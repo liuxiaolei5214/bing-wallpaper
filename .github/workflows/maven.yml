@@ -19,9 +19,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v4
       with:
         java-version: 1.8
     - name: current date
@@ -43,8 +43,8 @@ jobs:
           
     - name: Commit files
       run: |
-         git config --local user.email "niumoo@126.com"
-         git config --local user.name "niumoo"
+         git config --local user.email "liuxiaolei5214@gmail.com"
+         git config --local user.name "liuxiaolei5214"
          git pull
          git add README.md
          git add bing-wallpaper.md
