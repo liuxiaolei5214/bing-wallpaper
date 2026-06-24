@@ -12,7 +12,7 @@ on:
     - cron:  '2 16 * * *'
     # 每天UTC时间0点2分
     - cron:  '2 0 * * *'
-
+  workflow_dispatch:    # ← 加上这一行，缩进要和 schedule 对齐
 jobs:
   build:
 
