@@ -1,15 +1,28 @@
 /**
  * Bing 每日壁纸 - 纯前端项目
- * 使用 CORS 代理解决跨域问题
+ * 使用多个 CORS 代理，带自动重试
  */
 
 // ========== 配置 ==========
-// n=19，加上时间戳绕过缓存
-const BING_API = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(
-    'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=19&nc=' + Date.now() + '&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160'
-);
 const BING_BASE = 'https://cn.bing.com';
-const API_TIMEOUT = 15000;
+const API_TIMEOUT = 10000; // 10秒超时
+const MAX_RETRIES = 2;
+
+// 多个代理，按优先级排列
+const PROXIES = [
+    // 方案1: 使用 allorigins（最常用）
+    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    // 方案2: 使用 corsproxy.io（备选）
+    (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    // 方案3: 直接请求（如果浏览器支持）
+    (url) => url
+];
+
+// 构建 Bing API URL（带时间戳防缓存）
+function buildBingUrl() {
+    const timestamp = Date.now();
+    return `https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=19&nc=${timestamp}&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160`;
+}
 
 // ========== 工具函数 ==========
 
@@ -19,14 +32,12 @@ function getBeijingTime() {
     return new Date(beijingStr);
 }
 
-// 格式化日期：直接显示 API 返回的日期
 function formatDisplayDate(dateStr) {
     if (dateStr && dateStr.length === 8) {
         const year = parseInt(dateStr.slice(0,4));
         const month = parseInt(dateStr.slice(4,6)) - 1;
         const day = parseInt(dateStr.slice(6,8));
         const date = new Date(year, month, day);
-        // 不再加 1 天
         const y = date.getFullYear();
         const m = String(date.getMonth() + 1).padStart(2, '0');
         const d = String(date.getDate()).padStart(2, '0');
@@ -42,34 +53,61 @@ function updateClock() {
     el.textContent = `🕐 ${now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })} (北京时间)`;
 }
 
-// ========== API 请求 ==========
+// ========== API 请求（带重试和多代理） ==========
 
 function fetchWithTimeout(url, timeout = API_TIMEOUT) {
     return Promise.race([
         fetch(url),
         new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('请求超时，请稍后重试')), timeout)
+            setTimeout(() => reject(new Error('请求超时')), timeout)
         )
     ]);
 }
 
 async function fetchWallpapers() {
-    try {
-        console.log('正在获取壁纸数据...');
-        const response = await fetchWithTimeout(BING_API);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    const bingUrl = buildBingUrl();
+    const errors = [];
+
+    // 尝试每个代理
+    for (let i = 0; i < PROXIES.length; i++) {
+        const proxyFn = PROXIES[i];
+        const proxyUrl = proxyFn(bingUrl);
+
+        // 每个代理尝试 MAX_RETRIES 次
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                console.log(`尝试代理 ${i+1}/${PROXIES.length}，第 ${attempt+1} 次...`);
+
+                const response = await fetchWithTimeout(proxyUrl);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!data.images || data.images.length === 0) {
+                    throw new Error('API 返回数据为空');
+                }
+
+                console.log(`✅ 获取成功！共 ${data.images.length} 张壁纸`);
+                return data.images;
+
+            } catch (error) {
+                errors.push(`代理${i+1}-尝试${attempt+1}: ${error.message}`);
+                console.warn(`第 ${attempt+1} 次尝试失败:`, error.message);
+
+                // 最后一次尝试失败后，等待一下再换下一个代理
+                if (attempt === MAX_RETRIES) {
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
         }
-        const data = await response.json();
-        if (!data.images || data.images.length === 0) {
-            throw new Error('API 返回数据为空');
-        }
-        console.log('✅ 获取成功，共', data.images.length, '张壁纸');
-        return data.images;
-    } catch (error) {
-        console.error('获取壁纸失败:', error);
-        throw error;
     }
+
+    // 所有代理都失败了
+    console.error('所有请求均失败:', errors);
+    throw new Error(`无法获取壁纸数据：${errors.join('；')}`);
 }
 
 // ========== 渲染函数 ==========
@@ -120,7 +158,6 @@ function renderHistory(images) {
         return;
     }
 
-    // 跳过第一张（今日）
     const history = images.slice(1);
 
     if (history.length === 0) {
