@@ -47,9 +47,10 @@ public class Wallpaper {
             // 图片地址
             String url = BING_URL + (String)jsonObject.get("url");
 
-            // 图片时间
+            // 图片时间 - 使用系统当前日期，而不是API返回的日期
             String enddate = (String)jsonObject.get("enddate");
-            LocalDate localDate = LocalDate.parse(enddate, DateTimeFormatter.BASIC_ISO_DATE);
+            // 直接使用当前系统日期（北京时间）
+            LocalDate localDate = LocalDate.now();
             enddate = localDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
             // 图片版权
