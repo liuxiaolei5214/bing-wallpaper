@@ -44,8 +44,7 @@ jobs:
          git add zh-cn/*
          git commit -m "update readme.md"
     - name: Push changes
-      uses:  ad-m/github-push-action@master
-      with:
-         github_token: ${{ secrets.MY_GIT_TOKEN }}
-         branch: main
+      run: |
+       git remote set-url origin https://x-access-token:${{ secrets.MY_GIT_TOKEN }}@github.com/liuxiaolei5214/bing-wallpaper.git
+       git push origin main
     
