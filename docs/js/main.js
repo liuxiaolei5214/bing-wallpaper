@@ -1,16 +1,20 @@
 /**
  * Bing 每日壁纸 - 纯前端项目
- * 使用多个 CORS 代理，带自动重试
+ * 使用多个 CORS 代理，带自动重试 + 浏览器缓存
  */
 
 // ============ 配置 ============
-const BING_BASE = 'https://cn.bing.com';  // ⭐ 恢复：Bing 基础 URL
+const BING_BASE = 'https://cn.bing.com';
 const API_TIMEOUT = 5000; // 5 秒超时
 const MAX_RETRIES = 1;    // 每个代理最多重试 1 次
 
+// 缓存配置
+const CACHE_KEY = 'bing_wallpaper_cache';
+const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 小时
+
 // 多个代理，按优先级排列
 const PROXIES = [
-    // 1. 你自己的 Cloudflare Worker（如果有的话，取消注释并修改）
+    // 1. 你的 Cloudflare Worker（如果已部署，取消注释并修改域名）
     (url) => `https://bingdl.lei5214.cc.cd/?target=${encodeURIComponent(url)}`,
     
     // 2. 备选公共代理
@@ -26,7 +30,49 @@ function buildBingUrl() {
     return `https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&nc=${timestamp}&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160&setmkt=zh-CN`;
 }
 
-// ============ 工具函数（⭐ 恢复） ============
+// ============ 缓存管理 ============
+
+/** 读取缓存 */
+function getCachedWallpapers() {
+    try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (!cached) return null;
+        const data = JSON.parse(cached);
+        // 检查缓存是否过期
+        if (Date.now() - data.timestamp > CACHE_EXPIRY) {
+            localStorage.removeItem(CACHE_KEY);
+            return null;
+        }
+        // 检查是否是同一天的数据
+        const today = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
+        if (data.date !== today) {
+            localStorage.removeItem(CACHE_KEY);
+            return null;
+        }
+        console.log('📂 使用缓存的壁纸数据，共', data.images.length, '张');
+        return data.images;
+    } catch (e) {
+        return null;
+    }
+}
+
+/** 保存缓存 */
+function setCachedWallpapers(images) {
+    try {
+        const today = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+            images: images,
+            date: today,
+            timestamp: Date.now()
+        }));
+        console.log('💾 壁纸数据已缓存');
+    } catch (e) {
+        console.warn('缓存保存失败:', e);
+    }
+}
+
+// ============ 工具函数 ============
+
 function getBeijingTime() {
     const now = new Date();
     const beijingStr = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
@@ -56,10 +102,18 @@ function updateClock() {
     el.textContent = `🕐 ${now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })} (北京时间)`;
 }
 
-// ============ 核心：并行请求 ============
+// ============ 核心：并行请求 + 缓存 ============
+
 async function fetchWallpapers() {
+    // 1. 先检查缓存
+    const cached = getCachedWallpapers();
+    if (cached) {
+        return cached;
+    }
+
+    console.log('🌐 缓存未命中，请求 API...');
     const bingUrl = buildBingUrl();
-    
+
     // 生成所有可用的代理 URL
     const urlsToTry = [];
     for (const proxyFn of PROXIES) {
@@ -102,12 +156,15 @@ async function fetchWallpapers() {
         if (result.status === 'fulfilled' && result.value.success) {
             const { data, proxyIndex, attempt } = result.value;
             console.log(`✅ 代理 ${proxyIndex + 1} 第 ${attempt + 1} 次尝试成功！共 ${data.images.length} 张壁纸`);
-            // ⭐ 关键：按 enddate 排序，确保最新的在前
+            // 按 enddate 排序
             data.images.sort((a, b) => parseInt(b.enddate) - parseInt(a.enddate));
+            // 保存缓存
+            setCachedWallpapers(data.images);
             return data.images;
         }
     }
 
+    // 所有请求都失败
     const errors = results
         .filter(r => r.status === 'fulfilled' && !r.value.success)
         .map(r => r.value.error);
@@ -116,6 +173,7 @@ async function fetchWallpapers() {
 }
 
 // ============ 渲染函数 ============
+
 function renderToday(images) {
     const container = document.getElementById('todayCard');
     if (!images || images.length === 0) {
@@ -123,7 +181,6 @@ function renderToday(images) {
         return;
     }
 
-    // ⭐ 关键：使用 images[0] 作为今日图片
     const img = images[0];
     const url = BING_BASE + img.url;
     const dateStr = img.enddate || '';
@@ -201,6 +258,7 @@ function showError(containerId, message) {
 }
 
 // ============ 主函数 ============
+
 async function main() {
     const todayContainer = document.getElementById('todayCard');
     const historyContainer = document.getElementById('historyGrid');
