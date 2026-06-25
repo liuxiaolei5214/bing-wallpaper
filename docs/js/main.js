@@ -68,36 +68,27 @@ async function fetchWallpapers() {
     const bingUrl = buildBingUrl();
     const errors = [];
 
-    // 尝试每个代理
     for (let i = 0; i < PROXIES.length; i++) {
         const proxyFn = PROXIES[i];
         const proxyUrl = proxyFn(bingUrl);
 
-        // 每个代理尝试 MAX_RETRIES 次
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
                 console.log(`尝试代理 ${i+1}/${PROXIES.length}，第 ${attempt+1} 次...`);
-
                 const response = await fetchWithTimeout(proxyUrl);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-
-                if (!data.images || data.images.length === 0) {
-                    throw new Error('API 返回数据为空');
-                }
-
+                if (!data.images || data.images.length === 0) throw new Error('API 返回数据为空');
+                
+                // ⭐ 关键：打印第一张图片的 enddate，确认是否最新
+                console.log('📸 第一张图片的 enddate:', data.images[0].enddate);
+                console.log('📸 第一张图片的 copyright:', data.images[0].copyright);
+                
                 console.log(`✅ 获取成功！共 ${data.images.length} 张壁纸`);
                 return data.images;
-
             } catch (error) {
                 errors.push(`代理${i+1}-尝试${attempt+1}: ${error.message}`);
                 console.warn(`第 ${attempt+1} 次尝试失败:`, error.message);
-
-                // 最后一次尝试失败后，等待一下再换下一个代理
                 if (attempt === MAX_RETRIES) {
                     await new Promise(r => setTimeout(r, 500));
                 }
@@ -105,7 +96,6 @@ async function fetchWallpapers() {
         }
     }
 
-    // 所有代理都失败了
     console.error('所有请求均失败:', errors);
     throw new Error(`无法获取壁纸数据：${errors.join('；')}`);
 }
