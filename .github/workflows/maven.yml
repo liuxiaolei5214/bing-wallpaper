@@ -52,8 +52,11 @@ jobs:
         fi
       env:
         MY_GIT_TOKEN: ${{ secrets.MY_GIT_TOKEN }}
-    - name: Push changes
+    - name: Commit and Push changes
       run: |
-       git remote set-url origin https://x-access-token:${{ secrets.MY_GIT_TOKEN }}@github.com/liuxiaolei5214/bing-wallpaper.git
-       git push origin main
+        git config --local user.email "liuxiaolei5214@gmail.com"
+        git config --local user.name "liuxiaolei5214"
+        git add README.md bing-wallpaper.md picture/ docs/ zh-cn/
+        git commit -m "auto update: $(date +'%Y-%m-%d')" || echo "No changes to commit"
+        git push https://${{ secrets.MY_GIT_TOKEN }}@github.com/liuxiaolei5214/bing-wallpaper.git main
     
