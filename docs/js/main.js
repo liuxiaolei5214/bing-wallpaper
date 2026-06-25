@@ -21,7 +21,7 @@ const PROXIES = [
 // 构建 Bing API URL（带时间戳防缓存）
 function buildBingUrl() {
     const timestamp = Date.now();
-    return `https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=19&nc=${timestamp}&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160`;
+    return `https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=19&nc=${timestamp}&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160&setmkt=zh-CN`;
 }
 
 // ========== 工具函数 ==========
