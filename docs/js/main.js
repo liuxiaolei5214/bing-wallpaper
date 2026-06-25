@@ -4,9 +4,9 @@
  */
 
 // ========== 配置 ==========
-// 使用 CORS 代理服务解决跨域问题
+// n=50 表示获取 20 张壁纸（1 张今日 + 49 张历史）
 const BING_API = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(
-    'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=10&nc=1612409408851&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160'
+    'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=50&nc=1612409408851&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160'
 );
 const BING_BASE = 'https://cn.bing.com';
 const API_TIMEOUT = 15000;
@@ -19,9 +19,19 @@ function getBeijingTime() {
     return new Date(beijingStr);
 }
 
+// 格式化日期：API 返回 20260624，需要加 1 天补偿时区
 function formatDisplayDate(dateStr) {
     if (dateStr && dateStr.length === 8) {
-        return `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+        const year = parseInt(dateStr.slice(0,4));
+        const month = parseInt(dateStr.slice(4,6)) - 1;
+        const day = parseInt(dateStr.slice(6,8));
+        const date = new Date(year, month, day);
+        // 加 1 天，补偿时区差异
+        date.setDate(date.getDate() + 1);
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
     }
     return dateStr || '未知日期';
 }
@@ -111,6 +121,7 @@ function renderHistory(images) {
         return;
     }
 
+    // 跳过第一张（今日）
     const history = images.slice(1);
 
     if (history.length === 0) {
