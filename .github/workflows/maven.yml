@@ -43,6 +43,15 @@ jobs:
          git add docs/*
          git add zh-cn/*
          git commit -m "update readme.md"
+    - name: Debug token
+      run: |
+        if [ -n "${{ secrets.MY_GIT_TOKEN }}" ]; then
+          echo "Token exists (length: ${#MY_GIT_TOKEN})"
+        else
+          echo "Token is EMPTY!"
+        fi
+      env:
+        MY_GIT_TOKEN: ${{ secrets.MY_GIT_TOKEN }}
     - name: Push changes
       run: |
        git remote set-url origin https://x-access-token:${{ secrets.MY_GIT_TOKEN }}@github.com/liuxiaolei5214/bing-wallpaper.git
