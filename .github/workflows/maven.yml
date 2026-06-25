@@ -58,15 +58,17 @@ jobs:
       run: |
         git config --local user.email "liuxiaolei5214@gmail.com"
         git config --local user.name "liuxiaolei5214"
-        
-        # 强制删除 GitHub Actions 默认的认证头（这个头会覆盖 Token）
-        git config --local --unset http.https://github.com/.extraheader || true
     
-        # 用 Token 重写远程地址
+        # 强制修改远程地址（在任何操作之前）
         git remote set-url origin https://x-access-token:${TOKEN}@github.com/liuxiaolei5214/bing-wallpaper.git
     
+        # 添加所有变更
         git add README.md bing-wallpaper.md picture/ docs/ zh-cn/
-        git commit -m "auto update: $(date +'%Y-%m-%d')" || echo "No changes to commit"
     
-        # 推送
-        git push origin main
+        # 尝试提交，如果没有变更则跳过（但不会退出）
+        if git diff --cached --quiet; then
+          echo "No changes to commit, skipping commit and push."
+        else
+          git commit -m "auto update: $(date +'%Y-%m-%d %H:%M:%S')"
+          git push origin main
+        fi
