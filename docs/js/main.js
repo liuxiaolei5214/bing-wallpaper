@@ -80,10 +80,13 @@ async function fetchWallpapers() {
                 const data = await response.json();
                 if (!data.images || data.images.length === 0) throw new Error('API 返回数据为空');
                 
-                // ⭐ 关键：打印第一张图片的 enddate，确认是否最新
+                // ⭐ 关键：按 enddate 降序排列，最新的在前
+                data.images.sort((a, b) => {
+                    return parseInt(b.enddate) - parseInt(a.enddate);
+                });
+                
                 console.log('📸 第一张图片的 enddate:', data.images[0].enddate);
                 console.log('📸 第一张图片的 copyright:', data.images[0].copyright);
-                
                 console.log(`✅ 获取成功！共 ${data.images.length} 张壁纸`);
                 return data.images;
             } catch (error) {
