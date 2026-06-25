@@ -355,7 +355,7 @@
 
             grid.innerHTML = images.map(img => {
                 // 构建完整 URL
-                const url = BING_BASE + img.url;
+                const url = img.url.startsWith('http') ? img.url : BING_BASE + img.url;
                 const dateStr = img.enddate || '';
                 const displayDate = formatDisplayDate(dateStr);
                 const copyright = img.copyright || 'Bing 壁纸';
