@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bing 壁纸归档 · 按年月筛选</title>
+    <title>壁纸归档 · Bing 每日壁纸</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
     <style>
         * {
@@ -20,7 +20,6 @@
             padding: 20px;
         }
 
-        /* ===== 头部 ===== */
         header {
             max-width: 1400px;
             margin: 0 auto 30px;
@@ -54,7 +53,6 @@
             color: #fff;
         }
 
-        /* ===== 筛选器 ===== */
         .filters {
             max-width: 1400px;
             margin: 0 auto 30px;
@@ -100,7 +98,6 @@
             font-weight: 600;
         }
 
-        /* ===== 壁纸网格 ===== */
         .grid {
             max-width: 1400px;
             margin: 0 auto;
@@ -166,7 +163,6 @@
             background: #3a7bd5;
         }
 
-        /* ===== 加载/空状态 ===== */
         .loading,
         .empty {
             text-align: center;
@@ -195,7 +191,6 @@
             }
         }
 
-        /* ===== 页脚 ===== */
         footer {
             max-width: 1400px;
             margin: 40px auto 0;
@@ -206,7 +201,6 @@
             font-size: 0.85rem;
         }
 
-        /* ===== 响应式 ===== */
         @media (max-width: 768px) {
             header {
                 flex-direction: column;
@@ -282,16 +276,14 @@
     </div>
 
     <footer>
-        <p>数据来源：Bing 每日壁纸 · 仅供个人欣赏</p>
+        <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
     </footer>
 
     <script>
         // ============ 配置 ============
         const BING_BASE = 'https://cn.bing.com';
-        const API_URL = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(
-            'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&nc=' + Date.now() +
-            '&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160&setmkt=zh-CN'
-        );
+        // 从本地 history.json 读取数据
+        const HISTORY_URL = 'history.json';
 
         // ============ 工具函数 ============
         function formatDisplayDate(dateStr) {
@@ -312,19 +304,19 @@
         }
 
         // ============ 获取数据 ============
-        async function fetchWallpapers() {
+        async function fetchHistory() {
             try {
-                const response = await fetch(API_URL);
+                const response = await fetch(HISTORY_URL);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-                if (!data.images || data.images.length === 0) {
-                    throw new Error('API 返回数据为空');
+                if (!Array.isArray(data) || data.length === 0) {
+                    throw new Error('历史数据为空');
                 }
                 // 按 enddate 降序排列（最新的在前）
-                data.images.sort((a, b) => parseInt(b.enddate) - parseInt(a.enddate));
-                return data.images;
+                data.sort((a, b) => parseInt(b.enddate) - parseInt(a.enddate));
+                return data;
             } catch (error) {
-                console.error('获取壁纸失败:', error);
+                console.error('获取历史数据失败:', error);
                 throw error;
             }
         }
@@ -362,6 +354,7 @@
             totalCount.textContent = images.length;
 
             grid.innerHTML = images.map(img => {
+                // 构建完整 URL
                 const url = BING_BASE + img.url;
                 const dateStr = img.enddate || '';
                 const displayDate = formatDisplayDate(dateStr);
@@ -399,10 +392,10 @@
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
 
             try {
-                const allImages = await fetchWallpapers();
+                const allImages = await fetchHistory();
 
                 if (!allImages || allImages.length === 0) {
-                    grid.innerHTML = '<div class="empty">😅 未能获取壁纸数据</div>';
+                    grid.innerHTML = '<div class="empty">😅 暂无壁纸数据，等待自动归档...</div>';
                     return;
                 }
 
