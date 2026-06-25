@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bing 壁纸归档 · 按年月筛选</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* ===== 头部 ===== */
+        header {
+            max-width: 1400px;
+            margin: 0 auto 30px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header .nav-link {
+            color: #4d96ff;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border: 1px solid #4d96ff;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        header .nav-link:hover {
+            background: #4d96ff;
+            color: #fff;
+        }
+
+        /* ===== 筛选器 ===== */
+        .filters {
+            max-width: 1400px;
+            margin: 0 auto 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            background: #161616;
+            padding: 16px 20px;
+            border-radius: 12px;
+        }
+
+        .filters label {
+            color: #aaa;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .filters select {
+            background: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #3a3a3a;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            outline: none;
+            min-width: 120px;
+        }
+
+        .filters select:focus {
+            border-color: #4d96ff;
+        }
+
+        .filters .stats {
+            margin-left: auto;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .filters .stats span {
+            color: #e0e0e0;
+            font-weight: 600;
+        }
+
+        /* ===== 壁纸网格 ===== */
+        .grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: #161616;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .card img {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            display: block;
+            background: #111;
+        }
+
+        .card .info {
+            padding: 10px 14px 14px;
+        }
+
+        .card .info .date {
+            font-size: 0.85rem;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .card .info .copyright {
+            font-size: 0.75rem;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .card .info .download-btn {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 14px;
+            background: #4d96ff;
+            color: #fff;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .card .info .download-btn:hover {
+            background: #3a7bd5;
+        }
+
+        /* ===== 加载/空状态 ===== */
+        .loading,
+        .empty {
+            text-align: center;
+            padding: 60px 0;
+            color: #666;
+            font-size: 1rem;
+            grid-column: 1 / -1;
+        }
+
+        .loading::after {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 3px solid #2a2a2a;
+            border-top-color: #4d96ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== 页脚 ===== */
+        footer {
+            max-width: 1400px;
+            margin: 40px auto 0;
+            text-align: center;
+            padding: 20px 0 10px;
+            border-top: 1px solid #1a1a1a;
+            color: #555;
+            font-size: 0.85rem;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            header h1 {
+                font-size: 1.5rem;
+            }
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filters .stats {
+                margin-left: 0;
+                text-align: center;
+            }
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+            }
+            .card .info {
+                padding: 6px 10px 10px;
+            }
+            .card .info .date {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📚 壁纸归档</h1>
+        <a href="/bing-wallpaper/" class="nav-link">🏠 返回首页</a>
+    </header>
+
+    <div class="filters">
+        <label for="yearFilter">📅 年份</label>
+        <select id="yearFilter"></select>
+
+        <label for="monthFilter">📆 月份</label>
+        <select id="monthFilter">
+            <option value="all">全部月份</option>
+            <option value="01">1 月</option>
+            <option value="02">2 月</option>
+            <option value="03">3 月</option>
+            <option value="04">4 月</option>
+            <option value="05">5 月</option>
+            <option value="06">6 月</option>
+            <option value="07">7 月</option>
+            <option value="08">8 月</option>
+            <option value="09">9 月</option>
+            <option value="10">10 月</option>
+            <option value="11">11 月</option>
+            <option value="12">12 月</option>
+        </select>
+
+        <div class="stats">
+            共 <span id="totalCount">0</span> 张壁纸
+        </div>
+    </div>
+
+    <div class="grid" id="grid">
+        <div class="loading">加载壁纸数据中...</div>
+    </div>
+
+    <footer>
+        <p>数据来源：Bing 每日壁纸 · 仅供个人欣赏</p>
+    </footer>
+
+    <script>
+        // ============ 配置 ============
+        const BING_BASE = 'https://cn.bing.com';
+        const API_URL = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(
+            'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&nc=' + Date.now() +
+            '&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160&setmkt=zh-CN'
+        );
+
+        // ============ 工具函数 ============
+        function formatDisplayDate(dateStr) {
+            if (dateStr && dateStr.length === 8) {
+                return `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+            }
+            return dateStr || '未知日期';
+        }
+
+        function getYearMonth(dateStr) {
+            if (dateStr && dateStr.length === 8) {
+                return {
+                    year: dateStr.slice(0, 4),
+                    month: dateStr.slice(4, 6)
+                };
+            }
+            return { year: '未知', month: '未知' };
+        }
+
+        // ============ 获取数据 ============
+        async function fetchWallpapers() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if (!data.images || data.images.length === 0) {
+                    throw new Error('API 返回数据为空');
+                }
+                // 按 enddate 降序排列（最新的在前）
+                data.images.sort((a, b) => parseInt(b.enddate) - parseInt(a.enddate));
+                return data.images;
+            } catch (error) {
+                console.error('获取壁纸失败:', error);
+                throw error;
+            }
+        }
+
+        // ============ 渲染筛选器 ============
+        function populateFilters(images) {
+            const yearSet = new Set();
+            images.forEach(img => {
+                const { year } = getYearMonth(img.enddate);
+                if (year !== '未知') yearSet.add(year);
+            });
+            const years = Array.from(yearSet).sort().reverse();
+
+            const yearSelect = document.getElementById('yearFilter');
+            yearSelect.innerHTML = '<option value="all">全部年份</option>';
+            years.forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y + ' 年';
+                yearSelect.appendChild(opt);
+            });
+        }
+
+        // ============ 渲染网格 ============
+        function renderGrid(images) {
+            const grid = document.getElementById('grid');
+            const totalCount = document.getElementById('totalCount');
+
+            if (!images || images.length === 0) {
+                grid.innerHTML = '<div class="empty">😅 没有找到匹配的壁纸</div>';
+                totalCount.textContent = '0';
+                return;
+            }
+
+            totalCount.textContent = images.length;
+
+            grid.innerHTML = images.map(img => {
+                const url = BING_BASE + img.url;
+                const dateStr = img.enddate || '';
+                const displayDate = formatDisplayDate(dateStr);
+                const copyright = img.copyright || 'Bing 壁纸';
+                const hdUrl = url.includes('?') ?
+                    url + '&uhd=1&uhdwidth=3840&uhdheight=2160' :
+                    url + '?uhd=1&uhdwidth=3840&uhdheight=2160';
+
+                return `
+                        <div class="card" title="${copyright}">
+                            <img src="${url}" alt="${copyright}" loading="lazy" onerror="this.style.display='none'" />
+                            <div class="info">
+                                <div class="date">📅 ${displayDate}</div>
+                                <div class="copyright">${copyright}</div>
+                                <a href="${hdUrl}" class="download-btn" target="_blank">⬇️ 下载 4K</a>
+                            </div>
+                        </div>
+                    `;
+            }).join('');
+        }
+
+        // ============ 筛选逻辑 ============
+        function filterImages(images, year, month) {
+            return images.filter(img => {
+                const { year: y, month: m } = getYearMonth(img.enddate);
+                if (year !== 'all' && y !== year) return false;
+                if (month !== 'all' && m !== month) return false;
+                return true;
+            });
+        }
+
+        // ============ 主函数 ============
+        async function main() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
+
+            try {
+                const allImages = await fetchWallpapers();
+
+                if (!allImages || allImages.length === 0) {
+                    grid.innerHTML = '<div class="empty">😅 未能获取壁纸数据</div>';
+                    return;
+                }
+
+                // 填充筛选器
+                populateFilters(allImages);
+
+                // 获取当前筛选条件
+                const yearFilter = document.getElementById('yearFilter');
+                const monthFilter = document.getElementById('monthFilter');
+
+                // 初始渲染
+                const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
+                renderGrid(filtered);
+
+                // 监听筛选变化
+                yearFilter.addEventListener('change', () => {
+                    const filtered2 = filterImages(allImages, yearFilter.value, monthFilter.value);
+                    renderGrid(filtered2);
+                });
+
+                monthFilter.addEventListener('change', () => {
+                    const filtered2 = filterImages(allImages, yearFilter.value, monthFilter.value);
+                    renderGrid(filtered2);
+                });
+
+            } catch (error) {
+                grid.innerHTML = `<div class="empty">❌ 加载失败：${error.message || '未知错误'}</div>`;
+            }
+        }
+
+        // ============ 启动 ============
+        document.addEventListener('DOMContentLoaded', main);
+    </script>
+
+</body>
+</html>
