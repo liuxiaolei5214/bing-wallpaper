@@ -85,7 +85,7 @@ function formatDisplayDate(dateStr) {
         const day = parseInt(dateStr.slice(6,8));
         const date = new Date(year, month, day);
         // 加 1 天，补偿时区差异（如果不需要可以注释掉）
-        date.setDate(date.getDate() + 1);
+        //date.setDate(date.getDate() + 1);
         const y = date.getFullYear();
         const m = String(date.getMonth() + 1).padStart(2, '0');
         const d = String(date.getDate()).padStart(2, '0');
