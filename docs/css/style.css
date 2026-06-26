@@ -48,13 +48,6 @@ header p {
     font-size: 1.05rem;
 }
 
-.time-display {
-    margin-top: 10px;
-    color: #666;
-    font-size: 0.85rem;
-    font-family: "SF Mono", "Menlo", monospace;
-}
-
 /* ========== 通用章节 ========== */
 section {
     max-width: 1200px;
