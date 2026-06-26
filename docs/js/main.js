@@ -203,9 +203,18 @@ function renderToday(images) {
     const displayDate = formatDisplayDate(dateStr);
     const copyright = img.copyright || 'Bing 每日壁纸';
 
-    const hdUrl = url.includes('?')
-        ? url + '&uhd=1&uhdwidth=3840&uhdheight=2160'
-        : url + '?uhd=1&uhdwidth=3840&uhdheight=2160';
+    // ⭐ 生成 4K 高清链接
+    let hdUrl = url;
+    // 替换分辨率为 4K
+    hdUrl = hdUrl.replace(/1920x1080/g, '3840x2160');
+    // 替换 _1920x1080 为 _UHD
+    hdUrl = hdUrl.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+    // 如果还没有 uhd 参数，添加
+    if (!hdUrl.includes('uhd=1')) {
+        hdUrl = hdUrl.includes('?') 
+            ? hdUrl + '&uhd=1&uhdwidth=3840&uhdheight=2160' 
+            : hdUrl + '?uhd=1&uhdwidth=3840&uhdheight=2160';
+    }
 
     container.innerHTML = `
         <img
