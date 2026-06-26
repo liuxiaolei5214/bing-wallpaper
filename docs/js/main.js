@@ -203,33 +203,32 @@ function renderToday(images) {
     const displayDate = formatDisplayDate(dateStr);
     const copyright = img.copyright || 'Bing 每日壁纸';
 
-    // ⭐ 生成 4K 高清链接
-    let hdUrl = url;
-    // 替换分辨率为 4K
-    hdUrl = hdUrl.replace(/1920x1080/g, '3840x2160');
-    // 替换 _1920x1080 为 _UHD
-    hdUrl = hdUrl.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
-    // 如果还没有 uhd 参数，添加
-    if (!hdUrl.includes('uhd=1')) {
-        hdUrl = hdUrl.includes('?') 
-            ? hdUrl + '&uhd=1&uhdwidth=3840&uhdheight=2160' 
-            : hdUrl + '?uhd=1&uhdwidth=3840&uhdheight=2160';
+    // ⭐ 1080P 链接
+    let hd1080Url = url;
+    hd1080Url = hd1080Url.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+    hd1080Url = hd1080Url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+
+    // ⭐ 4K 链接
+    let hd4kUrl = url;
+    hd4kUrl = hd4kUrl.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+    hd4kUrl = hd4kUrl.replace(/1920x1080/g, 'UHD');
+    hd4kUrl = hd4kUrl.replace(/&rf=LaDigue_1920x1080\.jpg/g, '');
+    hd4kUrl = hd4kUrl.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+    if (hd4kUrl.includes('?')) {
+        hd4kUrl = hd4kUrl + '&w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
+    } else {
+        hd4kUrl = hd4kUrl + '?w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
     }
 
     container.innerHTML = `
-        <img
-            src="${url}"
-            alt="${copyright}"
-            loading="eager"
-            onerror="this.src='${url}'"
-        />
+        <img src="${url}" alt="${copyright}" loading="eager" onerror="this.src='${url}'" />
         <div class="info">
             <div class="date">📅 ${displayDate}</div>
             <div class="copyright">📷 ${copyright}</div>
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px;">
                 <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <a href="${hdUrl}" class="btn btn-primary" target="_blank">⬇️ 下载 4K</a>
-                    <a href="${url}" class="btn btn-secondary" target="_blank">🖼️ 查看原图</a>
+                    <a href="${hd4kUrl}" class="btn btn-primary" target="_blank">⬇️ 下载 4K</a>
+                    <a href="${hd1080Url}" class="btn btn-secondary" target="_blank">⬇️ 1080P</a>
                 </div>
                 <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
             </div>
