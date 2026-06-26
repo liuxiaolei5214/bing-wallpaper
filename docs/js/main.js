@@ -15,10 +15,14 @@ const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 小时
 
 // 多个代理，按优先级排列
 const PROXIES = [
-    // 1. 备选公共代理
+    // 1. 你自己的 Cloudflare Worker（如果有的话，取消注释并修改）
+    (url) => `https://bingdl.lei5214.cc.cd/?target=${encodeURIComponent(url)}`,
+    
+    // 2. 备选公共代理
     (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
     (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    // 2. 直接请求（仅本地测试可用）
+    
+    // 3. 直接请求（仅本地测试可用）
     (url) => url
 ];
 
