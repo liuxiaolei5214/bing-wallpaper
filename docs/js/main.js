@@ -203,12 +203,15 @@ function renderToday(images) {
     const displayDate = formatDisplayDate(dateStr);
     const copyright = img.copyright || 'Bing 每日壁纸';
 
-    // ⭐ 1080P 链接
+    // SVG 下载图标
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+
+    // 1080P 链接
     let hd1080Url = url;
     hd1080Url = hd1080Url.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
     hd1080Url = hd1080Url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
 
-    // ⭐ 4K 链接
+    // 4K 链接
     let hd4kUrl = url;
     hd4kUrl = hd4kUrl.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
     hd4kUrl = hd4kUrl.replace(/1920x1080/g, 'UHD');
@@ -226,15 +229,17 @@ function renderToday(images) {
             <div class="date">📅 ${displayDate}</div>
             <div class="copyright">📷 ${copyright}</div>
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px;">
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="${hd4kUrl}" class="btn btn-primary" target="_blank">
-                    <img src="/images/download-icon.png" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" alt="下载" />
-                    4K
-                </a>
-                <a href="${hd1080Url}" class="btn btn-secondary" target="_blank">
-                    <img src="/images/download-icon.png" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" alt="下载" />
-                    1080P
-                </a>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <a href="${hd4kUrl}" class="btn btn-primary" target="_blank" style="display: inline-flex; align-items: center; gap: 4px;">
+                        ${svgIcon}
+                        4K
+                    </a>
+                    <a href="${hd1080Url}" class="btn btn-secondary" target="_blank" style="display: inline-flex; align-items: center; gap: 4px;">
+                        ${svgIcon}
+                        1080P
+                    </a>
+                </div>
+                <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
             </div>
         </div>
     `;
