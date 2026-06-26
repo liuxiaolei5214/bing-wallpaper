@@ -32,7 +32,7 @@ jobs:
           jq '.images | map({
               startdate: .startdate,
               enddate: .enddate,
-              url: (.url | gsub("1920x1080"; "3840x2160") | gsub("_1920x1080\\.jpg"; "_UHD.jpg")),
+              url: .url,
               urlbase: .urlbase,
               copyright: (.copyright | gsub("\\s*\\(©[^)]*\\)\\s*"; "") | gsub("\\s*,\\s*$"; ""))
           })' today.json > today_clean.json
