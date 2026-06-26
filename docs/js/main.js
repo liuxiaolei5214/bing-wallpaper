@@ -226,11 +226,15 @@ function renderToday(images) {
             <div class="date">📅 ${displayDate}</div>
             <div class="copyright">📷 ${copyright}</div>
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px;">
-                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <a href="${hd4kUrl}" class="btn btn-primary" target="_blank">⬇️ 下载 4K</a>
-                    <a href="${hd1080Url}" class="btn btn-secondary" target="_blank">⬇️ 1080P</a>
-                </div>
-                <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="${hd4kUrl}" class="btn btn-primary" target="_blank">
+                    <img src="/images/download-icon.png" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" alt="下载" />
+                    4K
+                </a>
+                <a href="${hd1080Url}" class="btn btn-secondary" target="_blank">
+                    <img src="/images/download-icon.png" width="16" height="16" style="vertical-align: middle; margin-right: 4px;" alt="下载" />
+                    1080P
+                </a>
             </div>
         </div>
     `;
