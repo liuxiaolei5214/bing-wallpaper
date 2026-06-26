@@ -212,7 +212,6 @@ function renderToday(images) {
     const url = BING_BASE + img.url;
     const dateStr = img.enddate || '';
     const displayDate = formatDisplayDate(dateStr);
-    // ⭐ 已经清理过版权信息，直接使用
     const copyright = img.copyright || 'Bing 每日壁纸';
 
     const hdUrl = url.includes('?')
@@ -228,14 +227,14 @@ function renderToday(images) {
         />
         <div class="info">
             <div class="date">📅 ${displayDate}</div>
-            <div class="copyright">
-                📷 ${copyright}
+            <div class="copyright">📷 ${copyright}</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <a href="${hdUrl}" class="btn btn-primary" target="_blank">⬇️ 下载 4K</a>
+                    <a href="${url}" class="btn btn-secondary" target="_blank">🖼️ 查看原图</a>
+                </div>
+                <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
             </div>
-            <div class="actions">
-                <a href="${hdUrl}" class="btn btn-primary" target="_blank">⬇️ 下载 4K</a>
-                <a href="${url}" class="btn btn-secondary" target="_blank">🖼️ 查看原图</a>
-            </div>
-            <a href="/archive.html" class="btn btn-secondary archive-link">📚 壁纸归档</a>
         </div>
     `;
 }
