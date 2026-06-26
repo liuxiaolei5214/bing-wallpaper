@@ -235,7 +235,7 @@ function renderToday(images) {
                 <a href="${hdUrl}" class="btn btn-primary" target="_blank">⬇️ 下载 4K</a>
                 <a href="${url}" class="btn btn-secondary" target="_blank">🖼️ 查看原图</a>
             </div>
-            <a href="/archive.html" class="btn btn-secondary" style="margin-left: auto;">📚 壁纸归档</a>
+            <a href="/archive.html" class="btn btn-secondary archive-link">📚 壁纸归档</a>
         </div>
     `;
 }
