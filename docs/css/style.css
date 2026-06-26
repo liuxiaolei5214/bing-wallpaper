@@ -51,7 +51,7 @@ header p {
 /* ========== 通用章节 ========== */
 section {
     max-width: 1200px;
-    margin: 0 auto 50px;
+    margin: 10px auto 50px;
 }
 
 section h2 {
