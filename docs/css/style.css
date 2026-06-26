@@ -311,3 +311,39 @@ footer .footer-small {
         text-align: center;
     }
 }
+
+/* ========== 今日壁纸按钮布局 ========== */
+#todayCard .info .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+#todayCard .info .actions .btn-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+#todayCard .info .actions .archive-link {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* 响应式：小屏幕时归档按钮换行 */
+@media (max-width: 480px) {
+    #todayCard .info .actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #todayCard .info .actions .btn-group {
+        justify-content: center;
+    }
+    #todayCard .info .actions .archive-link {
+        margin-left: 0;
+        text-align: center;
+    }
+}
