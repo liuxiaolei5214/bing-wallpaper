@@ -1,6 +1,7 @@
 /**
  * Bing 每日壁纸 - 纯前端项目
  * 使用多个 CORS 代理，带自动重试 + 浏览器缓存
+ * 精简版：只保留必要字段，去掉版权符号
  */
 
 // ============ 配置 ============
@@ -14,14 +15,10 @@ const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 小时
 
 // 多个代理，按优先级排列
 const PROXIES = [
-    // 1. 你的 Cloudflare Worker（如果已部署，取消注释并修改域名）
-    (url) => `https://bingdl.lei5214.cc.cd/?target=${encodeURIComponent(url)}`,
-    
-    // 2. 备选公共代理
+    // 1. 备选公共代理
     (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
     (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    
-    // 3. 直接请求（仅本地测试可用）
+    // 2. 直接请求（仅本地测试可用）
     (url) => url
 ];
 
@@ -38,12 +35,10 @@ function getCachedWallpapers() {
         const cached = localStorage.getItem(CACHE_KEY);
         if (!cached) return null;
         const data = JSON.parse(cached);
-        // 检查缓存是否过期
         if (Date.now() - data.timestamp > CACHE_EXPIRY) {
             localStorage.removeItem(CACHE_KEY);
             return null;
         }
-        // 检查是否是同一天的数据
         const today = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
         if (data.date !== today) {
             localStorage.removeItem(CACHE_KEY);
@@ -85,7 +80,7 @@ function formatDisplayDate(dateStr) {
         const month = parseInt(dateStr.slice(4,6)) - 1;
         const day = parseInt(dateStr.slice(6,8));
         const date = new Date(year, month, day);
-        // 加 1 天，补偿时区差异
+        // 加 1 天，补偿时区差异（如果不需要可以注释掉）
         date.setDate(date.getDate() + 1);
         const y = date.getFullYear();
         const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -102,6 +97,31 @@ function updateClock() {
     el.textContent = `🕐 ${now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })} (北京时间)`;
 }
 
+// ============ ⭐ 核心：精简数据（只保留必要字段，去掉版权符号） ============
+
+/** 清理版权信息，去掉 (© xxx) 部分 */
+function cleanCopyright(text) {
+    if (!text) return '';
+    // 移除 (© xxx) 或 (© xxx) 及后面内容
+    let cleaned = text.replace(/\s*\(©[^)]*\)\s*/g, '');
+    // 移除末尾不完整的 (© xxx
+    cleaned = cleaned.replace(/\s*\(©[^)]*$/, '');
+    // 移除多余的逗号和空格
+    cleaned = cleaned.replace(/\s*,\s*$/, '');
+    return cleaned.trim();
+}
+
+/** 精简图片数据，只保留必要字段 */
+function cleanImageData(img) {
+    return {
+        startdate: img.startdate || '',
+        enddate: img.enddate || '',
+        url: img.url || '',
+        urlbase: img.urlbase || '',
+        copyright: cleanCopyright(img.copyright || '')
+    };
+}
+
 // ============ 核心：并行请求 + 缓存 ============
 
 async function fetchWallpapers() {
@@ -114,7 +134,6 @@ async function fetchWallpapers() {
     console.log('🌐 缓存未命中，请求 API...');
     const bingUrl = buildBingUrl();
 
-    // 生成所有可用的代理 URL
     const urlsToTry = [];
     for (const proxyFn of PROXIES) {
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -156,15 +175,19 @@ async function fetchWallpapers() {
         if (result.status === 'fulfilled' && result.value.success) {
             const { data, proxyIndex, attempt } = result.value;
             console.log(`✅ 代理 ${proxyIndex + 1} 第 ${attempt + 1} 次尝试成功！共 ${data.images.length} 张壁纸`);
-            // 按 enddate 排序
+            
+            // ⭐ 排序：按 enddate 降序
             data.images.sort((a, b) => parseInt(b.enddate) - parseInt(a.enddate));
+            
+            // ⭐ 精简数据：只保留必要字段，去掉版权符号
+            const cleanImages = data.images.map(img => cleanImageData(img));
+            
             // 保存缓存
-            setCachedWallpapers(data.images);
-            return data.images;
+            setCachedWallpapers(cleanImages);
+            return cleanImages;
         }
     }
 
-    // 所有请求都失败
     const errors = results
         .filter(r => r.status === 'fulfilled' && !r.value.success)
         .map(r => r.value.error);
@@ -185,8 +208,8 @@ function renderToday(images) {
     const url = BING_BASE + img.url;
     const dateStr = img.enddate || '';
     const displayDate = formatDisplayDate(dateStr);
+    // ⭐ 已经清理过版权信息，直接使用
     const copyright = img.copyright || 'Bing 每日壁纸';
-    const copyrightLink = img.copyrightlink || '#';
 
     const hdUrl = url.includes('?')
         ? url + '&uhd=1&uhdwidth=3840&uhdheight=2160'
@@ -203,7 +226,6 @@ function renderToday(images) {
             <div class="date">📅 ${displayDate}</div>
             <div class="copyright">
                 📷 ${copyright}
-                ${copyrightLink && copyrightLink !== '#' ? ` · <a href="${copyrightLink}" target="_blank">了解详情</a>` : ''}
             </div>
             <div class="actions">
                 <a href="${hdUrl}" class="btn btn-primary" target="_blank">⬇️ 下载 4K</a>
@@ -231,6 +253,7 @@ function renderHistory(images) {
         const url = BING_BASE + img.url;
         const dateStr = img.enddate || '';
         const displayDate = formatDisplayDate(dateStr);
+        // ⭐ 已经清理过版权信息，直接使用
         const copyright = img.copyright || 'Bing 壁纸';
 
         return `
