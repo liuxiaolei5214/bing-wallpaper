@@ -2,29 +2,21 @@
  * Bing 每日壁纸 - 纯前端项目
  * 使用多个 CORS 代理，带自动重试 + 浏览器缓存
  * 精简版：只保留必要字段，去掉版权符号
- * 历史壁纸从 history.json 读取，不受 API 限制
+ * 历史壁纸从 history.json 读取，不限数量
  */
 
 // ============ 配置 ============
 const BING_BASE = 'https://cn.bing.com';
-const API_TIMEOUT = 5000; // 5 秒超时
-const MAX_RETRIES = 1;    // 每个代理最多重试 1 次
-const HISTORY_COUNT = 10; // 首页显示的历史壁纸数量
+const API_TIMEOUT = 5000;
+const MAX_RETRIES = 1;
 
-// 缓存配置
 const CACHE_KEY = 'bing_wallpaper_cache';
-const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 小时
+const CACHE_EXPIRY = 24 * 60 * 60 * 1000;
 
-// 多个代理，按优先级排列
 const PROXIES = [
-    // 1. 你自己的 Cloudflare Worker
     (url) => `https://bingdl.lei5214.cc.cd/?target=${encodeURIComponent(url)}`,
-    
-    // 2. 备选公共代理
     (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
     (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    
-    // 3. 直接请求（仅本地测试可用）
     (url) => url
 ];
 
@@ -33,9 +25,6 @@ function buildBingUrl() {
     return `https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&nc=${timestamp}&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160&setmkt=zh-CN`;
 }
 
-// ============ 缓存管理 ============
-
-/** 读取缓存 */
 function getCachedWallpapers() {
     try {
         const cached = localStorage.getItem(CACHE_KEY);
@@ -57,7 +46,6 @@ function getCachedWallpapers() {
     }
 }
 
-/** 保存缓存 */
 function setCachedWallpapers(images) {
     try {
         const today = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
@@ -72,8 +60,6 @@ function setCachedWallpapers(images) {
     }
 }
 
-// ============ 工具函数 ============
-
 function getBeijingTime() {
     const now = new Date();
     const beijingStr = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
@@ -86,7 +72,6 @@ function formatDisplayDate(dateStr) {
         const month = parseInt(dateStr.slice(4,6)) - 1;
         const day = parseInt(dateStr.slice(6,8));
         const date = new Date(year, month, day);
-        // 不再加 1 天（与 enddate 保持一致）
         const y = date.getFullYear();
         const m = String(date.getMonth() + 1).padStart(2, '0');
         const d = String(date.getDate()).padStart(2, '0');
@@ -102,9 +87,6 @@ function updateClock() {
     el.textContent = `🕐 ${now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })} (北京时间)`;
 }
 
-// ============ ⭐ 核心：精简数据（只保留必要字段，去掉版权符号） ============
-
-/** 清理版权信息，去掉 (© xxx) 部分 */
 function cleanCopyright(text) {
     if (!text) return '';
     let cleaned = text.replace(/\s*\(©[^)]*\)\s*/g, '');
@@ -113,7 +95,6 @@ function cleanCopyright(text) {
     return cleaned.trim();
 }
 
-/** 精简图片数据，只保留必要字段 */
 function cleanImageData(img) {
     return {
         startdate: img.startdate || '',
@@ -124,8 +105,6 @@ function cleanImageData(img) {
     };
 }
 
-// ============ 从 history.json 读取历史数据 ============
-
 async function fetchHistoryFromJSON() {
     try {
         const response = await fetch('history.json');
@@ -134,7 +113,6 @@ async function fetchHistoryFromJSON() {
         if (!Array.isArray(data) || data.length === 0) {
             throw new Error('历史数据为空');
         }
-        // 按 enddate 降序排列（最新的在前）
         data.sort((a, b) => parseInt(b.enddate) - parseInt(a.enddate));
         console.log('📚 从 history.json 读取历史数据，共', data.length, '条');
         return data;
@@ -144,10 +122,7 @@ async function fetchHistoryFromJSON() {
     }
 }
 
-// ============ 核心：并行请求 + 缓存 ============
-
 async function fetchWallpapers() {
-    // 1. 先检查缓存
     const cached = getCachedWallpapers();
     if (cached) {
         return cached;
@@ -197,14 +172,8 @@ async function fetchWallpapers() {
         if (result.status === 'fulfilled' && result.value.success) {
             const { data, proxyIndex, attempt } = result.value;
             console.log(`✅ 代理 ${proxyIndex + 1} 第 ${attempt + 1} 次尝试成功！共 ${data.images.length} 张壁纸`);
-            
-            // ⭐ 排序：按 enddate 降序
             data.images.sort((a, b) => parseInt(b.enddate) - parseInt(a.enddate));
-            
-            // ⭐ 精简数据：只保留必要字段，去掉版权符号
             const cleanImages = data.images.map(img => cleanImageData(img));
-            
-            // 保存缓存
             setCachedWallpapers(cleanImages);
             return cleanImages;
         }
@@ -217,8 +186,6 @@ async function fetchWallpapers() {
     throw new Error(`无法获取壁纸数据：${errors.slice(0, 3).join('；')}`);
 }
 
-// ============ 渲染函数 ============
-
 function renderToday(images) {
     const container = document.getElementById('todayCard');
     if (!images || images.length === 0) {
@@ -227,7 +194,10 @@ function renderToday(images) {
     }
 
     const img = images[0];
-    const url = BING_BASE + img.url;
+    let url = img.url;
+    if (url && !url.startsWith('http')) {
+        url = BING_BASE + url;
+    }
     const dateStr = img.enddate || '';
     const displayDate = formatDisplayDate(dateStr);
     const copyright = img.copyright || 'Bing 每日壁纸';
@@ -257,7 +227,6 @@ function renderToday(images) {
     `;
 }
 
-/** 从数据数组渲染历史壁纸 */
 function renderHistoryFromData(history) {
     const container = document.getElementById('historyGrid');
     if (!history || history.length === 0) {
@@ -266,7 +235,11 @@ function renderHistoryFromData(history) {
     }
 
     container.innerHTML = history.map(img => {
-        const url = BING_BASE + img.url;
+        // ⭐ 判断 url 是否已经是完整链接
+        let url = img.url;
+        if (url && !url.startsWith('http')) {
+            url = BING_BASE + url;
+        }
         const dateStr = img.enddate || '';
         const displayDate = formatDisplayDate(dateStr);
         const copyright = img.copyright || 'Bing 壁纸';
@@ -295,8 +268,6 @@ function showError(containerId, message) {
     }
 }
 
-// ============ 主函数 ============
-
 async function main() {
     const todayContainer = document.getElementById('todayCard');
     const historyContainer = document.getElementById('historyGrid');
@@ -308,7 +279,6 @@ async function main() {
     setInterval(updateClock, 30000);
 
     try {
-        // 1. 获取今日壁纸（从 API）
         const images = await fetchWallpapers();
 
         if (!images || images.length === 0) {
@@ -317,24 +287,16 @@ async function main() {
             return;
         }
 
-        // 2. 渲染今日壁纸（取第一张）
         renderToday(images);
-
-        // 3. 获取今日的日期（用于排除）
         const todayDate = images[0]?.enddate || '';
 
-        // 4. ⭐ 从 history.json 读取历史数据
         const historyData = await fetchHistoryFromJSON();
 
         if (historyData && historyData.length > 1) {
-            // 排除今日（第一张），取后面的历史记录
             const historyImages = historyData.filter(item => item.enddate !== todayDate);
-            // 取前 N 张（由 HISTORY_COUNT 控制）
-            const limitedHistory = historyImages.slice(0, HISTORY_COUNT);
-            renderHistoryFromData(limitedHistory);
-            console.log(`📚 显示 ${limitedHistory.length} 张历史壁纸（从 history.json）`);
+            renderHistoryFromData(historyImages);
+            console.log(`📚 显示 ${historyImages.length} 张历史壁纸（从 history.json）`);
         } else {
-            // 如果 history.json 没有数据，用 API 返回的历史数据（降级方案）
             const fallbackHistory = images.slice(1);
             renderHistoryFromData(fallbackHistory);
             console.log(`📚 降级方案：显示 ${fallbackHistory.length} 张历史壁纸（从 API）`);
@@ -347,7 +309,6 @@ async function main() {
     }
 }
 
-// ============ 页面加载 ============
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', main);
 } else {
