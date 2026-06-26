@@ -234,7 +234,14 @@
             }
             return result;
         }
-
+        
+        function getFullUrl(url) {
+          if (url.startsWith('http')) {
+            return url;
+          }
+          return 'https://cn.bing.com' + url;
+        }
+        
         async function fetchHistory() {
             try {
                 const response = await fetch(HISTORY_URL);
@@ -277,7 +284,7 @@
             totalCount.textContent = images.length;
 
             grid.innerHTML = images.map(img => {
-                const url = img.url.startsWith('http') ? img.url : BING_BASE + img.url;
+                const url = getFullUrl(img.url); 
                 const dateStr = img.enddate || '';
                 const displayDate = formatDisplayDate(dateStr);
                 const copyright = img.copyright || 'Bing 壁纸';
