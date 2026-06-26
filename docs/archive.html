@@ -282,7 +282,6 @@
     <script>
         // ============ 配置 ============
         const BING_BASE = 'https://cn.bing.com';
-        // 从本地 history.json 读取数据
         const HISTORY_URL = 'history.json';
 
         // ============ 工具函数 ============
@@ -312,7 +311,6 @@
                 if (!Array.isArray(data) || data.length === 0) {
                     throw new Error('历史数据为空');
                 }
-                // 按 enddate 降序排列（最新的在前）
                 data.sort((a, b) => parseInt(b.enddate) - parseInt(a.enddate));
                 return data;
             } catch (error) {
@@ -354,33 +352,35 @@
             totalCount.textContent = images.length;
 
             grid.innerHTML = images.map(img => {
-                // 构建完整 URL
                 const url = img.url.startsWith('http') ? img.url : BING_BASE + img.url;
                 const dateStr = img.enddate || '';
                 const displayDate = formatDisplayDate(dateStr);
                 const copyright = img.copyright || 'Bing 壁纸';
-              // 生成 4K 高清链接
-              let hdUrl = url;
-              // 替换分辨率为 4K
-              hdUrl = hdUrl.replace(/1920x1080/g, '3840x2160');
-              hdUrl = hdUrl.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
-              // 如果还没有 uhd 参数，添加
-              if (!hdUrl.includes('uhd=1')) {
-                  hdUrl = hdUrl.includes('?') 
-                      ? hdUrl + '&uhd=1&uhdwidth=3840&uhdheight=2160' 
-                      : hdUrl + '?uhd=1&uhdwidth=3840&uhdheight=2160';
-              }
+
+                // ⭐ 生成 4K 高清链接（与首页一致）
+                let hdUrl = url;
+                // 替换 _1920x1080 为 _UHD
+                hdUrl = hdUrl.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+                hdUrl = hdUrl.replace(/1920x1080/g, 'UHD');
+                // 移除多余的 rf 参数
+                hdUrl = hdUrl.replace(/&rf=LaDigue_1920x1080\.jpg/g, '');
+                // 添加 4K 参数
+                if (hdUrl.includes('?')) {
+                    hdUrl = hdUrl + '&w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
+                } else {
+                    hdUrl = hdUrl + '?w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
+                }
 
                 return `
-                        <div class="card" title="${copyright}">
-                            <img src="${url}" alt="${copyright}" loading="lazy" onerror="this.style.display='none'" />
-                            <div class="info">
-                                <div class="date">📅 ${displayDate}</div>
-                                <div class="copyright">${copyright}</div>
-                                <a href="${hdUrl}" class="download-btn" target="_blank">⬇️ 下载 4K</a>
-                            </div>
+                    <div class="card" title="${copyright}">
+                        <img src="${url}" alt="${copyright}" loading="lazy" onerror="this.style.display='none'" />
+                        <div class="info">
+                            <div class="date">📅 ${displayDate}</div>
+                            <div class="copyright">${copyright}</div>
+                            <a href="${hdUrl}" class="download-btn" target="_blank">⬇️ 下载 4K</a>
                         </div>
-                    `;
+                    </div>
+                `;
             }).join('');
         }
 
@@ -407,18 +407,14 @@
                     return;
                 }
 
-                // 填充筛选器
                 populateFilters(allImages);
 
-                // 获取当前筛选条件
                 const yearFilter = document.getElementById('yearFilter');
                 const monthFilter = document.getElementById('monthFilter');
 
-                // 初始渲染
                 const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
                 renderGrid(filtered);
 
-                // 监听筛选变化
                 yearFilter.addEventListener('change', () => {
                     const filtered2 = filterImages(allImages, yearFilter.value, monthFilter.value);
                     renderGrid(filtered2);
@@ -434,7 +430,6 @@
             }
         }
 
-        // ============ 启动 ============
         document.addEventListener('DOMContentLoaded', main);
     </script>
 
