@@ -16,27 +16,30 @@ jobs:
       - name: Fetch today's wallpaper
         id: fetch
         run: |
-          # 获取今天的壁纸数据
           curl -s "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&setmkt=zh-CN" > today.json
           echo "✅ 获取今日壁纸"
-          cat today.json
 
       - name: Merge into history.json
         run: |
-          # 安装 jq 用于处理 JSON（Ubuntu 自带）
-          # 读取现有的 history.json，如果不存在则创建空数组
+          # 读取现有的 history.json
           if [ -f docs/history.json ]; then
             cat docs/history.json > history_old.json
           else
             echo '[]' > history_old.json
           fi
 
-          # 从 today.json 提取图片数据
-          jq '.images' today.json > today_images.json
+          # 精简数据 + 4K 转换
+          jq '.images | map({
+              startdate: .startdate,
+              enddate: .enddate,
+              url: (.url | gsub("1920x1080"; "3840x2160") | gsub("_1920x1080\\.jpg"; "_UHD.jpg")),
+              urlbase: .urlbase,
+              copyright: (.copyright | gsub("\\s*\\(©[^)]*\\)\\s*"; "") | gsub("\\s*,\\s*$"; ""))
+          })' today.json > today_clean.json
 
-          # 合并：新数据 + 旧数据，按 enddate 去重
-          jq -s '.[0] + .[1] | unique_by(.enddate) | sort_by(.enddate) | reverse' \
-            today_images.json history_old.json > docs/history.json
+          # 合并去重
+          jq -s '.[0] + .[1] | unique_by(.startdate) | sort_by(.startdate) | reverse' \
+            today_clean.json history_old.json > docs/history.json
 
           echo "✅ 合并完成，共 $(jq 'length' docs/history.json) 张壁纸"
 
