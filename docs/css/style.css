@@ -55,7 +55,7 @@ section {
 }
 
 section h2 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     margin-bottom: 20px;
     color: #ccc;
     font-weight: 600;
@@ -310,27 +310,6 @@ footer .footer-small {
     .btn {
         text-align: center;
     }
-}
-
-/* ========== 今日壁纸按钮布局 ========== */
-#todayCard .info .actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 14px;
-}
-
-#todayCard .info .actions .btn-group {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-#todayCard .info .actions .archive-link {
-    margin-left: auto;
-    flex-shrink: 0;
 }
 
 /* 响应式：小屏幕时归档按钮换行 */
