@@ -2,13 +2,14 @@
  * Bing 每日壁纸 - 纯前端项目
  * 使用多个 CORS 代理，带自动重试 + 浏览器缓存
  * 精简版：只保留必要字段，去掉版权符号
- * 历史壁纸从 history.json 读取，不限数量
+ * 历史壁纸从 history.json 读取，显示 10 张
  */
 
 // ============ 配置 ============
 const BING_BASE = 'https://cn.bing.com';
 const API_TIMEOUT = 5000;
 const MAX_RETRIES = 1;
+const HISTORY_LIMIT = 10; // ⭐ 历史壁纸显示数量
 
 const CACHE_KEY = 'bing_wallpaper_cache';
 const CACHE_EXPIRY = 24 * 60 * 60 * 1000;
@@ -234,8 +235,10 @@ function renderHistoryFromData(history) {
         return;
     }
 
-    container.innerHTML = history.map(img => {
-        // ⭐ 判断 url 是否已经是完整链接
+    // ⭐ 只取前 10 张
+    const limited = history.slice(0, HISTORY_LIMIT);
+
+    container.innerHTML = limited.map(img => {
         let url = img.url;
         if (url && !url.startsWith('http')) {
             url = BING_BASE + url;
@@ -295,11 +298,11 @@ async function main() {
         if (historyData && historyData.length > 1) {
             const historyImages = historyData.filter(item => item.enddate !== todayDate);
             renderHistoryFromData(historyImages);
-            console.log(`📚 显示 ${historyImages.length} 张历史壁纸（从 history.json）`);
+            console.log(`📚 显示 ${Math.min(historyImages.length, HISTORY_LIMIT)} 张历史壁纸（从 history.json）`);
         } else {
             const fallbackHistory = images.slice(1);
             renderHistoryFromData(fallbackHistory);
-            console.log(`📚 降级方案：显示 ${fallbackHistory.length} 张历史壁纸（从 API）`);
+            console.log(`📚 降级方案：显示 ${Math.min(fallbackHistory.length, HISTORY_LIMIT)} 张历史壁纸（从 API）`);
         }
 
     } catch (error) {
