@@ -6,12 +6,7 @@
     <title>壁纸归档 · Bing 每日壁纸</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: #0a0a0a;
@@ -19,7 +14,6 @@
             min-height: 100vh;
             padding: 20px;
         }
-
         header {
             max-width: 1400px;
             margin: 0 auto 30px;
@@ -30,14 +24,12 @@
             padding-bottom: 16px;
             border-bottom: 1px solid #2a2a2a;
         }
-
         header h1 {
             font-size: 2rem;
             background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         header .nav-link {
             color: #4d96ff;
             text-decoration: none;
@@ -47,12 +39,7 @@
             border-radius: 8px;
             transition: all 0.2s;
         }
-
-        header .nav-link:hover {
-            background: #4d96ff;
-            color: #fff;
-        }
-
+        header .nav-link:hover { background: #4d96ff; color: #fff; }
         .filters {
             max-width: 1400px;
             margin: 0 auto 30px;
@@ -64,13 +51,7 @@
             padding: 16px 20px;
             border-radius: 12px;
         }
-
-        .filters label {
-            color: #aaa;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
+        .filters label { color: #aaa; font-size: 0.9rem; font-weight: 600; }
         .filters select {
             background: #2a2a2a;
             color: #e0e0e0;
@@ -82,22 +63,9 @@
             outline: none;
             min-width: 120px;
         }
-
-        .filters select:focus {
-            border-color: #4d96ff;
-        }
-
-        .filters .stats {
-            margin-left: auto;
-            color: #888;
-            font-size: 0.9rem;
-        }
-
-        .filters .stats span {
-            color: #e0e0e0;
-            font-weight: 600;
-        }
-
+        .filters select:focus { border-color: #4d96ff; }
+        .filters .stats { margin-left: auto; color: #888; font-size: 0.9rem; }
+        .filters .stats span { color: #e0e0e0; font-weight: 600; }
         .grid {
             max-width: 1400px;
             margin: 0 auto;
@@ -105,7 +73,6 @@
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 16px;
         }
-
         .card {
             background: #161616;
             border-radius: 12px;
@@ -113,12 +80,7 @@
             transition: transform 0.25s ease, box-shadow 0.25s ease;
             cursor: pointer;
         }
-
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-        }
-
+        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
         .card img {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -126,17 +88,8 @@
             display: block;
             background: #111;
         }
-
-        .card .info {
-            padding: 10px 14px 14px;
-        }
-
-        .card .info .date {
-            font-size: 0.85rem;
-            color: #888;
-            font-weight: 600;
-        }
-
+        .card .info { padding: 10px 14px 14px; }
+        .card .info .date { font-size: 0.85rem; color: #888; font-weight: 600; }
         .card .info .copyright {
             font-size: 0.75rem;
             color: #666;
@@ -145,33 +98,35 @@
             text-overflow: ellipsis;
             margin-top: 2px;
         }
-
-        .card .info .download-btn {
-            display: inline-block;
+        .card .info .btn-group {
+            display: flex;
+            gap: 8px;
             margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .card .info .btn-group .download-btn {
+            display: inline-block;
             padding: 4px 14px;
-            background: #4d96ff;
             color: #fff;
             border-radius: 6px;
             text-decoration: none;
             font-size: 0.75rem;
             font-weight: 600;
             transition: background 0.2s;
+            border: none;
+            cursor: pointer;
         }
-
-        .card .info .download-btn:hover {
-            background: #3a7bd5;
-        }
-
-        .loading,
-        .empty {
+        .card .info .btn-group .btn-4k { background: #4d96ff; }
+        .card .info .btn-group .btn-4k:hover { background: #3a7bd5; }
+        .card .info .btn-group .btn-1080p { background: #6c757d; }
+        .card .info .btn-group .btn-1080p:hover { background: #5a6268; }
+        .loading, .empty {
             text-align: center;
             padding: 60px 0;
             color: #666;
             font-size: 1rem;
             grid-column: 1 / -1;
         }
-
         .loading::after {
             content: "";
             display: inline-block;
@@ -184,13 +139,7 @@
             animation: spin 0.8s linear infinite;
             vertical-align: middle;
         }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
+        @keyframes spin { to { transform: rotate(360deg); } }
         footer {
             max-width: 1400px;
             margin: 40px auto 0;
@@ -200,91 +149,48 @@
             color: #555;
             font-size: 0.85rem;
         }
-
         @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-            header h1 {
-                font-size: 1.5rem;
-            }
-            .filters {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .filters .stats {
-                margin-left: 0;
-                text-align: center;
-            }
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-                gap: 12px;
-            }
+            header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            header h1 { font-size: 1.5rem; }
+            .filters { flex-direction: column; align-items: stretch; }
+            .filters .stats { margin-left: 0; text-align: center; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
         }
-
         @media (max-width: 480px) {
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                gap: 10px;
-            }
-            .card .info {
-                padding: 6px 10px 10px;
-            }
-            .card .info .date {
-                font-size: 0.75rem;
-            }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+            .card .info { padding: 6px 10px 10px; }
+            .card .info .date { font-size: 0.75rem; }
+            .card .info .btn-group .download-btn { font-size: 0.7rem; padding: 3px 10px; }
         }
     </style>
 </head>
 <body>
-
     <header>
         <h1>📚 壁纸归档</h1>
         <a href="/" class="nav-link">🏠 返回首页</a>
     </header>
-
     <div class="filters">
         <label for="yearFilter">📅 年份</label>
         <select id="yearFilter"></select>
-
         <label for="monthFilter">📆 月份</label>
         <select id="monthFilter">
             <option value="all">全部月份</option>
-            <option value="01">1 月</option>
-            <option value="02">2 月</option>
-            <option value="03">3 月</option>
-            <option value="04">4 月</option>
-            <option value="05">5 月</option>
-            <option value="06">6 月</option>
-            <option value="07">7 月</option>
-            <option value="08">8 月</option>
-            <option value="09">9 月</option>
-            <option value="10">10 月</option>
-            <option value="11">11 月</option>
-            <option value="12">12 月</option>
+            <option value="01">1 月</option><option value="02">2 月</option>
+            <option value="03">3 月</option><option value="04">4 月</option>
+            <option value="05">5 月</option><option value="06">6 月</option>
+            <option value="07">7 月</option><option value="08">8 月</option>
+            <option value="09">9 月</option><option value="10">10 月</option>
+            <option value="11">11 月</option><option value="12">12 月</option>
         </select>
-
-        <div class="stats">
-            共 <span id="totalCount">0</span> 张壁纸
-        </div>
+        <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
     </div>
-
-    <div class="grid" id="grid">
-        <div class="loading">加载壁纸数据中...</div>
-    </div>
-
-    <footer>
-        <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
-    </footer>
+    <div class="grid" id="grid"><div class="loading">加载壁纸数据中...</div></div>
+    <footer><p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p></footer>
 
     <script>
-        // ============ 配置 ============
         const BING_BASE = 'https://cn.bing.com';
         const HISTORY_URL = 'history.json';
 
-        // ============ 工具函数 ============
         function formatDisplayDate(dateStr) {
             if (dateStr && dateStr.length === 8) {
                 return `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
@@ -294,23 +200,47 @@
 
         function getYearMonth(dateStr) {
             if (dateStr && dateStr.length === 8) {
-                return {
-                    year: dateStr.slice(0, 4),
-                    month: dateStr.slice(4, 6)
-                };
+                return { year: dateStr.slice(0, 4), month: dateStr.slice(4, 6) };
             }
             return { year: '未知', month: '未知' };
         }
 
-        // ============ 获取数据 ============
+        // ⭐ 获取 1080P 链接（从任何格式转换）
+        function get1080pUrl(url) {
+            let result = url;
+            // 如果包含 _UHD，替换为 _1920x1080
+            result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+            // 如果包含 _UHD.jpg? 的情况
+            result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
+            // 移除 4K 参数 (w=3840&h=2160&rs=1&c=4)
+            result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+            // 如果已经是 1920x1080，保持不变
+            return result;
+        }
+
+        // ⭐ 获取 4K 链接
+        function get4kUrl(url) {
+            let result = url;
+            // 替换 _1920x1080 为 _UHD
+            result = result.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+            result = result.replace(/1920x1080/g, 'UHD');
+            result = result.replace(/&rf=LaDigue_1920x1080\.jpg/g, '');
+            // 移除已有的 4K 参数再重新添加
+            result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+            if (result.includes('?')) {
+                result = result + '&w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
+            } else {
+                result = result + '?w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
+            }
+            return result;
+        }
+
         async function fetchHistory() {
             try {
                 const response = await fetch(HISTORY_URL);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-                if (!Array.isArray(data) || data.length === 0) {
-                    throw new Error('历史数据为空');
-                }
+                if (!Array.isArray(data) || data.length === 0) throw new Error('历史数据为空');
                 data.sort((a, b) => parseInt(b.enddate) - parseInt(a.enddate));
                 return data;
             } catch (error) {
@@ -319,7 +249,6 @@
             }
         }
 
-        // ============ 渲染筛选器 ============
         function populateFilters(images) {
             const yearSet = new Set();
             images.forEach(img => {
@@ -327,7 +256,6 @@
                 if (year !== '未知') yearSet.add(year);
             });
             const years = Array.from(yearSet).sort().reverse();
-
             const yearSelect = document.getElementById('yearFilter');
             yearSelect.innerHTML = '<option value="all">全部年份</option>';
             years.forEach(y => {
@@ -338,17 +266,14 @@
             });
         }
 
-        // ============ 渲染网格 ============
         function renderGrid(images) {
             const grid = document.getElementById('grid');
             const totalCount = document.getElementById('totalCount');
-
             if (!images || images.length === 0) {
                 grid.innerHTML = '<div class="empty">😅 没有找到匹配的壁纸</div>';
                 totalCount.textContent = '0';
                 return;
             }
-
             totalCount.textContent = images.length;
 
             grid.innerHTML = images.map(img => {
@@ -357,19 +282,9 @@
                 const displayDate = formatDisplayDate(dateStr);
                 const copyright = img.copyright || 'Bing 壁纸';
 
-                // ⭐ 生成 4K 高清链接（与首页一致）
-                let hdUrl = url;
-                // 替换 _1920x1080 为 _UHD
-                hdUrl = hdUrl.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
-                hdUrl = hdUrl.replace(/1920x1080/g, 'UHD');
-                // 移除多余的 rf 参数
-                hdUrl = hdUrl.replace(/&rf=LaDigue_1920x1080\.jpg/g, '');
-                // 添加 4K 参数
-                if (hdUrl.includes('?')) {
-                    hdUrl = hdUrl + '&w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
-                } else {
-                    hdUrl = hdUrl + '?w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
-                }
+                // ⭐ 生成两个链接
+                const hd1080Url = get1080pUrl(url);
+                const hd4kUrl = get4kUrl(url);
 
                 return `
                     <div class="card" title="${copyright}">
@@ -377,14 +292,16 @@
                         <div class="info">
                             <div class="date">📅 ${displayDate}</div>
                             <div class="copyright">${copyright}</div>
-                            <a href="${hdUrl}" class="download-btn" target="_blank">⬇️ 下载 4K</a>
+                            <div class="btn-group">
+                                <a href="${hd4kUrl}" class="download-btn btn-4k" target="_blank">⬇️ 4K</a>
+                                <a href="${hd1080Url}" class="download-btn btn-1080p" target="_blank">⬇️ 1080P</a>
+                            </div>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        // ============ 筛选逻辑 ============
         function filterImages(images, year, month) {
             return images.filter(img => {
                 const { year: y, month: m } = getYearMonth(img.enddate);
@@ -394,44 +311,31 @@
             });
         }
 
-        // ============ 主函数 ============
         async function main() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
-
             try {
                 const allImages = await fetchHistory();
-
                 if (!allImages || allImages.length === 0) {
                     grid.innerHTML = '<div class="empty">😅 暂无壁纸数据，等待自动归档...</div>';
                     return;
                 }
-
                 populateFilters(allImages);
-
                 const yearFilter = document.getElementById('yearFilter');
                 const monthFilter = document.getElementById('monthFilter');
-
                 const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
                 renderGrid(filtered);
-
                 yearFilter.addEventListener('change', () => {
-                    const filtered2 = filterImages(allImages, yearFilter.value, monthFilter.value);
-                    renderGrid(filtered2);
+                    renderGrid(filterImages(allImages, yearFilter.value, monthFilter.value));
                 });
-
                 monthFilter.addEventListener('change', () => {
-                    const filtered2 = filterImages(allImages, yearFilter.value, monthFilter.value);
-                    renderGrid(filtered2);
+                    renderGrid(filterImages(allImages, yearFilter.value, monthFilter.value));
                 });
-
             } catch (error) {
                 grid.innerHTML = `<div class="empty">❌ 加载失败：${error.message || '未知错误'}</div>`;
             }
         }
-
         document.addEventListener('DOMContentLoaded', main);
     </script>
-
 </body>
 </html>
