@@ -1,17 +1,12 @@
 /**
  * Bing 每日壁纸 - 纯前端项目
- * 使用多个 CORS 代理，带自动重试 + 浏览器缓存
- * 精简版：只保留必要字段，去掉版权符号
- * 历史壁纸从 history.json 读取
- * 新增：电影感壁纸轮播 + 历史壁纸网格
+ * 精简版：只保留今日壁纸 + 电影感轮播
  */
 
 // ============ 配置 ============
 const BING_BASE = 'https://cn.bing.com';
 const API_TIMEOUT = 5000;
 const MAX_RETRIES = 1;
-const CAROUSEL_COUNT = 20; // 轮播显示数量
-const SLIDES_PER_VIEW = 5; // 轮播每次显示数量
 
 const CACHE_KEY = 'bing_wallpaper_cache';
 const CACHE_EXPIRY = 24 * 60 * 60 * 1000;
@@ -257,193 +252,6 @@ function renderToday(images) {
     `;
 }
 
-// ============ 渲染历史壁纸网格 ============
-
-function renderHistoryFromData(history) {
-    const container = document.getElementById('historyGrid');
-    if (!history || history.length === 0) {
-        container.innerHTML = '<div class="loading">暂无历史壁纸</div>';
-        return;
-    }
-
-    const limited = history.slice(0, HISTORY_LIMIT);
-
-    container.innerHTML = limited.map(img => {
-        let url = img.url;
-        if (url && !url.startsWith('http')) {
-            url = BING_BASE + url;
-        }
-        const dateStr = img.enddate || '';
-        const displayDate = formatDisplayDate(dateStr);
-        const copyright = img.copyright || 'Bing 壁纸';
-
-        return `
-            <div class="history-item" title="${copyright}" onclick="window.open('${url}', '_blank')">
-                <img
-                    src="${url}"
-                    alt="${copyright}"
-                    loading="lazy"
-                    onerror="this.style.display='none'"
-                />
-                <div class="info">
-                    <div class="date">📅 ${displayDate}</div>
-                    <div class="copyright">${copyright}</div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-// ============ 历史壁纸轮播 ============
-
-let carouselData = [];
-let currentIndex = 0;
-let autoPlayTimer = null;
-
-function renderCarousel(images) {
-    const track = document.getElementById('carouselTrack');
-    const dots = document.getElementById('carouselDots');
-    const prevBtn = document.getElementById('carouselPrev');
-    const nextBtn = document.getElementById('carouselNext');
-    
-    if (!track) return;
-    
-    if (!images || images.length === 0) {
-        track.innerHTML = '<div style="padding: 20px; text-align: center; color: #666; width:100%;">暂无历史壁纸</div>';
-        if (dots) dots.innerHTML = '';
-        return;
-    }
-    
-    const slideImages = images.slice(0, CAROUSEL_COUNT);
-    carouselData = slideImages;
-    currentIndex = 0;
-    
-    track.innerHTML = slideImages.map((img, index) => {
-        let url = img.url;
-        if (url && !url.startsWith('http')) {
-            url = BING_BASE + url;
-        }
-        const dateStr = img.enddate || '';
-        const displayDate = formatDisplayDate(dateStr);
-        const copyright = img.copyright || 'Bing 壁纸';
-        
-        return `
-            <div class="carousel-slide" data-index="${index}" onclick="window.open('${url}', '_blank')">
-                <img src="${url}" alt="${copyright}" loading="lazy" onerror="this.style.display='none'" />
-                <div class="slide-info">
-                    <div class="slide-date">📅 ${displayDate}</div>
-                    <div class="slide-title">${copyright}</div>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    const totalDots = Math.ceil(slideImages.length / SLIDES_PER_VIEW);
-    if (dots) {
-        dots.innerHTML = Array.from({ length: totalDots }, (_, i) => 
-            `<button class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></button>`
-        ).join('');
-    }
-    
-    updateCarouselButtons();
-    
-    if (prevBtn) {
-        prevBtn.onclick = () => moveCarousel(-1);
-        prevBtn.classList.remove('disabled');
-    }
-    if (nextBtn) {
-        nextBtn.onclick = () => moveCarousel(1);
-        nextBtn.classList.remove('disabled');
-    }
-    if (dots) {
-        dots.querySelectorAll('.dot').forEach(dot => {
-            dot.onclick = () => goToCarousel(parseInt(dot.dataset.index));
-        });
-    }
-    
-    startAutoPlay();
-}
-
-function updateCarouselButtons() {
-    const prevBtn = document.getElementById('carouselPrev');
-    const nextBtn = document.getElementById('carouselNext');
-    const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
-    
-    if (prevBtn) prevBtn.classList.toggle('disabled', currentIndex === 0);
-    if (nextBtn) nextBtn.classList.toggle('disabled', currentIndex >= total - 1 || total === 0);
-    
-    const dots = document.querySelectorAll('.carousel-dots .dot');
-    dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === currentIndex);
-    });
-}
-
-function moveCarousel(direction) {
-    const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
-    if (total === 0) return;
-    const newIndex = Math.max(0, Math.min(total - 1, currentIndex + direction));
-    if (newIndex === currentIndex) return;
-    currentIndex = newIndex;
-    updateCarouselPosition();
-    updateCarouselButtons();
-    resetAutoPlay();
-}
-
-function goToCarousel(index) {
-    const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
-    if (index < 0 || index >= total) return;
-    currentIndex = index;
-    updateCarouselPosition();
-    updateCarouselButtons();
-    resetAutoPlay();
-}
-
-function updateCarouselPosition() {
-    const track = document.getElementById('carouselTrack');
-    if (!track) return;
-    const firstSlide = track.querySelector('.carousel-slide');
-    if (!firstSlide) return;
-    const slideWidth = firstSlide.offsetWidth || 0;
-    const gap = 12;
-    const offset = currentIndex * (slideWidth + gap) * SLIDES_PER_VIEW;
-    track.style.transform = `translateX(-${offset}px)`;
-}
-
-function startAutoPlay() {
-    stopAutoPlay();
-    autoPlayTimer = setInterval(() => {
-        const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
-        if (total === 0) return;
-        if (currentIndex >= total - 1) {
-            currentIndex = 0;
-        } else {
-            currentIndex++;
-        }
-        updateCarouselPosition();
-        updateCarouselButtons();
-    }, 4000);
-}
-
-function stopAutoPlay() {
-    if (autoPlayTimer) {
-        clearInterval(autoPlayTimer);
-        autoPlayTimer = null;
-    }
-}
-
-function resetAutoPlay() {
-    stopAutoPlay();
-    startAutoPlay();
-}
-
-let resizeTimeout;
-window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        updateCarouselPosition();
-    }, 200);
-});
-
 // ============ 电影感壁纸轮播 ============
 
 let movieData = [];
@@ -574,12 +382,10 @@ function showError(containerId, message) {
 
 async function main() {
     const todayContainer = document.getElementById('todayCard');
-    const historyContainer = document.getElementById('historyGrid');
-    const carouselTrack = document.getElementById('carouselTrack');
+    const slide = document.getElementById('movieSlide');
 
     if (todayContainer) todayContainer.innerHTML = '<div class="loading">加载今日壁纸中...</div>';
-    if (historyContainer) historyContainer.innerHTML = '<div class="loading">加载历史壁纸中...</div>';
-    if (carouselTrack) carouselTrack.innerHTML = '<div class="loading">加载历史壁纸中...</div>';
+    if (slide) slide.style.backgroundImage = '';
 
     updateClock();
     setInterval(updateClock, 30000);
@@ -589,8 +395,7 @@ async function main() {
 
         if (!images || images.length === 0) {
             showError('todayCard', '未能获取壁纸数据，请稍后重试');
-            if (historyContainer) historyContainer.innerHTML = '';
-            if (carouselTrack) carouselTrack.innerHTML = '';
+            if (slide) slide.style.backgroundImage = '';
             return;
         }
 
@@ -602,20 +407,17 @@ async function main() {
         if (historyData && historyData.length > 1) {
             const historyImages = historyData.filter(item => item.enddate !== todayDate);
             renderMovieCarousel(historyImages);
-            console.log(`📚 电影轮播显示 ${Math.min(historyImages.length, 15)} 张，网格显示 ${historyImages.length} 张`);
+            console.log(`🎬 电影轮播显示 ${Math.min(historyImages.length, 15)} 张`);
         } else {
             const fallbackHistory = images.slice(1);
-            renderCarousel(fallbackHistory);
-            renderHistoryFromData(fallbackHistory);
             renderMovieCarousel(fallbackHistory);
-            console.log(`📚 降级方案：电影轮播显示 ${Math.min(fallbackHistory.length, 15)} 张`);
+            console.log(`🎬 降级方案：电影轮播显示 ${Math.min(fallbackHistory.length, 15)} 张`);
         }
 
     } catch (error) {
         console.error('主流程错误:', error);
         showError('todayCard', `加载失败：${error.message || '未知错误'}`);
-        if (historyContainer) historyContainer.innerHTML = '';
-        if (carouselTrack) carouselTrack.innerHTML = '';
+        if (slide) slide.style.backgroundImage = '';
     }
 }
 
