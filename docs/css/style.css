@@ -311,3 +311,178 @@ footer .footer-small {
         text-align: center;
     }
 }
+
+/* ===== 历史壁纸轮播 ===== */
+#carouselSection {
+    max-width: 1200px;
+    margin: 30px auto 10px;
+}
+
+#carouselSection h2 {
+    font-size: 1.3rem;
+    color: #ccc;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.carousel-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #161616;
+    border-radius: 16px;
+    padding: 16px 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.carousel-track-wrapper {
+    overflow: hidden;
+    flex: 1;
+    border-radius: 12px;
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    gap: 12px;
+}
+
+.carousel-slide {
+    flex: 0 0 calc(20% - 10px); /* 默认显示5张 */
+    min-width: 0;
+    background: #1e1e1e;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.carousel-slide:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(77, 150, 255, 0.2);
+}
+
+.carousel-slide img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+    background: #111;
+}
+
+.carousel-slide .slide-info {
+    padding: 8px 10px 10px;
+}
+
+.carousel-slide .slide-date {
+    font-size: 0.7rem;
+    color: #888;
+}
+
+.carousel-slide .slide-title {
+    font-size: 0.7rem;
+    color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+/* 轮播按钮 */
+.carousel-btn {
+    background: rgba(77, 150, 255, 0.15);
+    border: 1px solid rgba(77, 150, 255, 0.3);
+    color: #4d96ff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.carousel-btn:hover {
+    background: rgba(77, 150, 255, 0.3);
+    border-color: #4d96ff;
+}
+
+.carousel-btn:active {
+    transform: scale(0.95);
+}
+
+.carousel-btn.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* 指示点 */
+.carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.carousel-dots .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3a3a3a;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.carousel-dots .dot.active {
+    background: #4d96ff;
+    width: 24px;
+    border-radius: 4px;
+}
+
+.carousel-dots .dot:hover {
+    background: #5a5a5a;
+}
+
+.carousel-dots .dot.active:hover {
+    background: #4d96ff;
+}
+
+/* 响应式 */
+@media (max-width: 1024px) {
+    .carousel-slide {
+        flex: 0 0 calc(33.33% - 10px); /* 显示3张 */
+    }
+}
+
+@media (max-width: 768px) {
+    .carousel-container {
+        padding: 12px 8px;
+        gap: 8px;
+    }
+    .carousel-slide {
+        flex: 0 0 calc(50% - 8px); /* 显示2张 */
+    }
+    .carousel-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel-slide {
+        flex: 0 0 calc(100% - 0px); /* 显示1张 */
+    }
+    .carousel-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
+    }
+}
