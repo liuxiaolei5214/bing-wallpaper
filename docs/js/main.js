@@ -2,18 +2,22 @@
  * Bing 每日壁纸 - 纯前端项目
  * 使用多个 CORS 代理，带自动重试 + 浏览器缓存
  * 精简版：只保留必要字段，去掉版权符号
- * 历史壁纸从 history.json 读取，显示 10 张
+ * 历史壁纸从 history.json 读取，不限数量
+ * 新增：历史壁纸轮播
  */
 
 // ============ 配置 ============
 const BING_BASE = 'https://cn.bing.com';
 const API_TIMEOUT = 5000;
 const MAX_RETRIES = 1;
-const HISTORY_LIMIT = 10; // ⭐ 历史壁纸显示数量
+const HISTORY_LIMIT = 10; // 历史壁纸显示数量
+const CAROUSEL_COUNT = 20; // 轮播显示数量
+const SLIDES_PER_VIEW = 5; // 轮播每次显示数量
 
 const CACHE_KEY = 'bing_wallpaper_cache';
 const CACHE_EXPIRY = 24 * 60 * 60 * 1000;
 
+// 多个代理，按优先级排列
 const PROXIES = [
     (url) => `https://bingdl.lei5214.cc.cd/?target=${encodeURIComponent(url)}`,
     (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -25,6 +29,8 @@ function buildBingUrl() {
     const timestamp = Date.now();
     return `https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=8&nc=${timestamp}&pid=hp&FORM=BEHPTB&uhd=1&uhdwidth=3840&uhdheight=2160&setmkt=zh-CN`;
 }
+
+// ============ 缓存管理 ============
 
 function getCachedWallpapers() {
     try {
@@ -60,6 +66,8 @@ function setCachedWallpapers(images) {
         console.warn('缓存保存失败:', e);
     }
 }
+
+// ============ 工具函数 ============
 
 function getBeijingTime() {
     const now = new Date();
@@ -106,6 +114,8 @@ function cleanImageData(img) {
     };
 }
 
+// ============ 从 history.json 读取历史数据 ============
+
 async function fetchHistoryFromJSON() {
     try {
         const response = await fetch('history.json');
@@ -122,6 +132,8 @@ async function fetchHistoryFromJSON() {
         return null;
     }
 }
+
+// ============ 核心：并行请求 + 缓存 ============
 
 async function fetchWallpapers() {
     const cached = getCachedWallpapers();
@@ -187,6 +199,8 @@ async function fetchWallpapers() {
     throw new Error(`无法获取壁纸数据：${errors.slice(0, 3).join('；')}`);
 }
 
+// ============ 渲染今日壁纸 ============
+
 function renderToday(images) {
     const container = document.getElementById('todayCard');
     if (!images || images.length === 0) {
@@ -202,9 +216,6 @@ function renderToday(images) {
     const dateStr = img.enddate || '';
     const displayDate = formatDisplayDate(dateStr);
     const copyright = img.copyright || 'Bing 每日壁纸';
-
-    // SVG 下载图标
-    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
 
     // 1080P 链接
     let hd1080Url = url;
@@ -222,6 +233,8 @@ function renderToday(images) {
     } else {
         hd4kUrl = hd4kUrl + '?w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
     }
+
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
 
     container.innerHTML = `
         <img src="${url}" alt="${copyright}" loading="eager" onerror="this.src='${url}'" />
@@ -245,6 +258,8 @@ function renderToday(images) {
     `;
 }
 
+// ============ 渲染历史壁纸网格 ============
+
 function renderHistoryFromData(history) {
     const container = document.getElementById('historyGrid');
     if (!history || history.length === 0) {
@@ -252,7 +267,6 @@ function renderHistoryFromData(history) {
         return;
     }
 
-    // ⭐ 只取前 10 张
     const limited = history.slice(0, HISTORY_LIMIT);
 
     container.innerHTML = limited.map(img => {
@@ -281,65 +295,11 @@ function renderHistoryFromData(history) {
     }).join('');
 }
 
-function showError(containerId, message) {
-    const container = document.getElementById(containerId);
-    if (container) {
-        container.innerHTML = `<div class="error">❌ ${message}</div>`;
-    }
-}
-
-async function main() {
-    const todayContainer = document.getElementById('todayCard');
-    const historyContainer = document.getElementById('historyGrid');
-
-    if (todayContainer) todayContainer.innerHTML = '<div class="loading">加载今日壁纸中...</div>';
-    if (historyContainer) historyContainer.innerHTML = '<div class="loading">加载历史壁纸中...</div>';
-
-    updateClock();
-    setInterval(updateClock, 30000);
-
-    try {
-        const images = await fetchWallpapers();
-
-        if (!images || images.length === 0) {
-            showError('todayCard', '未能获取壁纸数据，请稍后重试');
-            if (historyContainer) historyContainer.innerHTML = '';
-            return;
-        }
-
-        renderToday(images);
-        const todayDate = images[0]?.enddate || '';
-
-        const historyData = await fetchHistoryFromJSON();
-
-        if (historyData && historyData.length > 1) {
-            const historyImages = historyData.filter(item => item.enddate !== todayDate);
-            renderHistoryFromData(historyImages);
-            console.log(`📚 显示 ${Math.min(historyImages.length, HISTORY_LIMIT)} 张历史壁纸（从 history.json）`);
-        } else {
-            const fallbackHistory = images.slice(1);
-            renderHistoryFromData(fallbackHistory);
-            console.log(`📚 降级方案：显示 ${Math.min(fallbackHistory.length, HISTORY_LIMIT)} 张历史壁纸（从 API）`);
-        }
-
-    } catch (error) {
-        console.error('主流程错误:', error);
-        showError('todayCard', `加载失败：${error.message || '未知错误'}`);
-        if (historyContainer) historyContainer.innerHTML = '';
-    }
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', main);
-} else {
-    main();
-}
-
 // ============ 历史壁纸轮播 ============
+
 let carouselData = [];
 let currentIndex = 0;
 let autoPlayTimer = null;
-const SLIDES_PER_VIEW = 5; // 每次显示的卡片数
 
 function renderCarousel(images) {
     const track = document.getElementById('carouselTrack');
@@ -347,16 +307,21 @@ function renderCarousel(images) {
     const prevBtn = document.getElementById('carouselPrev');
     const nextBtn = document.getElementById('carouselNext');
     
-    if (!track || !images || images.length === 0) {
-        if (track) track.innerHTML = '<div class="loading" style="grid-column:1/-1;padding:20px;">暂无历史壁纸</div>';
+    if (!track) return;
+    
+    if (!images || images.length === 0) {
+        track.innerHTML = '<div style="padding: 20px; text-align: center; color: #666; width:100%;">暂无历史壁纸</div>';
+        if (dots) dots.innerHTML = '';
         return;
     }
     
-    carouselData = images;
+    // 截取前 CAROUSEL_COUNT 张
+    const slideImages = images.slice(0, CAROUSEL_COUNT);
+    carouselData = slideImages;
     currentIndex = 0;
     
     // 生成幻灯片
-    track.innerHTML = images.map((img, index) => {
+    track.innerHTML = slideImages.map((img, index) => {
         let url = img.url;
         if (url && !url.startsWith('http')) {
             url = BING_BASE + url;
@@ -376,21 +341,33 @@ function renderCarousel(images) {
         `;
     }).join('');
     
+    // 计算总页数
+    const totalDots = Math.ceil(slideImages.length / SLIDES_PER_VIEW);
+    
     // 生成指示点
-    const totalDots = Math.ceil(images.length / SLIDES_PER_VIEW);
-    dots.innerHTML = Array.from({ length: totalDots }, (_, i) => 
-        `<button class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></button>`
-    ).join('');
+    if (dots) {
+        dots.innerHTML = Array.from({ length: totalDots }, (_, i) => 
+            `<button class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></button>`
+        ).join('');
+    }
     
     // 更新按钮状态
     updateCarouselButtons();
     
     // 绑定事件
-    if (prevBtn) prevBtn.onclick = () => moveCarousel(-1);
-    if (nextBtn) nextBtn.onclick = () => moveCarousel(1);
-    dots.querySelectorAll('.dot').forEach(dot => {
-        dot.onclick = () => goToCarousel(parseInt(dot.dataset.index));
-    });
+    if (prevBtn) {
+        prevBtn.onclick = () => moveCarousel(-1);
+        prevBtn.classList.remove('disabled');
+    }
+    if (nextBtn) {
+        nextBtn.onclick = () => moveCarousel(1);
+        nextBtn.classList.remove('disabled');
+    }
+    if (dots) {
+        dots.querySelectorAll('.dot').forEach(dot => {
+            dot.onclick = () => goToCarousel(parseInt(dot.dataset.index));
+        });
+    }
     
     // 启动自动播放
     startAutoPlay();
@@ -401,8 +378,12 @@ function updateCarouselButtons() {
     const nextBtn = document.getElementById('carouselNext');
     const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
     
-    if (prevBtn) prevBtn.classList.toggle('disabled', currentIndex === 0);
-    if (nextBtn) nextBtn.classList.toggle('disabled', currentIndex >= total - 1);
+    if (prevBtn) {
+        prevBtn.classList.toggle('disabled', currentIndex === 0);
+    }
+    if (nextBtn) {
+        nextBtn.classList.toggle('disabled', currentIndex >= total - 1 || total === 0);
+    }
     
     // 更新指示点
     const dots = document.querySelectorAll('.carousel-dots .dot');
@@ -413,6 +394,7 @@ function updateCarouselButtons() {
 
 function moveCarousel(direction) {
     const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
+    if (total === 0) return;
     const newIndex = Math.max(0, Math.min(total - 1, currentIndex + direction));
     if (newIndex === currentIndex) return;
     currentIndex = newIndex;
@@ -433,8 +415,10 @@ function goToCarousel(index) {
 function updateCarouselPosition() {
     const track = document.getElementById('carouselTrack');
     if (!track) return;
-    const slideWidth = track.querySelector('.carousel-slide')?.offsetWidth || 0;
-    const gap = 12; // gap 值
+    const firstSlide = track.querySelector('.carousel-slide');
+    if (!firstSlide) return;
+    const slideWidth = firstSlide.offsetWidth || 0;
+    const gap = 12;
     const offset = currentIndex * (slideWidth + gap) * SLIDES_PER_VIEW;
     track.style.transform = `translateX(-${offset}px)`;
 }
@@ -443,15 +427,15 @@ function startAutoPlay() {
     stopAutoPlay();
     autoPlayTimer = setInterval(() => {
         const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
+        if (total === 0) return;
         if (currentIndex >= total - 1) {
-            // 循环到开头
             currentIndex = 0;
         } else {
             currentIndex++;
         }
         updateCarouselPosition();
         updateCarouselButtons();
-    }, 4000); // 4秒切换一次
+    }, 4000);
 }
 
 function stopAutoPlay() {
@@ -474,3 +458,68 @@ window.addEventListener('resize', () => {
         updateCarouselPosition();
     }, 200);
 });
+
+// ============ 错误提示 ============
+
+function showError(containerId, message) {
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.innerHTML = `<div class="error">❌ ${message}</div>`;
+    }
+}
+
+// ============ 主函数 ============
+
+async function main() {
+    const todayContainer = document.getElementById('todayCard');
+    const historyContainer = document.getElementById('historyGrid');
+    const carouselTrack = document.getElementById('carouselTrack');
+
+    if (todayContainer) todayContainer.innerHTML = '<div class="loading">加载今日壁纸中...</div>';
+    if (historyContainer) historyContainer.innerHTML = '<div class="loading">加载历史壁纸中...</div>';
+    if (carouselTrack) carouselTrack.innerHTML = '<div class="loading">加载历史壁纸中...</div>';
+
+    updateClock();
+    setInterval(updateClock, 30000);
+
+    try {
+        const images = await fetchWallpapers();
+
+        if (!images || images.length === 0) {
+            showError('todayCard', '未能获取壁纸数据，请稍后重试');
+            if (historyContainer) historyContainer.innerHTML = '';
+            if (carouselTrack) carouselTrack.innerHTML = '';
+            return;
+        }
+
+        renderToday(images);
+        const todayDate = images[0]?.enddate || '';
+
+        const historyData = await fetchHistoryFromJSON();
+
+        if (historyData && historyData.length > 1) {
+            const historyImages = historyData.filter(item => item.enddate !== todayDate);
+            renderCarousel(historyImages);
+            renderHistoryFromData(historyImages);
+            console.log(`📚 轮播显示 ${Math.min(historyImages.length, CAROUSEL_COUNT)} 张，网格显示 ${historyImages.length} 张`);
+        } else {
+            const fallbackHistory = images.slice(1);
+            renderCarousel(fallbackHistory);
+            renderHistoryFromData(fallbackHistory);
+            console.log(`📚 降级方案：轮播显示 ${Math.min(fallbackHistory.length, CAROUSEL_COUNT)} 张`);
+        }
+
+    } catch (error) {
+        console.error('主流程错误:', error);
+        showError('todayCard', `加载失败：${error.message || '未知错误'}`);
+        if (historyContainer) historyContainer.innerHTML = '';
+        if (carouselTrack) carouselTrack.innerHTML = '';
+    }
+}
+
+// ============ 页面加载 ============
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', main);
+} else {
+    main();
+}
