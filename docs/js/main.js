@@ -272,7 +272,7 @@ function renderMovieCarousel(images) {
         return;
     }
 
-    movieData = images.slice(0, 12);
+    movieData = images.slice(0, 13);
     movieIndex = 0;
 
     thumbs.innerHTML = movieData.map((img, index) => {
