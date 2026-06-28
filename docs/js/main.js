@@ -334,3 +334,143 @@ if (document.readyState === 'loading') {
 } else {
     main();
 }
+
+// ============ 历史壁纸轮播 ============
+let carouselData = [];
+let currentIndex = 0;
+let autoPlayTimer = null;
+const SLIDES_PER_VIEW = 5; // 每次显示的卡片数
+
+function renderCarousel(images) {
+    const track = document.getElementById('carouselTrack');
+    const dots = document.getElementById('carouselDots');
+    const prevBtn = document.getElementById('carouselPrev');
+    const nextBtn = document.getElementById('carouselNext');
+    
+    if (!track || !images || images.length === 0) {
+        if (track) track.innerHTML = '<div class="loading" style="grid-column:1/-1;padding:20px;">暂无历史壁纸</div>';
+        return;
+    }
+    
+    carouselData = images;
+    currentIndex = 0;
+    
+    // 生成幻灯片
+    track.innerHTML = images.map((img, index) => {
+        let url = img.url;
+        if (url && !url.startsWith('http')) {
+            url = BING_BASE + url;
+        }
+        const dateStr = img.enddate || '';
+        const displayDate = formatDisplayDate(dateStr);
+        const copyright = img.copyright || 'Bing 壁纸';
+        
+        return `
+            <div class="carousel-slide" data-index="${index}" onclick="window.open('${url}', '_blank')">
+                <img src="${url}" alt="${copyright}" loading="lazy" onerror="this.style.display='none'" />
+                <div class="slide-info">
+                    <div class="slide-date">📅 ${displayDate}</div>
+                    <div class="slide-title">${copyright}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // 生成指示点
+    const totalDots = Math.ceil(images.length / SLIDES_PER_VIEW);
+    dots.innerHTML = Array.from({ length: totalDots }, (_, i) => 
+        `<button class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></button>`
+    ).join('');
+    
+    // 更新按钮状态
+    updateCarouselButtons();
+    
+    // 绑定事件
+    if (prevBtn) prevBtn.onclick = () => moveCarousel(-1);
+    if (nextBtn) nextBtn.onclick = () => moveCarousel(1);
+    dots.querySelectorAll('.dot').forEach(dot => {
+        dot.onclick = () => goToCarousel(parseInt(dot.dataset.index));
+    });
+    
+    // 启动自动播放
+    startAutoPlay();
+}
+
+function updateCarouselButtons() {
+    const prevBtn = document.getElementById('carouselPrev');
+    const nextBtn = document.getElementById('carouselNext');
+    const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
+    
+    if (prevBtn) prevBtn.classList.toggle('disabled', currentIndex === 0);
+    if (nextBtn) nextBtn.classList.toggle('disabled', currentIndex >= total - 1);
+    
+    // 更新指示点
+    const dots = document.querySelectorAll('.carousel-dots .dot');
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentIndex);
+    });
+}
+
+function moveCarousel(direction) {
+    const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
+    const newIndex = Math.max(0, Math.min(total - 1, currentIndex + direction));
+    if (newIndex === currentIndex) return;
+    currentIndex = newIndex;
+    updateCarouselPosition();
+    updateCarouselButtons();
+    resetAutoPlay();
+}
+
+function goToCarousel(index) {
+    const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
+    if (index < 0 || index >= total) return;
+    currentIndex = index;
+    updateCarouselPosition();
+    updateCarouselButtons();
+    resetAutoPlay();
+}
+
+function updateCarouselPosition() {
+    const track = document.getElementById('carouselTrack');
+    if (!track) return;
+    const slideWidth = track.querySelector('.carousel-slide')?.offsetWidth || 0;
+    const gap = 12; // gap 值
+    const offset = currentIndex * (slideWidth + gap) * SLIDES_PER_VIEW;
+    track.style.transform = `translateX(-${offset}px)`;
+}
+
+function startAutoPlay() {
+    stopAutoPlay();
+    autoPlayTimer = setInterval(() => {
+        const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
+        if (currentIndex >= total - 1) {
+            // 循环到开头
+            currentIndex = 0;
+        } else {
+            currentIndex++;
+        }
+        updateCarouselPosition();
+        updateCarouselButtons();
+    }, 4000); // 4秒切换一次
+}
+
+function stopAutoPlay() {
+    if (autoPlayTimer) {
+        clearInterval(autoPlayTimer);
+        autoPlayTimer = null;
+    }
+}
+
+function resetAutoPlay() {
+    stopAutoPlay();
+    startAutoPlay();
+}
+
+// 窗口尺寸变化时重新计算位置
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        updateCarouselPosition();
+    }, 200);
+});
