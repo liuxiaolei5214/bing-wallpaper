@@ -4,17 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bing 每日壁纸 · 4K</title>
-    <meta name="description" content="每日更新的必应超清壁纸，4K 高清下载" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌅</text></svg>" />
     <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-   <header>
-    <div class="header-inner">
-        <h1>🌅 Bing 每日壁纸</h1>
-        <p>每日更新 · 4K 超清 · 免费下载</p>
-    </div>
-  </header>
+    <header>
+        <div class="header-inner">
+            <h1>🌅 Bing 每日壁纸</h1>
+            <p>每日更新 · 4K 超清 · 免费下载</p>
+            <div id="currentTime" class="time-display"></div>
+        </div>
+    </header>
 
     <main>
         <!-- 今日壁纸 -->
@@ -25,22 +25,28 @@
             </div>
         </section>
 
-       <!-- ===== 在今日壁纸卡片之后 ===== -->
-
-    <!-- 历史壁纸轮播 -->
-    <section id="carouselSection">
-        <h2>🔄 历史壁纸 · 回顾</h2>
-        <div class="carousel-container">
-            <button class="carousel-btn prev" id="carouselPrev">‹</button>
-           <div class="carousel-track-wrapper">
-                <div class="carousel-track" id="carouselTrack">
-                    <!-- 由 JavaScript 动态生成 -->
+        <!-- ===== 轮播区域 ===== -->
+        <section id="carouselSection">
+            <h2>🔄 历史壁纸 · 回顾</h2>
+            <div class="carousel-container">
+                <button class="carousel-btn prev" id="carouselPrev">‹</button>
+                <div class="carousel-track-wrapper">
+                    <div class="carousel-track" id="carouselTrack">
+                        <div class="loading">加载历史壁纸中...</div>
+                    </div>
                 </div>
+                <button class="carousel-btn next" id="carouselNext">›</button>
             </div>
-            <button class="carousel-btn next" id="carouselNext">›</button>
-        </div>
-        <div class="carousel-dots" id="carouselDots"></div>
-    </section>
+            <div class="carousel-dots" id="carouselDots"></div>
+        </section>
+
+        <!-- 历史壁纸网格 -->
+        <section id="history">
+            <h2>📚 历史壁纸</h2>
+            <div id="historyGrid">
+                <div class="loading">加载中...</div>
+            </div>
+        </section>
     </main>
 
     <footer>
