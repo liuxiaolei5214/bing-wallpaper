@@ -2,15 +2,15 @@
  * Bing 每日壁纸 - 纯前端项目
  * 使用多个 CORS 代理，带自动重试 + 浏览器缓存
  * 精简版：只保留必要字段，去掉版权符号
- * 历史壁纸从 history.json 读取，不限数量
- * 新增：历史壁纸轮播
+ * 历史壁纸从 history.json 读取
+ * 新增：电影感壁纸轮播 + 历史壁纸网格
  */
 
 // ============ 配置 ============
 const BING_BASE = 'https://cn.bing.com';
 const API_TIMEOUT = 5000;
 const MAX_RETRIES = 1;
-const HISTORY_LIMIT = 10; // 历史壁纸显示数量
+const HISTORY_LIMIT = 10; // 历史壁纸网格显示数量
 const CAROUSEL_COUNT = 20; // 轮播显示数量
 const SLIDES_PER_VIEW = 5; // 轮播每次显示数量
 
@@ -315,12 +315,10 @@ function renderCarousel(images) {
         return;
     }
     
-    // 截取前 CAROUSEL_COUNT 张
     const slideImages = images.slice(0, CAROUSEL_COUNT);
     carouselData = slideImages;
     currentIndex = 0;
     
-    // 生成幻灯片
     track.innerHTML = slideImages.map((img, index) => {
         let url = img.url;
         if (url && !url.startsWith('http')) {
@@ -341,20 +339,15 @@ function renderCarousel(images) {
         `;
     }).join('');
     
-    // 计算总页数
     const totalDots = Math.ceil(slideImages.length / SLIDES_PER_VIEW);
-    
-    // 生成指示点
     if (dots) {
         dots.innerHTML = Array.from({ length: totalDots }, (_, i) => 
             `<button class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></button>`
         ).join('');
     }
     
-    // 更新按钮状态
     updateCarouselButtons();
     
-    // 绑定事件
     if (prevBtn) {
         prevBtn.onclick = () => moveCarousel(-1);
         prevBtn.classList.remove('disabled');
@@ -369,7 +362,6 @@ function renderCarousel(images) {
         });
     }
     
-    // 启动自动播放
     startAutoPlay();
 }
 
@@ -378,14 +370,9 @@ function updateCarouselButtons() {
     const nextBtn = document.getElementById('carouselNext');
     const total = Math.ceil(carouselData.length / SLIDES_PER_VIEW);
     
-    if (prevBtn) {
-        prevBtn.classList.toggle('disabled', currentIndex === 0);
-    }
-    if (nextBtn) {
-        nextBtn.classList.toggle('disabled', currentIndex >= total - 1 || total === 0);
-    }
+    if (prevBtn) prevBtn.classList.toggle('disabled', currentIndex === 0);
+    if (nextBtn) nextBtn.classList.toggle('disabled', currentIndex >= total - 1 || total === 0);
     
-    // 更新指示点
     const dots = document.querySelectorAll('.carousel-dots .dot');
     dots.forEach((dot, i) => {
         dot.classList.toggle('active', i === currentIndex);
@@ -450,7 +437,6 @@ function resetAutoPlay() {
     startAutoPlay();
 }
 
-// 窗口尺寸变化时重新计算位置
 let resizeTimeout;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
@@ -458,6 +444,123 @@ window.addEventListener('resize', () => {
         updateCarouselPosition();
     }, 200);
 });
+
+// ============ 电影感壁纸轮播 ============
+
+let movieData = [];
+let movieIndex = 0;
+let movieInterval = null;
+
+function renderMovieCarousel(images) {
+    const slide = document.getElementById('movieSlide');
+    const thumbs = document.getElementById('movieThumbnails');
+    const dateEl = document.getElementById('movieDate');
+    const titleEl = document.getElementById('movieTitle');
+    const downloadBtn = document.getElementById('movieDownloadBtn');
+    const viewBtn = document.getElementById('movieViewBtn');
+
+    if (!slide || !thumbs || !images || images.length === 0) {
+        if (slide) slide.style.backgroundImage = '';
+        if (thumbs) thumbs.innerHTML = '<div style="padding: 10px; color: #666;">暂无历史壁纸</div>';
+        return;
+    }
+
+    movieData = images.slice(0, 15);
+    movieIndex = 0;
+
+    thumbs.innerHTML = movieData.map((img, index) => {
+        let url = img.url;
+        if (url && !url.startsWith('http')) url = BING_BASE + url;
+        return `<div class="thumb-item ${index === 0 ? 'active' : ''}" 
+                    style="background-image: url('${url}');" 
+                    data-index="${index}"></div>`;
+    }).join('');
+
+    updateMovieSlide(movieData[0]);
+
+    thumbs.querySelectorAll('.thumb-item').forEach(el => {
+        el.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.index);
+            if (idx === movieIndex) return;
+            movieIndex = idx;
+            updateMovieSlide(movieData[idx]);
+            updateMovieThumbs();
+            resetMovieTimer();
+        });
+    });
+
+    const prevBtn = document.getElementById('moviePrev');
+    const nextBtn = document.getElementById('movieNext');
+    if (prevBtn) prevBtn.onclick = () => { changeMovie(-1); };
+    if (nextBtn) nextBtn.onclick = () => { changeMovie(1); };
+
+    startMovieTimer();
+}
+
+function updateMovieSlide(data) {
+    const slide = document.getElementById('movieSlide');
+    const dateEl = document.getElementById('movieDate');
+    const titleEl = document.getElementById('movieTitle');
+    const downloadBtn = document.getElementById('movieDownloadBtn');
+    const viewBtn = document.getElementById('movieViewBtn');
+
+    if (!slide || !data) return;
+
+    let url = data.url;
+    if (url && !url.startsWith('http')) url = BING_BASE + url;
+
+    slide.style.backgroundImage = `url('${url}')`;
+
+    const dateStr = data.enddate || '';
+    if (dateEl) dateEl.textContent = `📅 ${formatDisplayDate(dateStr)}`;
+    if (titleEl) titleEl.textContent = data.copyright || 'Bing 壁纸';
+
+    if (downloadBtn) {
+        let hdUrl = url;
+        hdUrl = hdUrl.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+        hdUrl = hdUrl.replace(/1920x1080/g, 'UHD');
+        hdUrl = hdUrl.replace(/&rf=LaDigue_1920x1080\.jpg/g, '');
+        if (!hdUrl.includes('uhd=1')) {
+            hdUrl = hdUrl.includes('?') ? hdUrl + '&uhd=1&uhdwidth=3840&uhdheight=2160' : hdUrl + '?uhd=1&uhdwidth=3840&uhdheight=2160';
+        }
+        downloadBtn.href = hdUrl;
+    }
+    if (viewBtn) viewBtn.href = url;
+}
+
+function updateMovieThumbs() {
+    document.querySelectorAll('.thumb-item').forEach((el, i) => {
+        el.classList.toggle('active', i === movieIndex);
+    });
+}
+
+function changeMovie(direction) {
+    const total = movieData.length;
+    if (total === 0) return;
+    movieIndex = (movieIndex + direction + total) % total;
+    updateMovieSlide(movieData[movieIndex]);
+    updateMovieThumbs();
+    resetMovieTimer();
+}
+
+function startMovieTimer() {
+    stopMovieTimer();
+    movieInterval = setInterval(() => {
+        changeMovie(1);
+    }, 5000);
+}
+
+function stopMovieTimer() {
+    if (movieInterval) {
+        clearInterval(movieInterval);
+        movieInterval = null;
+    }
+}
+
+function resetMovieTimer() {
+    stopMovieTimer();
+    startMovieTimer();
+}
 
 // ============ 错误提示 ============
 
@@ -501,12 +604,14 @@ async function main() {
             const historyImages = historyData.filter(item => item.enddate !== todayDate);
             renderCarousel(historyImages);
             renderHistoryFromData(historyImages);
-            console.log(`📚 轮播显示 ${Math.min(historyImages.length, CAROUSEL_COUNT)} 张，网格显示 ${historyImages.length} 张`);
+            renderMovieCarousel(historyImages);
+            console.log(`📚 电影轮播显示 ${Math.min(historyImages.length, 15)} 张，网格显示 ${historyImages.length} 张`);
         } else {
             const fallbackHistory = images.slice(1);
             renderCarousel(fallbackHistory);
             renderHistoryFromData(fallbackHistory);
-            console.log(`📚 降级方案：轮播显示 ${Math.min(fallbackHistory.length, CAROUSEL_COUNT)} 张`);
+            renderMovieCarousel(fallbackHistory);
+            console.log(`📚 降级方案：电影轮播显示 ${Math.min(fallbackHistory.length, 15)} 张`);
         }
 
     } catch (error) {
