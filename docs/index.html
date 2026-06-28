@@ -25,13 +25,22 @@
             </div>
         </section>
 
-        <!-- 本周壁纸 -->
-        <section id="history">
-            <h2>📚 历史壁纸</h2>
-            <div id="historyGrid">
-                <div class="loading">加载中...</div>
+       <!-- ===== 在今日壁纸卡片之后 ===== -->
+
+    <!-- 历史壁纸轮播 -->
+    <section id="carouselSection">
+        <h2>🔄 历史壁纸 · 回顾</h2>
+        <div class="carousel-container">
+            <button class="carousel-btn prev" id="carouselPrev">‹</button>
+           <div class="carousel-track-wrapper">
+                <div class="carousel-track" id="carouselTrack">
+                    <!-- 由 JavaScript 动态生成 -->
+                </div>
             </div>
-        </section>
+            <button class="carousel-btn next" id="carouselNext">›</button>
+        </div>
+        <div class="carousel-dots" id="carouselDots"></div>
+    </section>
     </main>
 
     <footer>
