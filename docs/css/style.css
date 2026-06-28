@@ -247,7 +247,7 @@ section h2 {
 }
 
 .movie-title {
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-weight: 700;
     margin-bottom: 16px;
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
@@ -322,7 +322,9 @@ section h2 {
 }
 
 .thumb-item {
-    flex: 0 0 80px;
+    flex: 1;                     /* 平均分配剩余空间 */
+    min-width: 0;                /* 允许收缩 */
+    max-width: 120px;          /* 限制最大宽度，防止太宽 */
     height: 50px;
     border-radius: 6px;
     background-size: cover;
@@ -332,6 +334,7 @@ section h2 {
     transition: all 0.3s ease;
     opacity: 0.6;
     filter: grayscale(0.5);
+    aspect-ratio: 16 / 9;
 }
 
 .thumb-item:hover {
