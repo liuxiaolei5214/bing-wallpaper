@@ -237,6 +237,10 @@ section h2 {
     z-index: 2;
     position: relative;
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;  /* 内容底部对齐 */
+    align-items: flex-start;
 }
 
 .movie-date {
@@ -249,7 +253,7 @@ section h2 {
 .movie-title {
     font-size: 1rem;
     font-weight: 700;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
     line-height: 1.2;
 }
