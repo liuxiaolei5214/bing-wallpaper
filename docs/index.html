@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bing 每日壁纸 · 4K</title>
+    <meta name="description" content="每日更新的必应超清壁纸，4K 高清下载" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌅</text></svg>" />
     <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -17,7 +18,7 @@
     </header>
 
     <main>
-        <!-- 今日壁纸 -->
+        <!-- ===== 今日壁纸 ===== -->
         <section id="today">
             <h2>📸 今日壁纸</h2>
             <div id="todayCard">
@@ -25,32 +26,55 @@
             </div>
         </section>
 
-       <!-- 电影感壁纸轮播 -->
-      <section id="movieCarouselSection">
-          <h2>🎬 光影回顾</h2>
-          <div class="carousel-movie">
-              <!-- 当前展示的壁纸将作为背景 -->
-              <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
-                  <div class="movie-overlay">
-                      <div class="movie-content">
-                          <div class="movie-date" id="movieDate"></div>
-                          <div class="movie-title" id="movieTitle"></div>
-                          <div class="movie-actions">
-                              <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
-                              <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-              <!-- 缩略图导航栏 -->
-            <div class="movie-thumbnails" id="movieThumbnails">
-                  <!-- 由 JavaScript 生成 -->
-              </div>
-              <!-- 控制按钮 -->
-              <button class="movie-btn prev" id="moviePrev">‹</button>
-              <button class="movie-btn next" id="movieNext">›</button>
-          </div>
-      </section>
+        <!-- ===== 电影感壁纸轮播 ===== -->
+        <section id="movieCarouselSection">
+            <h2>🎬 光影回顾</h2>
+            <div class="carousel-movie">
+                <!-- 当前展示的壁纸将作为背景 -->
+                <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
+                    <div class="movie-overlay">
+                        <div class="movie-content">
+                            <div class="movie-date" id="movieDate"></div>
+                            <div class="movie-title" id="movieTitle"></div>
+                            <div class="movie-actions">
+                                <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
+                                <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 缩略图导航栏 -->
+                <div class="movie-thumbnails" id="movieThumbnails">
+                    <!-- 由 JavaScript 生成 -->
+                </div>
+                <!-- 控制按钮 -->
+                <button class="movie-btn prev" id="moviePrev">‹</button>
+                <button class="movie-btn next" id="movieNext">›</button>
+            </div>
+        </section>
+
+        <!-- ===== 历史壁纸轮播 ===== -->
+        <section id="carouselSection">
+            <h2>🔄 历史壁纸 · 回顾</h2>
+            <div class="carousel-container">
+                <button class="carousel-btn prev" id="carouselPrev">‹</button>
+                <div class="carousel-track-wrapper">
+                    <div class="carousel-track" id="carouselTrack">
+                        <div class="loading">加载历史壁纸中...</div>
+                    </div>
+                </div>
+                <button class="carousel-btn next" id="carouselNext">›</button>
+            </div>
+            <div class="carousel-dots" id="carouselDots"></div>
+        </section>
+
+        <!-- ===== 历史壁纸网格 ===== -->
+        <section id="history">
+            <h2>📚 历史壁纸</h2>
+            <div id="historyGrid">
+                <div class="loading">加载中...</div>
+            </div>
+        </section>
     </main>
 
     <footer>
