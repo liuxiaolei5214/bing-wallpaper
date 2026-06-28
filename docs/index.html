@@ -33,14 +33,18 @@
                 <!-- 当前展示的壁纸将作为背景 -->
                 <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
                     <div class="movie-overlay">
-                        <div class="movie-content">
-                            <div class="movie-date" id="movieDate"></div>
-                            <div class="movie-title" id="movieTitle"></div>
-                            <div class="movie-actions" id="movieActions">
-                                <a href="#" class="btn btn-primary movie-btn-small" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
-                                <a href="#" class="btn btn-secondary movie-btn-small" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
-                            </div>
-                        </div>
+                    <div class="movie-content">
+                         <!-- 按钮放在上方 -->
+                         <div class="movie-actions" id="movieActions">
+                             <a href="#" class="btn btn-primary movie-btn-small" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
+                             <a href="#" class="btn btn-secondary movie-btn-small" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
+                         </div>
+                         <!-- 日期和标题移到下方 -->
+                         <div class="movie-info">
+                             <div class="movie-date" id="movieDate"></div>
+                             <div class="movie-title" id="movieTitle"></div>
+                         </div>
+                     </div>
                     </div>
                 </div>
                 <!-- 缩略图导航栏 -->
