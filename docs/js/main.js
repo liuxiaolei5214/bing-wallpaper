@@ -10,7 +10,6 @@
 const BING_BASE = 'https://cn.bing.com';
 const API_TIMEOUT = 5000;
 const MAX_RETRIES = 1;
-const HISTORY_LIMIT = 10; // 历史壁纸网格显示数量
 const CAROUSEL_COUNT = 20; // 轮播显示数量
 const SLIDES_PER_VIEW = 5; // 轮播每次显示数量
 
@@ -602,8 +601,6 @@ async function main() {
 
         if (historyData && historyData.length > 1) {
             const historyImages = historyData.filter(item => item.enddate !== todayDate);
-            renderCarousel(historyImages);
-            renderHistoryFromData(historyImages);
             renderMovieCarousel(historyImages);
             console.log(`📚 电影轮播显示 ${Math.min(historyImages.length, 15)} 张，网格显示 ${historyImages.length} 张`);
         } else {
