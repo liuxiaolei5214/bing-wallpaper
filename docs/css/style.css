@@ -12,6 +12,7 @@ body {
     color: #e0e0e0;
     min-height: 100vh;
     padding: 0 20px 20px;
+    overflow-x: hidden;  /* 防止水平滚动条 */
 }
 
 /* ========== 头部 ========== */
@@ -70,28 +71,7 @@ section h2 {
 
 /* ========== 今日壁纸卡片 ========== */
 #todayCard {
-    background: #161616;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-#todayCard:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.8);
-}
-
-#todayCard img {
-    width: 100%;
-    max-height: 65vh;
-    object-fit: cover;
-    display: block;
-    background: #111;
-}
-
-/* ========== 今日壁纸卡片 ========== */
-#todayCard {
+    position: relative;
     background: #161616;
     border-radius: 16px;
     overflow: hidden;
@@ -113,18 +93,27 @@ section h2 {
     background: #111;
 }
 
-/* ===== 今日壁纸信息 - 半透明浮层 ===== */
+/* ===== 今日壁纸信息 - 半透明浮层（默认隐藏，hover显示） ===== */
 #todayCard .info {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     padding: 30px 28px 24px;
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.3) 70%, transparent 100%);
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
     color: #fff;
     pointer-events: none;
-    transition: opacity 0.3s;
-    /* 移除日期后，标题更大更粗 */
+    transition: opacity 0.4s ease;
+    opacity: 0;  /* 默认隐藏 */
+}
+
+#todayCard:hover .info {
+    opacity: 1;  /* hover 时显示 */
+}
+
+/* 按钮需要可点击，所以单独设置 pointer-events */
+#todayCard .info .actions {
+    pointer-events: auto;
 }
 
 #todayCard .info .title-line {
@@ -145,7 +134,7 @@ section h2 {
 
 #todayCard .info .desc-line {
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.8);
     max-width: 80%;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -153,7 +142,18 @@ section h2 {
     overflow: hidden;
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
     line-height: 1.6;
-    text-indent: 2em;  /* 首行缩进2字符 */
+}
+
+/* 描述文字每段首行缩进2字符（使用 text-indent） */
+#todayCard .info .desc-line {
+    text-indent: 2em;
+}
+/* 对于多段文字，使用伪元素无法处理多行，改用 js 处理或在数据中加 \n 后使用 white-space: pre-wrap */
+#todayCard .info .desc-line.pre-wrap {
+    white-space: pre-wrap;
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
 }
 
 /* ===== 今日壁纸操作按钮 ===== */
@@ -164,7 +164,6 @@ section h2 {
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 14px;
-    pointer-events: auto;  /* 按钮可点击 */
 }
 
 #todayCard .info .actions .btn-group {
@@ -172,6 +171,7 @@ section h2 {
     gap: 12px;
     flex-wrap: wrap;
 }
+
 .btn {
     display: inline-block;
     padding: 8px 22px;
@@ -212,7 +212,7 @@ section h2 {
     background: rgba(77, 150, 255, 0.1);
 }
 
-/* ========== 电影感壁纸轮播 ========== */
+/* ========== 电影感壁纸轮播（光影回顾） ========== */
 #movieCarouselSection {
     max-width: 1200px;
     margin: 40px auto 20px;
@@ -290,7 +290,7 @@ section h2 {
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;  /* 内容底部对齐 */
+    justify-content: flex-end;
     align-items: flex-start;
 }
 
@@ -377,9 +377,9 @@ section h2 {
 }
 
 .thumb-item {
-    flex: 1;                     /* 平均分配剩余空间 */
-    min-width: 0;                /* 允许收缩 */
-    max-width: 120px;          /* 限制最大宽度，防止太宽 */
+    flex: 1;
+    min-width: 0;
+    max-width: 120px;
     height: 50px;
     border-radius: 6px;
     background-size: cover;
@@ -440,6 +440,120 @@ section h2 {
 
 .movie-btn.next {
     right: 16px;
+}
+
+/* ========== 模态框（弹窗） ========== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.open {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-box {
+    background: #1a1a1a;
+    border-radius: 28px;
+    max-width: 1100px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
+    padding: 0;  /* 移除内边距，让图片占满 */
+    position: relative;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.open .modal-box {
+    transform: scale(1);
+}
+
+/* 关闭按钮 - 放到图片右上角 */
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 1.6rem;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.modal-image {
+    width: 100%;
+    border-radius: 28px 28px 0 0;  /* 顶部圆角，底部无圆角 */
+    overflow: hidden;
+    background: #0b0b0b;
+}
+
+.modal-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 70vh;
+    object-fit: contain;
+    background: #0b0b0b;
+}
+
+/* 内容区域（标题、描述） */
+.modal-content {
+    padding: 20px 28px 32px;
+}
+
+.modal-title {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.modal-subtitle {
+    font-size: 1rem;
+    color: #d4a373;
+    margin-bottom: 12px;
+}
+
+.modal-desc {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    opacity: 0.85;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 每段首行缩进2字符 - 通过 JS 处理，或者用 CSS */
+.modal-desc p {
+    text-indent: 2em;
+    margin-bottom: 0.5em;
 }
 
 /* ========== 加载状态 ========== */
@@ -509,12 +623,6 @@ footer .footer-small {
     header p {
         font-size: 0.9rem;
     }
-    #todayCard .info {
-        padding: 16px 18px;
-    }
-    #todayCard .info .copyright {
-        font-size: 0.9rem;
-    }
     .movie-slide {
         padding-top: 65%;
     }
@@ -545,15 +653,33 @@ footer .footer-small {
         font-size: 0.7rem;
         padding: 4px 12px;
     }
-    #todayCard .info .actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    #todayCard .info .actions .btn-group {
-        justify-content: center;
-    }
     .btn {
         padding: 6px 16px;
+        font-size: 0.8rem;
+    }
+    .modal-box {
+        max-width: 100%;
+        margin: 10px;
+        border-radius: 20px;
+    }
+    .modal-image {
+        border-radius: 20px 20px 0 0;
+    }
+    .modal-content {
+        padding: 16px 18px 24px;
+    }
+    .modal-close {
+        top: 12px;
+        right: 12px;
+        width: 38px;
+        height: 38px;
+        font-size: 1.2rem;
+    }
+    #todayCard .info .title-line {
+        font-size: 1.3rem;
+    }
+    #todayCard .info .desc-line {
+        max-width: 100%;
         font-size: 0.8rem;
     }
 }
@@ -595,20 +721,50 @@ footer .footer-small {
         padding: 3px 10px;
     }
     #todayCard .info {
-        padding: 12px 14px;
+        padding: 16px 14px 14px;
     }
-    #todayCard .info .date {
+    #todayCard .info .title-line {
+        font-size: 1.1rem;
+    }
+    #todayCard .info .subtitle-line {
+        font-size: 0.85rem;
+    }
+    #todayCard .info .desc-line {
         font-size: 0.75rem;
+        max-width: 100%;
     }
-    #todayCard .info .copyright {
-        font-size: 0.8rem;
+    #todayCard .info .actions {
+        flex-direction: column;
+        align-items: stretch;
     }
     #todayCard .info .actions .btn-group {
-        flex-direction: column;
-        align-items: center;
+        justify-content: center;
     }
     .btn {
         padding: 5px 14px;
         font-size: 0.75rem;
+    }
+    .modal-box {
+        border-radius: 16px;
+        margin: 8px;
+    }
+    .modal-image {
+        border-radius: 16px 16px 0 0;
+    }
+    .modal-content {
+        padding: 12px 14px 18px;
+    }
+    .modal-title {
+        font-size: 1.2rem;
+    }
+    .modal-desc {
+        font-size: 0.85rem;
+    }
+    .modal-close {
+        top: 10px;
+        right: 10px;
+        width: 34px;
+        height: 34px;
+        font-size: 1rem;
     }
 }
