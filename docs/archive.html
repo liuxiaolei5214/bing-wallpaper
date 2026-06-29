@@ -508,19 +508,14 @@
             return `https://cn.bing.com/search?q=${encodedTopic}&form=BGALM&filters=HpDate%3a%22${dateParam}%22+mgzv3configlist%3a%22BingQA_Encyclopedia_Layout%22&pc=W011&bwa=1`;
         }
 
-        // 获取 4K 链接
+        // 获取 4K 链接（直接返回 UHD 图片，不加额外参数）
         function get4kUrl(url) {
-            let result = url;
-            result = result.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
-            result = result.replace(/1920x1080/g, 'UHD');
-            result = result.replace(/&rf=LaDigue_1920x1080\.jpg/g, '');
-            result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
-            if (result.includes('?')) {
-                result = result + '&w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
-            } else {
-                result = result + '?w=3840&h=2160&rs=1&c=4&uhd=1&uhdwidth=3840&uhdheight=2160';
+            // 如果已经是 UHD，直接返回
+            if (url.includes('_UHD.jpg')) {
+                return url;
             }
-            return result;
+            // 否则替换为 UHD
+            return url.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
         }
 
         // 获取 1080P 链接
