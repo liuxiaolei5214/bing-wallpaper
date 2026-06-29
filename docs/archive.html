@@ -432,19 +432,58 @@
         <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
     </footer>
 
-    <!-- ===== 模态框 ===== -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-box">
-            <button class="modal-close" id="modalClose">&times;</button>
-            <div class="modal-image">
-                <img id="modalImg" src="" alt="壁纸大图" />
-            </div>
-            <div class="modal-title" id="modalTitle"></div>
-            <div class="modal-subtitle" id="modalSubtitle"></div>
-            <div class="modal-desc" id="modalDesc"></div>
-        </div>
-    </div>
+// ============ 模态框 ==========
 
+function openModal(item) {
+    const overlay = document.getElementById('modalOverlay');
+    document.getElementById('modalImg').src = item.bing_url || '';
+    document.getElementById('modalTitle').textContent = item.title || '壁纸';
+
+    const subtitle = item.subtitle || '';
+    const subtitleEl = document.getElementById('modalSubtitle');
+    if (subtitle && subtitle !== item.title) {
+        subtitleEl.textContent = subtitle;
+        subtitleEl.style.display = 'block';
+    } else {
+        subtitleEl.style.display = 'none';
+    }
+
+    // ✅ 修复：处理描述文字，按多种换行符分割
+    let desc = item.description || '暂无详细介绍';
+    
+    // 先统一换行符：将 \r\n, \r, <br>, <br/> 都转换为 \n
+    desc = desc.replace(/\r\n/g, '\n');
+    desc = desc.replace(/\r/g, '\n');
+    desc = desc.replace(/<br\s*\/?>/gi, '\n');
+    
+    // 按 \n 分割成段落，过滤掉空段落
+    const paragraphs = desc.split('\n').filter(p => p.trim());
+    
+    // 如果分割后只有一个段落，但里面包含句号、逗号等，可能是用其他方式分隔的
+    // 这种情况下，用句号+空格来分割
+    if (paragraphs.length <= 1 && desc.length > 50) {
+        // 尝试用中文句号、问号、感叹号分割
+        const sentences = desc.split(/[。？！；]\s*/).filter(s => s.trim());
+        if (sentences.length > 1) {
+            // 把句子重新组合成段落（每2-3句一段）
+            const grouped = [];
+            for (let i = 0; i < sentences.length; i += 2) {
+                const group = sentences.slice(i, i + 2).join('。');
+                if (group.trim()) grouped.push(group.trim() + '。');
+            }
+            const descHtml = grouped.map(p => `<p>${p}</p>`).join('');
+            document.getElementById('modalDesc').innerHTML = descHtml;
+            return;
+        }
+    }
+    
+    // 正常情况：每个段落用 <p> 包裹
+    const descHtml = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+    document.getElementById('modalDesc').innerHTML = descHtml;
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
     <!-- ============================================================ -->
     <!-- JavaScript -->
     <!-- ============================================================ -->
