@@ -128,62 +128,22 @@
             background: #111;
         }
 
-        /* ===== 光影回顾按钮 — 默认隐藏，hover显示 ===== */
-        .card .review-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 0.65rem;
-            letter-spacing: 0.3px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            cursor: pointer;
-            z-index: 5;
-            white-space: nowrap;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .card:hover .review-btn {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .card .review-btn:hover {
-            background: rgba(212, 163, 115, 0.25);
-            border-color: #d4a373;
-        }
-
+        /* ===== 卡片信息 ===== */
         .card .info {
             padding: 10px 14px 14px;
         }
 
         .card .info .date {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #888;
-            font-weight: 600;
+            font-weight: 500;
         }
 
         .card .info .title {
             font-size: 0.85rem;
-            color: #ccc;
+            color: #e0e0e0;
+            font-weight: 600;
             margin-top: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .card .info .subtitle {
-            font-size: 0.75rem;
-            color: #d4a373;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -258,7 +218,7 @@
             }
         }
 
-        /* ========== 模态框 ========== */
+        /* ========== 模态框（加宽） ========== */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -282,12 +242,12 @@
         .modal-box {
             background: #1a1a1a;
             border-radius: 28px;
-            max-width: 900px;
+            max-width: 1100px;  /* 加宽 */
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
-            padding: 20px 20px 28px;
+            padding: 24px 28px 32px;
             position: relative;
             transform: scale(0.95);
             transition: transform 0.3s ease;
@@ -352,10 +312,16 @@
 
         .modal-desc {
             font-size: 0.95rem;
-            line-height: 1.7;
-            opacity: 0.8;
+            line-height: 1.8;
+            opacity: 0.85;
             white-space: pre-wrap;
             word-break: break-word;
+            text-indent: 2em;  /* 每段首行缩进2字符 */
+        }
+
+        /* 修复 text-indent 对第一段之后的影响，只缩进每段的第一行 */
+        .modal-desc::first-line {
+            text-indent: 2em;
         }
 
         /* ========== 页脚 ========== */
@@ -391,6 +357,11 @@
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
                 gap: 12px;
             }
+            .modal-box {
+                padding: 16px;
+                max-width: 100%;
+                margin: 10px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -402,11 +373,20 @@
                 padding: 6px 10px 10px;
             }
             .card .info .date {
+                font-size: 0.7rem;
+            }
+            .card .info .title {
                 font-size: 0.75rem;
             }
             .card .info .btn-group .download-btn {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
                 padding: 3px 10px;
+            }
+            .modal-box {
+                padding: 12px;
+            }
+            .modal-title {
+                font-size: 1.2rem;
             }
         }
     </style>
@@ -652,7 +632,17 @@
             const overlay = document.getElementById('modalOverlay');
             document.getElementById('modalImg').src = item.bing_url || '';
             document.getElementById('modalTitle').textContent = item.title || '壁纸';
-            document.getElementById('modalSubtitle').textContent = item.subtitle || '';
+
+            // 如果 subtitle 为空 或 与 title 相同，则不显示
+            const subtitle = item.subtitle || '';
+            const subtitleEl = document.getElementById('modalSubtitle');
+            if (subtitle && subtitle !== item.title) {
+                subtitleEl.textContent = subtitle;
+                subtitleEl.style.display = 'block';
+            } else {
+                subtitleEl.style.display = 'none';
+            }
+
             document.getElementById('modalDesc').textContent = item.description || '暂无详细介绍';
             overlay.classList.add('open');
             document.body.style.overflow = 'hidden';
@@ -694,12 +684,9 @@
                 const url = img.bing_url || '';
                 const dateStr = img.date || '';
                 const title = img.title || 'Bing 壁纸';
-                const subtitle = img.subtitle || '';
-                const description = img.description || '';
 
                 const hd4kUrl = get4kUrl(url);
                 const hd1080Url = get1080pUrl(url);
-                const detailUrl = buildDetailUrl(img);
 
                 // 对 JSON 数据进行转义，防止 XSS
                 const escapedData = JSON.stringify(img).replace(/'/g, "&#39;");
@@ -707,11 +694,9 @@
                 return `
                     <div class="card" data-item='${escapedData}'>
                         <img src="${url}" alt="${title}" loading="lazy" onerror="this.style.display='none'" />
-                        <a href="${detailUrl}" class="review-btn" target="_blank" onclick="event.stopPropagation();">📖 光影回顾</a>
                         <div class="info">
                             <div class="date">📅 ${dateStr}</div>
                             <div class="title">${title}</div>
-                            ${subtitle ? `<div class="subtitle">${subtitle}</div>` : ''}
                             <div class="btn-group">
                                 <a href="${hd4kUrl}" class="download-btn btn-4k" target="_blank" onclick="event.stopPropagation();">
                                     ${DOWNLOAD_SVG} 4K
