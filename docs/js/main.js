@@ -16,7 +16,6 @@ function getBeijingTime() {
 
 function formatDisplayDate(dateStr) {
     if (!dateStr) return '未知日期';
-    // date 格式为 YYYY-MM-DD
     return dateStr;
 }
 
@@ -36,7 +35,6 @@ function buildDetailUrl(item) {
     if (topic.includes(',')) topic = topic.split(',')[0].trim();
     topic = topic.replace(/\s*\(©[^)]*\)\s*$/, '');
 
-    // 从 date 转换为 Bing 的日期格式 (YYYYMMDD)
     let dateParam = item.date || '';
     dateParam = dateParam.replace(/-/g, '');
     if (dateParam.length === 8) {
@@ -109,25 +107,30 @@ function renderToday(images) {
     const description = todayItem.description || '';
     const dateStr = todayItem.date || '';
 
-    // 标题：只显示 title，不加粗变大在 CSS 中控制
-    // subtitle 如果为空或与 title 相同，则不显示
-    let displayTitle = title;
+    // 判断 subtitle 是否显示（不为空且不等于 title）
+    const showSubtitle = subtitle && subtitle !== title;
 
-    // 4K 链接处理
+    // 4K 链接：直接使用原始链接（已经是 UHD）
     let hd4kUrl = url;
+    // 1080P 链接：替换为 1920x1080
     let hd1080Url = url.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
 
     const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
 
-    // 判断 subtitle 是否显示（不为空且不等于 title）
-    const showSubtitle = subtitle && subtitle !== title;
+    // 处理描述文字：将 \n 转换为 <br>，并添加首行缩进
+    let descHtml = description || '';
+    if (descHtml) {
+        // 将换行符转换为 <br>，并包裹在 p 标签中实现每段缩进
+        const paragraphs = descHtml.split('\n').filter(p => p.trim());
+        descHtml = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+    }
 
     container.innerHTML = `
         <img src="${url}" alt="${title}" loading="eager" />
         <div class="info">
-            <div class="title-line">${displayTitle}</div>
+            <div class="title-line">${title}</div>
             ${showSubtitle ? `<div class="subtitle-line">${subtitle}</div>` : ''}
-            ${description ? `<div class="desc-line">${description}</div>` : ''}
+            ${descHtml ? `<div class="desc-line pre-wrap">${descHtml}</div>` : ''}
             <div class="actions">
                 <div class="btn-group">
                     <a href="${hd4kUrl}" class="btn btn-primary" target="_blank">${svgIcon} 4K</a>
@@ -156,8 +159,22 @@ function openModal(item) {
     }
     document.getElementById('modalImg').src = item.bing_url || '';
     document.getElementById('modalTitle').textContent = item.title || '壁纸';
-    document.getElementById('modalSubtitle').textContent = item.subtitle || '';
-    document.getElementById('modalDesc').textContent = item.description || '暂无详细介绍';
+
+    const subtitle = item.subtitle || '';
+    const subtitleEl = document.getElementById('modalSubtitle');
+    if (subtitle && subtitle !== item.title) {
+        subtitleEl.textContent = subtitle;
+        subtitleEl.style.display = 'block';
+    } else {
+        subtitleEl.style.display = 'none';
+    }
+
+    // 处理描述：按段落分割，每段首行缩进
+    const desc = item.description || '暂无详细介绍';
+    const paragraphs = desc.split('\n').filter(p => p.trim());
+    const descHtml = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+    document.getElementById('modalDesc').innerHTML = descHtml;
+
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
 }
@@ -175,10 +192,14 @@ function createModal() {
         <div class="modal-overlay" id="modalOverlay">
             <div class="modal-box">
                 <button class="modal-close" id="modalClose">&times;</button>
-                <div class="modal-image"><img id="modalImg" src="" alt="壁纸大图"></div>
-                <div class="modal-title" id="modalTitle"></div>
-                <div class="modal-subtitle" id="modalSubtitle"></div>
-                <div class="modal-desc" id="modalDesc"></div>
+                <div class="modal-image">
+                    <img id="modalImg" src="" alt="壁纸大图" />
+                </div>
+                <div class="modal-content">
+                    <div class="modal-title" id="modalTitle"></div>
+                    <div class="modal-subtitle" id="modalSubtitle"></div>
+                    <div class="modal-desc" id="modalDesc"></div>
+                </div>
             </div>
         </div>
     `;
