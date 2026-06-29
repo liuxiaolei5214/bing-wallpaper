@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>壁纸归档 · Bing 每日壁纸</title>
+    <title>壁纸归档 · 光影回顾</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
     <style>
+        /* ========== 全局重置 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: #0a0a0a;
@@ -14,6 +16,8 @@
             min-height: 100vh;
             padding: 20px;
         }
+
+        /* ========== 头部 ========== */
         header {
             max-width: 1400px;
             margin: 0 auto 30px;
@@ -24,12 +28,14 @@
             padding-bottom: 16px;
             border-bottom: 1px solid #2a2a2a;
         }
+
         header h1 {
             font-size: 2rem;
             background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         header .nav-link {
             color: #4d96ff;
             text-decoration: none;
@@ -39,7 +45,13 @@
             border-radius: 8px;
             transition: all 0.2s;
         }
-        header .nav-link:hover { background: #4d96ff; color: #fff; }
+
+        header .nav-link:hover {
+            background: #4d96ff;
+            color: #fff;
+        }
+
+        /* ========== 筛选器 ========== */
         .filters {
             max-width: 1400px;
             margin: 0 auto 30px;
@@ -51,7 +63,13 @@
             padding: 16px 20px;
             border-radius: 12px;
         }
-        .filters label { color: #aaa; font-size: 0.9rem; font-weight: 600; }
+
+        .filters label {
+            color: #aaa;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
         .filters select {
             background: #2a2a2a;
             color: #e0e0e0;
@@ -63,9 +81,23 @@
             outline: none;
             min-width: 120px;
         }
-        .filters select:focus { border-color: #4d96ff; }
-        .filters .stats { margin-left: auto; color: #888; font-size: 0.9rem; }
-        .filters .stats span { color: #e0e0e0; font-weight: 600; }
+
+        .filters select:focus {
+            border-color: #4d96ff;
+        }
+
+        .filters .stats {
+            margin-left: auto;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .filters .stats span {
+            color: #e0e0e0;
+            font-weight: 600;
+        }
+
+        /* ========== 网格 ========== */
         .grid {
             max-width: 1400px;
             margin: 0 auto;
@@ -73,14 +105,21 @@
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 16px;
         }
+
         .card {
             background: #161616;
             border-radius: 12px;
             overflow: hidden;
             transition: transform 0.25s ease, box-shadow 0.25s ease;
             cursor: pointer;
+            position: relative;
         }
-        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
         .card img {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -88,22 +127,75 @@
             display: block;
             background: #111;
         }
-        .card .info { padding: 10px 14px 14px; }
-        .card .info .date { font-size: 0.85rem; color: #888; font-weight: 600; }
-        .card .info .copyright {
-            font-size: 0.75rem;
-            color: #666;
+
+        /* ===== 光影回顾按钮 — 默认隐藏，hover显示 ===== */
+        .card .review-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.65rem;
+            letter-spacing: 0.3px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+            z-index: 5;
+            white-space: nowrap;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .card:hover .review-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .card .review-btn:hover {
+            background: rgba(212, 163, 115, 0.25);
+            border-color: #d4a373;
+        }
+
+        .card .info {
+            padding: 10px 14px 14px;
+        }
+
+        .card .info .date {
+            font-size: 0.85rem;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .card .info .title {
+            font-size: 0.85rem;
+            color: #ccc;
+            margin-top: 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-top: 2px;
         }
+
+        .card .info .subtitle {
+            font-size: 0.75rem;
+            color: #d4a373;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .card .info .btn-group {
             display: flex;
             gap: 8px;
             margin-top: 8px;
             flex-wrap: wrap;
         }
+
         .card .info .btn-group .download-btn {
             display: inline-flex;
             align-items: center;
@@ -118,20 +210,35 @@
             border: none;
             cursor: pointer;
         }
+
         .card .info .btn-group .download-btn svg {
             flex-shrink: 0;
         }
-        .card .info .btn-group .btn-4k { background: #4d96ff; }
-        .card .info .btn-group .btn-4k:hover { background: #3a7bd5; }
-        .card .info .btn-group .btn-1080p { background: #6c757d; }
-        .card .info .btn-group .btn-1080p:hover { background: #5a6268; }
-        .loading, .empty {
+
+        .card .info .btn-group .btn-4k {
+            background: #4d96ff;
+        }
+        .card .info .btn-group .btn-4k:hover {
+            background: #3a7bd5;
+        }
+
+        .card .info .btn-group .btn-1080p {
+            background: #6c757d;
+        }
+        .card .info .btn-group .btn-1080p:hover {
+            background: #5a6268;
+        }
+
+        /* ========== 加载/空状态 ========== */
+        .loading,
+        .empty {
             text-align: center;
             padding: 60px 0;
             color: #666;
             font-size: 1rem;
             grid-column: 1 / -1;
         }
+
         .loading::after {
             content: "";
             display: inline-block;
@@ -144,7 +251,114 @@
             animation: spin 0.8s linear infinite;
             vertical-align: middle;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ========== 模态框 ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background: #1a1a1a;
+            border-radius: 28px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
+            padding: 20px 20px 28px;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.open .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: #ccc;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.6rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .modal-image {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .modal-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 60vh;
+            object-fit: contain;
+            background: #0b0b0b;
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .modal-subtitle {
+            font-size: 1rem;
+            color: #d4a373;
+            margin-bottom: 12px;
+        }
+
+        .modal-desc {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            opacity: 0.8;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* ========== 页脚 ========== */
         footer {
             max-width: 1400px;
             margin: 40px auto 0;
@@ -154,73 +368,167 @@
             color: #555;
             font-size: 0.85rem;
         }
+
+        /* ========== 响应式 ========== */
         @media (max-width: 768px) {
-            header { flex-direction: column; align-items: flex-start; gap: 12px; }
-            header h1 { font-size: 1.5rem; }
-            .filters { flex-direction: column; align-items: stretch; }
-            .filters .stats { margin-left: 0; text-align: center; }
-            .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            header h1 {
+                font-size: 1.5rem;
+            }
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filters .stats {
+                margin-left: 0;
+                text-align: center;
+            }
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 12px;
+            }
         }
+
         @media (max-width: 480px) {
-            .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-            .card .info { padding: 6px 10px 10px; }
-            .card .info .date { font-size: 0.75rem; }
-            .card .info .btn-group .download-btn { font-size: 0.7rem; padding: 3px 10px; }
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+            }
+            .card .info {
+                padding: 6px 10px 10px;
+            }
+            .card .info .date {
+                font-size: 0.75rem;
+            }
+            .card .info .btn-group .download-btn {
+                font-size: 0.7rem;
+                padding: 3px 10px;
+            }
         }
     </style>
 </head>
 <body>
+
+    <!-- ===== 头部 ===== -->
     <header>
         <h1>📚 壁纸归档</h1>
         <a href="/" class="nav-link">🏠 返回首页</a>
     </header>
+
+    <!-- ===== 筛选器 ===== -->
     <div class="filters">
         <label for="yearFilter">📅 年份</label>
         <select id="yearFilter"></select>
         <label for="monthFilter">📆 月份</label>
         <select id="monthFilter">
             <option value="all">全部月份</option>
-            <option value="01">1 月</option><option value="02">2 月</option>
-            <option value="03">3 月</option><option value="04">4 月</option>
-            <option value="05">5 月</option><option value="06">6 月</option>
-            <option value="07">7 月</option><option value="08">8 月</option>
-            <option value="09">9 月</option><option value="10">10 月</option>
-            <option value="11">11 月</option><option value="12">12 月</option>
+            <option value="01">1 月</option>
+            <option value="02">2 月</option>
+            <option value="03">3 月</option>
+            <option value="04">4 月</option>
+            <option value="05">5 月</option>
+            <option value="06">6 月</option>
+            <option value="07">7 月</option>
+            <option value="08">8 月</option>
+            <option value="09">9 月</option>
+            <option value="10">10 月</option>
+            <option value="11">11 月</option>
+            <option value="12">12 月</option>
         </select>
         <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
     </div>
-    <div class="grid" id="grid"><div class="loading">加载壁纸数据中...</div></div>
-    <footer><p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p></footer>
 
+    <!-- ===== 网格 ===== -->
+    <div class="grid" id="grid">
+        <div class="loading">加载壁纸数据中...</div>
+    </div>
+
+    <!-- ===== 页脚 ===== -->
+    <footer>
+        <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
+    </footer>
+
+    <!-- ===== 模态框 ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-image">
+                <img id="modalImg" src="" alt="壁纸大图" />
+            </div>
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-subtitle" id="modalSubtitle"></div>
+            <div class="modal-desc" id="modalDesc"></div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JavaScript -->
+    <!-- ============================================================ -->
     <script>
-        const BING_BASE = 'https://cn.bing.com';
-        const HISTORY_URL = 'history.json';
+        /**
+         * 壁纸归档页面
+         * 从 zh.*.json 读取数据
+         * 支持按年份/月份筛选
+         * 默认显示当月壁纸
+         */
 
-        // SVG 下载图标
-        const DOWNLOAD_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+        // ============ 工具函数 ============
 
-        function formatDisplayDate(dateStr) {
-            if (dateStr && dateStr.length === 8) {
-                return `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+        // 获取北京时间
+        function getBeijingTime() {
+            const now = new Date();
+            const beijingStr = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+            return new Date(beijingStr);
+        }
+
+        // 获取当前年份
+        function getCurrentYear() {
+            return String(getBeijingTime().getFullYear());
+        }
+
+        // 获取当前月份（两位）
+        function getCurrentMonth() {
+            return String(getBeijingTime().getMonth() + 1).padStart(2, '0');
+        }
+
+        // 从 date 字段提取年份
+        function getYearFromDate(dateStr) {
+            if (dateStr && dateStr.length >= 4) {
+                return dateStr.substring(0, 4);
             }
-            return dateStr || '未知日期';
+            return '未知';
         }
 
-        function getYearMonth(dateStr) {
-            if (dateStr && dateStr.length === 8) {
-                return { year: dateStr.slice(0, 4), month: dateStr.slice(4, 6) };
+        // 从 date 字段提取月份
+        function getMonthFromDate(dateStr) {
+            if (dateStr && dateStr.length >= 7) {
+                return dateStr.substring(5, 7);
             }
-            return { year: '未知', month: '未知' };
+            return '未知';
         }
 
-        function get1080pUrl(url) {
-            let result = url;
-            result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
-            result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
-            result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
-            return result;
+        // 构建"光影回顾"详情链接
+        function buildDetailUrl(item) {
+            let topic = item.title || item.subtitle || '壁纸';
+            if (topic.includes('，')) topic = topic.split('，')[0].trim();
+            if (topic.includes(',')) topic = topic.split(',')[0].trim();
+            topic = topic.replace(/\s*\(©[^)]*\)\s*$/, '');
+
+            let dateParam = item.date || '';
+            dateParam = dateParam.replace(/-/g, '');
+            if (dateParam.length === 8) {
+                dateParam = dateParam + '_1600';
+            }
+
+            const encodedTopic = encodeURIComponent(topic);
+            return `https://cn.bing.com/search?q=${encodedTopic}&form=BGALM&filters=HpDate%3a%22${dateParam}%22+mgzv3configlist%3a%22BingQA_Encyclopedia_Layout%22&pc=W011&bwa=1`;
         }
 
+        // 获取 4K 链接
         function get4kUrl(url) {
             let result = url;
             result = result.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
@@ -234,36 +542,95 @@
             }
             return result;
         }
-        
-        function getFullUrl(url) {
-          if (url.startsWith('http')) {
-            return url;
-          }
-          return 'https://cn.bing.com' + url;
+
+        // 获取 1080P 链接
+        function get1080pUrl(url) {
+            let result = url;
+            result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+            result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
+            result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+            return result;
         }
-        
-        async function fetchHistory() {
+
+        // ============ SVG 图标 ============
+        const DOWNLOAD_SVG =
+            `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+
+        // ============ 数据加载 ============
+
+        /**
+         * 加载单个年份的 JSON 文件
+         */
+        async function loadYearData(year) {
             try {
-                const response = await fetch(HISTORY_URL);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                if (!Array.isArray(data) || data.length === 0) throw new Error('历史数据为空');
-                data.sort((a, b) => parseInt(b.enddate) - parseInt(a.enddate));
-                return data;
-            } catch (error) {
-                console.error('获取历史数据失败:', error);
-                throw error;
+                const resp = await fetch(`zh.${year}.json`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                return Array.isArray(data) ? data : [];
+            } catch (e) {
+                console.warn(`加载 ${year} 数据失败:`, e);
+                return [];
             }
         }
 
+        /**
+         * 加载所有年份的数据（2020 ~ 当前年份）
+         */
+        async function loadAllData() {
+            const currentYear = parseInt(getCurrentYear());
+            const years = [];
+            for (let y = 2020; y <= currentYear; y++) {
+                years.push(y);
+            }
+
+            // 并行加载所有年份
+            const results = await Promise.allSettled(years.map(y => loadYearData(y)));
+
+            let all = [];
+            results.forEach((result, index) => {
+                if (result.status === 'fulfilled' && result.value.length) {
+                    all = all.concat(result.value);
+                }
+            });
+
+            // 按日期降序排序（最新的在前）
+            all.sort((a, b) => {
+                const da = a.date || '';
+                const db = b.date || '';
+                return db.localeCompare(da);
+            });
+
+            return all;
+        }
+
+        // ============ 筛选逻辑 ============
+
+        /**
+         * 筛选图片
+         */
+        function filterImages(images, year, month) {
+            return images.filter(img => {
+                const y = getYearFromDate(img.date);
+                const m = getMonthFromDate(img.date);
+                if (year !== 'all' && y !== year) return false;
+                if (month !== 'all' && m !== month) return false;
+                return true;
+            });
+        }
+
+        /**
+         * 填充年份筛选器
+         */
         function populateFilters(images) {
             const yearSet = new Set();
             images.forEach(img => {
-                const { year } = getYearMonth(img.enddate);
-                if (year !== '未知') yearSet.add(year);
+                const y = getYearFromDate(img.date);
+                if (y !== '未知') yearSet.add(y);
             });
+
             const years = Array.from(yearSet).sort().reverse();
             const yearSelect = document.getElementById('yearFilter');
+
             yearSelect.innerHTML = '<option value="all">全部年份</option>';
             years.forEach(y => {
                 const opt = document.createElement('option');
@@ -271,83 +638,161 @@
                 opt.textContent = y + ' 年';
                 yearSelect.appendChild(opt);
             });
+
+            // 默认选中当前年份
+            const currentYear = getCurrentYear();
+            if (years.includes(currentYear)) {
+                yearSelect.value = currentYear;
+            }
         }
 
+        // ============ 模态框 ============
+
+        function openModal(item) {
+            const overlay = document.getElementById('modalOverlay');
+            document.getElementById('modalImg').src = item.bing_url || '';
+            document.getElementById('modalTitle').textContent = item.title || '壁纸';
+            document.getElementById('modalSubtitle').textContent = item.subtitle || '';
+            document.getElementById('modalDesc').textContent = item.description || '暂无详细介绍';
+            overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const overlay = document.getElementById('modalOverlay');
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // 绑定模态框事件
+        document.getElementById('modalClose').addEventListener('click', closeModal);
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ============ 渲染网格 ============
+
+        /**
+         * 渲染壁纸网格
+         */
         function renderGrid(images) {
             const grid = document.getElementById('grid');
             const totalCount = document.getElementById('totalCount');
+
             if (!images || images.length === 0) {
                 grid.innerHTML = '<div class="empty">😅 没有找到匹配的壁纸</div>';
                 totalCount.textContent = '0';
                 return;
             }
+
             totalCount.textContent = images.length;
 
             grid.innerHTML = images.map(img => {
-                const url = getFullUrl(img.url); 
-                const dateStr = img.enddate || '';
-                const displayDate = formatDisplayDate(dateStr);
-                const copyright = img.copyright || 'Bing 壁纸';
+                const url = img.bing_url || '';
+                const dateStr = img.date || '';
+                const title = img.title || 'Bing 壁纸';
+                const subtitle = img.subtitle || '';
+                const description = img.description || '';
 
-                const hd1080Url = get1080pUrl(url);
                 const hd4kUrl = get4kUrl(url);
+                const hd1080Url = get1080pUrl(url);
+                const detailUrl = buildDetailUrl(img);
+
+                // 对 JSON 数据进行转义，防止 XSS
+                const escapedData = JSON.stringify(img).replace(/'/g, "&#39;");
 
                 return `
-                    <div class="card" title="${copyright}">
-                        <img src="${url}" alt="${copyright}" loading="lazy" onerror="this.style.display='none'" />
+                    <div class="card" data-item='${escapedData}'>
+                        <img src="${url}" alt="${title}" loading="lazy" onerror="this.style.display='none'" />
+                        <a href="${detailUrl}" class="review-btn" target="_blank" onclick="event.stopPropagation();">📖 光影回顾</a>
                         <div class="info">
-                            <div class="date">📅 ${displayDate}</div>
-                            <div class="copyright">${copyright}</div>
+                            <div class="date">📅 ${dateStr}</div>
+                            <div class="title">${title}</div>
+                            ${subtitle ? `<div class="subtitle">${subtitle}</div>` : ''}
                             <div class="btn-group">
-                                <a href="${hd4kUrl}" class="download-btn btn-4k" target="_blank">
-                                    ${DOWNLOAD_SVG}
-                                    4K
+                                <a href="${hd4kUrl}" class="download-btn btn-4k" target="_blank" onclick="event.stopPropagation();">
+                                    ${DOWNLOAD_SVG} 4K
                                 </a>
-                                <a href="${hd1080Url}" class="download-btn btn-1080p" target="_blank">
-                                    ${DOWNLOAD_SVG}
-                                    1080P
+                                <a href="${hd1080Url}" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">
+                                    ${DOWNLOAD_SVG} 1080P
                                 </a>
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
-        }
 
-        function filterImages(images, year, month) {
-            return images.filter(img => {
-                const { year: y, month: m } = getYearMonth(img.enddate);
-                if (year !== 'all' && y !== year) return false;
-                if (month !== 'all' && m !== month) return false;
-                return true;
+            // ===== 绑定事件：点击卡片打开弹窗 =====
+            document.querySelectorAll('.card').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    // 如果点击的是链接，不触发弹窗
+                    if (e.target.closest('a')) return;
+                    const data = this.dataset.item;
+                    if (data) {
+                        try {
+                            const item = JSON.parse(data);
+                            openModal(item);
+                        } catch (e) {
+                            console.warn('解析数据失败:', e);
+                        }
+                    }
+                });
             });
         }
+
+        // ============ 主函数 ============
 
         async function main() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
+
             try {
-                const allImages = await fetchHistory();
+                // 1. 加载所有数据
+                const allImages = await loadAllData();
+
                 if (!allImages || allImages.length === 0) {
                     grid.innerHTML = '<div class="empty">😅 暂无壁纸数据，等待自动归档...</div>';
                     return;
                 }
+
+                // 2. 填充年份筛选器
                 populateFilters(allImages);
+
+                // 3. 获取筛选器引用
                 const yearFilter = document.getElementById('yearFilter');
                 const monthFilter = document.getElementById('monthFilter');
+
+                // 4. 默认显示当月壁纸
+                const currentMonth = getCurrentMonth();
+                monthFilter.value = currentMonth;
+
+                // 5. 首次渲染
                 const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
                 renderGrid(filtered);
+
+                // 6. 监听筛选器变化
                 yearFilter.addEventListener('change', () => {
-                    renderGrid(filterImages(allImages, yearFilter.value, monthFilter.value));
+                    const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
+                    renderGrid(filtered);
                 });
+
                 monthFilter.addEventListener('change', () => {
-                    renderGrid(filterImages(allImages, yearFilter.value, monthFilter.value));
+                    const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
+                    renderGrid(filtered);
                 });
+
             } catch (error) {
+                console.error('加载失败:', error);
                 grid.innerHTML = `<div class="empty">❌ 加载失败：${error.message || '未知错误'}</div>`;
             }
         }
+
+        // ============ 启动 ============
         document.addEventListener('DOMContentLoaded', main);
     </script>
+
 </body>
 </html>
