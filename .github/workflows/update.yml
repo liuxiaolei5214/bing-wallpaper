@@ -19,33 +19,54 @@ jobs:
           curl -s "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&setmkt=zh-CN" > today.json
           echo "✅ 获取今日壁纸"
 
-      - name: Merge into history.json
+      - name: Convert to zh.2026.json format and merge
         run: |
-          # 读取现有的 history.json
-          if [ -f docs/history.json ]; then
-            cat docs/history.json > history_old.json
-          else
-            echo '[]' > history_old.json
+          # 读取现有的各年份 JSON 文件
+          # 获取当前年份
+          CURRENT_YEAR=$(TZ='Asia/Shanghai' date +'%Y')
+          CURRENT_DATE=$(TZ='Asia/Shanghai' date +'%Y-%m-%d')
+          YEAR_FILE="zh.${CURRENT_YEAR}.json"
+          
+          # 如果年份文件不存在，创建空数组
+          if [ ! -f "docs/${YEAR_FILE}" ]; then
+            echo '[]' > "docs/${YEAR_FILE}"
           fi
-
-          # 精简数据 + 4K 转换
+          
+          # 读取现有数据
+          cat "docs/${YEAR_FILE}" > year_old.json
+          
+          # 从 today.json 提取并转换为新格式
           jq '.images | map({
-              startdate: .startdate,
-              enddate: .enddate,
-              url: .url,
-              urlbase: .urlbase,
-              copyright: (.copyright | gsub("\\s*\\(©[^)]*\\)\\s*"; "") | gsub("\\s*,\\s*$"; ""))
+              title: (.copyright | split("，") | .[0] // .copyright),
+              subtitle: (.copyright | split("，") | .[1:] | join("，") // ""),
+              description: .copyright,
+              date: (.enddate | sub("(?<y>....)(?<m>..)(?<d>..)"; "\(.y)-\(.m)-\(.d)")),
+              bing_url: ("https://bing.com" + .urlbase + "_UHD.jpg")
           })' today.json > today_clean.json
+          
+          # 合并去重（按 date 去重，保留最新的）
+          jq -s '.[0] + .[1] | unique_by(.date) | sort_by(.date) | reverse' \
+            today_clean.json year_old.json > "docs/${YEAR_FILE}"
+          
+          echo "✅ 已更新 ${YEAR_FILE}，共 $(jq 'length' "docs/${YEAR_FILE}") 张壁纸"
 
-          # 合并去重
-          jq -s '.[0] + .[1] | unique_by(.startdate) | sort_by(.startdate) | reverse' \
-            today_clean.json history_old.json > docs/history.json
-
-          echo "✅ 合并完成，共 $(jq 'length' docs/history.json) 张壁纸"
+      - name: Generate combined history.json (for compatibility)
+        run: |
+          # 合并所有年份的 JSON 文件到一个 history.json（保持新格式）
+          echo '[]' > docs/history.json
+          for year in $(seq 2020 $(date +'%Y')); do
+            if [ -f "docs/zh.${year}.json" ]; then
+              jq -s '.[0] + .[1]' docs/history.json "docs/zh.${year}.json" > docs/history_temp.json
+              mv docs/history_temp.json docs/history.json
+            fi
+          done
+          # 按 date 排序去重
+          jq 'unique_by(.date) | sort_by(.date) | reverse' docs/history.json > docs/history_temp.json
+          mv docs/history_temp.json docs/history.json
+          echo "✅ 合并所有年份，共 $(jq 'length' docs/history.json) 张壁纸"
 
       - name: Touch index.html to refresh cache
         run: |
-          mkdir -p docs
           touch docs/index.html
           echo "✅ Cache refreshed at $(date)" >> docs/cache.log
 
@@ -57,7 +78,7 @@ jobs:
           git config --local user.name "liuxiaolei5214"
           git config --local --unset http.https://github.com/.extraheader || true
           git remote set-url origin https://x-access-token:${TOKEN}@github.com/liuxiaolei5214/bing-wallpaper.git
-          git add docs/history.json docs/index.html docs/cache.log
+          git add docs/zh.*.json docs/history.json docs/index.html docs/cache.log
           if git diff --cached --quiet; then
             echo "No changes to commit, skipping push."
           else
