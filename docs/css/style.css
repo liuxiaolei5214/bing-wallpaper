@@ -104,7 +104,8 @@ section h2 {
     color: #fff;
     pointer-events: none;
     transition: opacity 0.4s ease;
-    opacity: 0;  /* 默认隐藏 */
+    opacity: 1;  /* ✅ 始终显示 */
+    visibility: visible;  /* ✅ 始终可见 */
 }
 
 #todayCard:hover .info {
