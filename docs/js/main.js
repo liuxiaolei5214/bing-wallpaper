@@ -178,9 +178,36 @@ function openModal(item) {
         subtitleEl.style.display = 'none';
     }
 
-    // 处理描述：按段落分割，每段首行缩进
-    const desc = item.description || '暂无详细介绍';
-    const paragraphs = desc.split('\n').filter(p => p.trim());
+    // ✅ 修复：处理描述文字，去除多余空行
+    let desc = item.description || '暂无详细介绍';
+
+    // 统一换行符
+    desc = desc.replace(/\r\n/g, '\n');
+    desc = desc.replace(/\r/g, '\n');
+    desc = desc.replace(/<br\s*\/?>/gi, '\n');
+
+    // ✅ 分割段落，过滤掉空段落（包括只包含空白的行）
+    const paragraphs = desc.split('\n').filter(p => p.trim() !== '');
+
+    // 如果分割后只有一个段落，但包含多个句子，尝试按句号分割
+    if (paragraphs.length <= 1 && desc.length > 50) {
+        const sentences = desc.split(/[。？！；]\s*/).filter(s => s.trim());
+        if (sentences.length > 1) {
+            const grouped = [];
+            for (let i = 0; i < sentences.length; i += 2) {
+                const group = sentences.slice(i, i + 2).join('。');
+                if (group.trim()) grouped.push(group.trim() + '。');
+            }
+            // ✅ 用 <p> 包裹，但段落之间没有空白行
+            const descHtml = grouped.map(p => `<p>${p}</p>`).join('');
+            document.getElementById('modalDesc').innerHTML = descHtml;
+            overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            return;
+        }
+    }
+
+    // ✅ 正常情况：每个段落用 <p> 包裹，段落之间没有空白行
     const descHtml = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
     document.getElementById('modalDesc').innerHTML = descHtml;
 
