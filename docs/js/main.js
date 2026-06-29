@@ -150,11 +150,6 @@ function renderToday(images) {
             </div>
         </div>
     `;
-
-    container.onclick = function(e) {
-        if (e.target.closest('a')) return;
-        openModal(todayItem);
-    };
 }
 
 // ============ 模态框 ==========
