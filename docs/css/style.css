@@ -470,34 +470,36 @@ section h2 {
     max-width: 900px;
     width: 100%;
     max-height: 85vh;
-    overflow-y: hidden;
-    overflow-x: hidden; 
+    overflow: hidden;  /* ✅ 完全隐藏滚动条 */
     box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
-    padding: 0;  /* 移除内边距，让图片占满 */
+    padding: 0;
     position: relative;
     transform: scale(0.95);
     transition: transform 0.3s ease;
-}
-
-/* ✅ 隐藏滚动条（但保留滚动功能） */
-.modal-box::-webkit-scrollbar {
-    width: 4px;
-}
-
-.modal-box::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.modal-box::-webkit-scrollbar-thumb {
-    background: #4d96ff;
-    border-radius: 4px;
 }
 
 .modal-overlay.open .modal-box {
     transform: scale(1);
 }
 
-/* 关闭按钮 - 放到图片右上角 */
+/* ✅ 内容区域独立滚动（如果需要） */
+.modal-content {
+    padding: 20px 28px 32px;
+    max-height: 45vh;  /* ✅ 限制高度，内容过多时内部滚动 */
+    overflow-y: auto;  /* ✅ 只在内容区域滚动 */
+    overflow-x: hidden;
+}
+
+/* ✅ 隐藏内容区域的滚动条（但保留滚动功能） */
+.modal-content::-webkit-scrollbar {
+    width: 0px;  /* ✅ 完全隐藏滚动条 */
+    background: transparent;
+}
+
+.modal-content {
+    scrollbar-width: none;  /* ✅ Firefox 隐藏滚动条 */
+}
+
 .modal-close {
     position: absolute;
     top: 16px;
@@ -527,7 +529,7 @@ section h2 {
 
 .modal-image {
     width: 100%;
-    border-radius: 28px 28px 0 0;  /* 顶部圆角，底部无圆角 */
+    border-radius: 28px 28px 0 0;
     overflow: hidden;
     background: #0b0b0b;
 }
@@ -536,14 +538,9 @@ section h2 {
     width: 100%;
     height: auto;
     display: block;
-    max-height: 55vh;
+    max-height: 50vh;
     object-fit: contain;
     background: #0b0b0b;
-}
-
-/* 内容区域（标题、描述） */
-.modal-content {
-    padding: 20px 28px 32px;
 }
 
 .modal-title {
@@ -558,24 +555,24 @@ section h2 {
     margin-bottom: 12px;
 }
 
+/* ✅ 描述文字 - 段落之间没有空行 */
 .modal-desc {
     font-size: 0.95rem;
     line-height: 1.8;
     opacity: 0.85;
-    white-space: pre-wrap;
+    white-space: normal;
     word-break: break-word;
 }
 
-/* ✅ 每个段落首行缩进2字符，段落间距为0 */
 .modal-desc p {
     text-indent: 2em;
-    margin: 0;  /* ✅ 去掉段落之间的空白行 */
+    margin: 0;  /* ✅ 完全去掉段落间距 */
     padding: 0;
+    line-height: 1.8;
 }
 
-/* ✅ 段落之间用换行分隔，但不要空白行 */
 .modal-desc p + p {
-    margin-top: 0;  /* ✅ 确保段落之间没有额外间距 */
+    margin-top: 0;  /* ✅ 确保段落之间没有间距 */
 }
 
 /* ========== 加载状态 ========== */
