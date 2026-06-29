@@ -35,10 +35,19 @@ function buildDetailUrl(item) {
     if (topic.includes(',')) topic = topic.split(',')[0].trim();
     topic = topic.replace(/\s*\(©[^)]*\)\s*$/, '');
 
+    // ✅ 日期减1天
     let dateParam = item.date || '';
-    dateParam = dateParam.replace(/-/g, '');
-    if (dateParam.length === 8) {
-        dateParam = dateParam + '_1600';
+    if (dateParam) {
+        // 将 YYYY-MM-DD 转换为 Date 对象
+        const parts = dateParam.split('-');
+        const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        // 减1天
+        date.setDate(date.getDate() - 1);
+        // 格式化为 YYYYMMDD
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        dateParam = y + m + d + '_1600';
     }
 
     const encodedTopic = encodeURIComponent(topic);
