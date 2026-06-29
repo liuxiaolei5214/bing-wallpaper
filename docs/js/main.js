@@ -301,13 +301,6 @@ function renderMovieCarousel(images) {
     if (prevBtn) prevBtn.onclick = () => { changeMovie(-1); };
     if (nextBtn) nextBtn.onclick = () => { changeMovie(1); };
 
-    slide.onclick = function(e) {
-        if (e.target.closest('.movie-actions')) return;
-        if (movieData[movieIndex]) {
-            openModal(movieData[movieIndex]);
-        }
-    };
-
     startMovieTimer();
 }
 
