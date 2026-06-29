@@ -109,12 +109,9 @@ function renderToday(images) {
     const description = todayItem.description || '';
     const dateStr = todayItem.date || '';
 
-    // 标题格式: subtitle | title - YYYY/MM/DD
+    // 标题：只显示 title，不加粗变大在 CSS 中控制
+    // subtitle 如果为空或与 title 相同，则不显示
     let displayTitle = title;
-    if (subtitle) {
-        displayTitle = `${subtitle} | ${title}`;
-    }
-    displayTitle = `${displayTitle} - ${dateStr}`;
 
     // 4K 链接处理
     let hd4kUrl = url;
@@ -122,12 +119,14 @@ function renderToday(images) {
 
     const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
 
+    // 判断 subtitle 是否显示（不为空且不等于 title）
+    const showSubtitle = subtitle && subtitle !== title;
+
     container.innerHTML = `
         <img src="${url}" alt="${title}" loading="eager" />
         <div class="info">
-            <div class="date">📅 ${dateStr}</div>
             <div class="title-line">${displayTitle}</div>
-            ${subtitle ? `<div class="subtitle-line">${subtitle}</div>` : ''}
+            ${showSubtitle ? `<div class="subtitle-line">${subtitle}</div>` : ''}
             ${description ? `<div class="desc-line">${description}</div>` : ''}
             <div class="actions">
                 <div class="btn-group">
