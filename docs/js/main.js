@@ -178,7 +178,7 @@ function openModal(item) {
         subtitleEl.style.display = 'none';
     }
 
-    // ✅ 修复：处理描述文字，去除多余空行
+    // ✅ 修复：处理描述文字
     let desc = item.description || '暂无详细介绍';
 
     // 统一换行符
@@ -186,19 +186,32 @@ function openModal(item) {
     desc = desc.replace(/\r/g, '\n');
     desc = desc.replace(/<br\s*\/?>/gi, '\n');
 
-    // ✅ 分割段落，过滤掉空段落（包括只包含空白的行）
-    const paragraphs = desc.split('\n').filter(p => p.trim() !== '');
+    // ✅ 按 \n 分割，过滤空段落，去除首尾空格
+    const paragraphs = desc.split('\n')
+        .map(p => p.trim())
+        .filter(p => p !== '');
 
-    // 如果分割后只有一个段落，但包含多个句子，尝试按句号分割
-    if (paragraphs.length <= 1 && desc.length > 50) {
-        const sentences = desc.split(/[。？！；]\s*/).filter(s => s.trim());
+    // ✅ 如果只有一个段落但包含多个句子，用句号分割
+    if (paragraphs.length === 1 && desc.length > 50) {
+        // 用中文句号、问号、感叹号分割
+        const sentences = desc.split(/[。？！；]\s*/)
+            .map(s => s.trim())
+            .filter(s => s !== '');
+        
         if (sentences.length > 1) {
+            // 每2句合成一段，避免段落过多
             const grouped = [];
             for (let i = 0; i < sentences.length; i += 2) {
-                const group = sentences.slice(i, i + 2).join('。');
-                if (group.trim()) grouped.push(group.trim() + '。');
+                let group = sentences.slice(i, i + 2).join('。');
+                if (group) {
+                    // 如果最后没有句号，补一个
+                    if (!group.endsWith('。') && !group.endsWith('？') && !group.endsWith('！')) {
+                        group = group + '。';
+                    }
+                    grouped.push(group);
+                }
             }
-            // ✅ 用 <p> 包裹，但段落之间没有空白行
+            // ✅ 直接用 <p> 包裹，段落之间没有空行
             const descHtml = grouped.map(p => `<p>${p}</p>`).join('');
             document.getElementById('modalDesc').innerHTML = descHtml;
             overlay.classList.add('open');
@@ -207,8 +220,8 @@ function openModal(item) {
         }
     }
 
-    // ✅ 正常情况：每个段落用 <p> 包裹，段落之间没有空白行
-    const descHtml = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+    // ✅ 正常情况：每个段落用 <p> 包裹，没有空行
+    const descHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
     document.getElementById('modalDesc').innerHTML = descHtml;
 
     overlay.classList.add('open');
