@@ -13,45 +13,151 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Fetch today's wallpaper with encyclopedia
+      - name: Cache Playwright
+        uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Fetch today's wallpaper
         id: fetch
         run: |
-          # 获取今日壁纸数据（含详情页）
           curl -s "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&setmkt=zh-CN" > today.json
           echo "✅ 获取今日壁纸"
 
-      - name: Fetch encyclopedia description
+      - name: Install Playwright and fetch description
         id: fetch_desc
         run: |
-          # 从 today.json 提取 enddate 和 urlbase
-          ENDDATE=$(jq -r '.images[0].enddate' today.json)
-          URLBASE=$(jq -r '.images[0].urlbase' today.json)
+          # 安装 Playwright
+          pip install playwright
+          playwright install chromium
           
-          # 构建详情页 URL（使用 Bing 的详情页）
-          DETAIL_URL="https://cn.bing.com/search?q=${URLBASE}&form=HPNNNN&filters=HpDate%3a%22${ENDDATE}_1600%22"
+          python3 << 'EOF'
+          import re
+          import json
+          import os
+          from playwright.sync_api import sync_playwright
           
-          # 获取详情页 HTML
-          curl -s "${DETAIL_URL}" > detail.html
+          # 读取 today.json
+          with open('today.json', 'r', encoding='utf-8') as f:
+              data = json.load(f)
           
-          # 提取 encyclopedia-description 内容（使用 sed 或 awk 提取）
-          # 先提取 aria-label 属性中的内容
-          DESCRIPTION=$(cat detail.html | grep -oP 'encyclopedia-description" aria-label="\K[^"]*' | head -1)
+          if not data.get('images'):
+              print("❌ 没有获取到图片数据")
+              exit(1)
           
-          # 如果提取失败，尝试另一种方式
-          if [ -z "$DESCRIPTION" ]; then
-            DESCRIPTION=$(cat detail.html | sed -n 's/.*encyclopedia-description[^>]*>\([^<]*\)<.*/\1/p' | head -1)
-          fi
+          img = data['images'][0]
+          enddate = img.get('enddate', '')
+          urlbase = img.get('urlbase', '')
+          copyright_text = img.get('copyright', '')
           
-          # 如果还是空，使用 copyright 作为备用
-          if [ -z "$DESCRIPTION" ]; then
-            DESCRIPTION=$(jq -r '.images[0].copyright' today.json)
-          fi
+          # 构建详情页 URL
+          detail_url = f'https://cn.bing.com/search?q={urlbase}&form=HPNNNN&filters=HpDate%3a%22{enddate}_1600%22'
+          print(f"🔗 访问详情页: {detail_url}")
           
-          # 将提取的描述保存到文件
-          echo "$DESCRIPTION" > description.txt
-          echo "✅ 提取描述: ${DESCRIPTION:0:50}..."
+          desc = ''
+          
+          try:
+              with sync_playwright() as p:
+                  # 启动浏览器（无头模式）
+                  browser = p.chromium.launch(headless=True)
+                  page = browser.new_page()
+                  
+                  # 访问页面
+                  page.goto(detail_url, timeout=30000)
+                  
+                  # 等待页面加载完成
+                  page.wait_for_load_state('networkidle')
+                  
+                  # 方法1: 通过 aria-label 提取
+                  try:
+                      element = page.locator('.encyclopedia-description')
+                      desc = element.get_attribute('aria-label')
+                      if not desc:
+                          desc = element.text_content()
+                      print("✅ 方法1提取成功")
+                  except Exception as e:
+                      print(f"⚠️ 方法1失败: {e}")
+                  
+                  # 方法2: 使用 JavaScript 提取
+                  if not desc or len(desc) < 20:
+                      try:
+                          desc = page.evaluate('''
+                              () => {
+                                  const el = document.querySelector('.encyclopedia-description');
+                                  if (el) {
+                                      return el.getAttribute('aria-label') || el.textContent;
+                                  }
+                                  // 备用：查找包含描述文字的容器
+                                  const texts = document.querySelectorAll('[class*="description"]');
+                                  for (let t of texts) {
+                                      const content = t.textContent || t.getAttribute('aria-label');
+                                      if (content && content.length > 50) {
+                                          return content;
+                                      }
+                                  }
+                                  return '';
+                              }
+                          ''')
+                          if desc and len(desc) > 20:
+                              print("✅ 方法2提取成功")
+                      except Exception as e:
+                          print(f"⚠️ 方法2失败: {e}")
+                  
+                  browser.close()
+          except Exception as e:
+              print(f"❌ Playwright 执行失败: {e}")
+              desc = ''
+          
+          # 如果所有方法都失败，使用 copyright 作为备用
+          if not desc or len(desc) < 20:
+              desc = copyright_text
+              print("⚠️ 使用 copyright 作为备用描述")
+          
+          # 清理 title：去掉 (© ...)
+          clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
+          clean_title = re.sub(r'\s*,\s*$', '', clean_title)
+          
+          # 提取 subtitle（逗号后面的部分作为副标题）
+          subtitle = ''
+          if '，' in clean_title:
+              parts = clean_title.split('，')
+              if len(parts) > 1:
+                  clean_title = parts[0]
+                  subtitle = parts[1] if len(parts) > 1 else ''
+          
+          # 构建日期
+          if len(enddate) == 8:
+              date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}"
+          else:
+              date_str = enddate
+          
+          # 构建 bing_url
+          bing_url = f"https://bing.com{urlbase}_UHD.jpg" if urlbase else ''
+          
+          # 保存结果到文件
+          result = {
+              "title": clean_title,
+              "subtitle": subtitle,
+              "description": desc,
+              "date": date_str,
+              "bing_url": bing_url
+          }
+          
+          with open('today_clean.json', 'w', encoding='utf-8') as f:
+              json.dump(result, f, ensure_ascii=False, indent=2)
+          
+          print(f"✅ 处理完成")
+          print(f"📝 标题: {clean_title}")
+          print(f"📝 副标题: {subtitle}")
+          print(f"📝 描述长度: {len(desc)} 字符")
+          print(f"📅 日期: {date_str}")
+          EOF
 
-      - name: Convert to zh.2026.json format
+      - name: Merge into year file
         run: |
           CURRENT_YEAR=$(date +'%Y')
           YEAR_FILE="zh.${CURRENT_YEAR}.json"
@@ -62,34 +168,11 @@ jobs:
           
           cat "docs/${YEAR_FILE}" > year_old.json
           
-          # 读取提取的描述
-          DESCRIPTION=$(cat description.txt)
-          
-          # 从 copyright 中提取纯净标题（去掉 © 和后面的内容）
-          RAW_TITLE=$(jq -r '.images[0].copyright' today.json)
-          # 去掉 (© ...) 部分
-          CLEAN_TITLE=$(echo "$RAW_TITLE" | sed 's/\s*(©[^)]*)//g' | sed 's/\s*,\s*$//')
-          # 提取 subtitle（如果有），这里用标题的第一部分
-          SUBTITLE=""
-          
-          jq -n --arg title "$CLEAN_TITLE" \
-                --arg subtitle "$SUBTITLE" \
-                --arg desc "$DESCRIPTION" \
-                --arg date "$(jq -r '.images[0].enddate' today.json | sed 's/\(....\)\(..\)\(..\)/\1-\2-\3/')" \
-                --arg bing_url "https://bing.com$(jq -r '.images[0].urlbase' today.json)_UHD.jpg" \
-            '{
-              title: $title,
-              subtitle: $subtitle,
-              description: $desc,
-              date: $date,
-              bing_url: $bing_url
-            }' > today_clean.json
-          
           # 合并去重
           jq -s '.[0] + [.[1]] | unique_by(.date) | sort_by(.date) | reverse' \
             year_old.json today_clean.json > "docs/${YEAR_FILE}"
           
-          echo "✅ 已更新 ${YEAR_FILE}"
+          echo "✅ 已更新 ${YEAR_FILE}，共 $(jq 'length' "docs/${YEAR_FILE}") 张壁纸"
 
       - name: Generate combined history.json
         run: |
