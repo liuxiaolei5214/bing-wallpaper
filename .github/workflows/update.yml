@@ -31,14 +31,14 @@ jobs:
       - name: Install Playwright and fetch description
         id: fetch_desc
         run: |
-          # 安装 Playwright
           pip install playwright
           playwright install chromium
           
           python3 << 'EOF'
           import re
           import json
-          import os
+          import urllib.parse
+          import time
           from playwright.sync_api import sync_playwright
           
           # 读取 today.json
@@ -51,11 +51,20 @@ jobs:
           
           img = data['images'][0]
           enddate = img.get('enddate', '')
-          urlbase = img.get('urlbase', '')
           copyright_text = img.get('copyright', '')
           
-          # 构建详情页 URL
-          detail_url = f'https://cn.bing.com/search?q={urlbase}&form=HPNNNN&filters=HpDate%3a%22{enddate}_1600%22'
+          # ✅ 从 copyright 中提取主题（用于搜索）
+          topic = copyright_text
+          # 去掉 (© ...) 部分
+          topic = re.sub(r'\s*\(©[^)]*\)\s*', '', topic)
+          # 去掉末尾的逗号
+          topic = re.sub(r'\s*,\s*$', '', topic)
+          # URL 编码
+          encoded_topic = urllib.parse.quote(topic)
+          
+          # ✅ 构建正确的详情页 URL
+          date_param = f"{enddate}_1600"
+          detail_url = f"https://cn.bing.com/search?q={encoded_topic}&form=BGALM&filters=HpDate%3a%22{date_param}%22"
           print(f"🔗 访问详情页: {detail_url}")
           
           desc = ''
@@ -72,6 +81,12 @@ jobs:
                   # 等待页面加载完成
                   page.wait_for_load_state('networkidle')
                   
+                  # 等待 encyclopedia-description 出现
+                  try:
+                      page.wait_for_selector('.encyclopedia-description', timeout=10000)
+                  except:
+                      print("⏳ 等待超时，尝试其他选择器")
+                  
                   # 方法1: 通过 aria-label 提取
                   try:
                       element = page.locator('.encyclopedia-description')
@@ -87,16 +102,19 @@ jobs:
                       try:
                           desc = page.evaluate('''
                               () => {
-                                  const el = document.querySelector('.encyclopedia-description');
-                                  if (el) {
-                                      return el.getAttribute('aria-label') || el.textContent;
-                                  }
-                                  // 备用：查找包含描述文字的容器
-                                  const texts = document.querySelectorAll('[class*="description"]');
-                                  for (let t of texts) {
-                                      const content = t.textContent || t.getAttribute('aria-label');
-                                      if (content && content.length > 50) {
-                                          return content;
+                                  // 尝试多个选择器
+                                  const selectors = [
+                                      '.encyclopedia-description',
+                                      '[class*="encyclopedia-description"]',
+                                      '.b_wpt_bl .encyclopedia-content .encyclopedia-text div:last-child'
+                                  ];
+                                  for (let sel of selectors) {
+                                      const el = document.querySelector(sel);
+                                      if (el) {
+                                          const content = el.getAttribute('aria-label') || el.textContent;
+                                          if (content && content.length > 50) {
+                                              return content;
+                                          }
                                       }
                                   }
                                   return '';
@@ -106,6 +124,24 @@ jobs:
                               print("✅ 方法2提取成功")
                       except Exception as e:
                           print(f"⚠️ 方法2失败: {e}")
+                  
+                  # 方法3: 等待更长时间后重试
+                  if not desc or len(desc) < 20:
+                      try:
+                          time.sleep(2)
+                          desc = page.evaluate('''
+                              () => {
+                                  const el = document.querySelector('.encyclopedia-description');
+                                  if (el) {
+                                      return el.getAttribute('aria-label') || el.textContent;
+                                  }
+                                  return '';
+                              }
+                          ''')
+                          if desc and len(desc) > 20:
+                              print("✅ 方法3提取成功")
+                      except Exception as e:
+                          print(f"⚠️ 方法3失败: {e}")
                   
                   browser.close()
           except Exception as e:
@@ -117,28 +153,29 @@ jobs:
               desc = copyright_text
               print("⚠️ 使用 copyright 作为备用描述")
           
-          # 清理 title：去掉 (© ...)
+          # ✅ 清理 title：去掉 (© ...)
           clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
           clean_title = re.sub(r'\s*,\s*$', '', clean_title)
           
-          # 提取 subtitle（逗号后面的部分作为副标题）
+          # ✅ 提取 subtitle：按逗号分割，第一部分作 title，其余作 subtitle
           subtitle = ''
           if '，' in clean_title:
               parts = clean_title.split('，')
               if len(parts) > 1:
-                  clean_title = parts[0]
-                  subtitle = parts[1] if len(parts) > 1 else ''
+                  clean_title = parts[0].strip()
+                  subtitle = '，'.join(parts[1:]).strip()
           
-          # 构建日期
+          # ✅ 构建日期
           if len(enddate) == 8:
               date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}"
           else:
               date_str = enddate
           
-          # 构建 bing_url
+          # ✅ 构建 bing_url
+          urlbase = img.get('urlbase', '')
           bing_url = f"https://bing.com{urlbase}_UHD.jpg" if urlbase else ''
           
-          # 保存结果到文件
+          # ✅ 保存结果到文件
           result = {
               "title": clean_title,
               "subtitle": subtitle,
