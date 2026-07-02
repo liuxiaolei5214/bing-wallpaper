@@ -13,184 +13,194 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cache Playwright
-        uses: actions/cache@v3
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
-
-      - name: Fetch today's wallpaper
+      - name: Fetch today's wallpaper from Bing API
         id: fetch
         run: |
           curl -s "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&setmkt=zh-CN" > today.json
           echo "✅ 获取今日壁纸"
 
-      - name: Install Playwright and fetch description
-        id: fetch_desc
+      - name: Extract data from multiple sources
+        id: extract
         run: |
-          pip install playwright
-          playwright install chromium
-          
           python3 << 'EOF'
-          import re
           import json
-          import urllib.parse
+          import re
+          import requests
+          from datetime import datetime
           import time
-          from playwright.sync_api import sync_playwright
-          
+
           # 读取 today.json
           with open('today.json', 'r', encoding='utf-8') as f:
               data = json.load(f)
-          
+
           if not data.get('images'):
               print("❌ 没有获取到图片数据")
               exit(1)
-          
+
           img = data['images'][0]
           enddate = img.get('enddate', '')
           copyright_text = img.get('copyright', '')
-          
-          # ✅ 从 copyright 中提取主题（用于搜索）
-          topic = copyright_text
-          # 去掉 (© ...) 部分
-          topic = re.sub(r'\s*\(©[^)]*\)\s*', '', topic)
-          # 去掉末尾的逗号
-          topic = re.sub(r'\s*,\s*$', '', topic)
-          # URL 编码
-          encoded_topic = urllib.parse.quote(topic)
-          
-          # ✅ 构建正确的详情页 URL
-          date_param = f"{enddate}_1600"
-          detail_url = f"https://cn.bing.com/search?q={encoded_topic}&form=BGALM&filters=HpDate%3a%22{date_param}%22"
-          print(f"🔗 访问详情页: {detail_url}")
-          
-          desc = ''
-          
-          try:
-              with sync_playwright() as p:
-                  # 启动浏览器（无头模式）
-                  browser = p.chromium.launch(headless=True)
-                  page = browser.new_page()
-                  
-                  # 访问页面
-                  page.goto(detail_url, timeout=30000)
-                  
-                  # 等待页面加载完成
-                  page.wait_for_load_state('networkidle')
-                  
-                  # 等待 encyclopedia-description 出现
-                  try:
-                      page.wait_for_selector('.encyclopedia-description', timeout=10000)
-                  except:
-                      print("⏳ 等待超时，尝试其他选择器")
-                  
-                  # 方法1: 通过 aria-label 提取
-                  try:
-                      element = page.locator('.encyclopedia-description')
-                      desc = element.get_attribute('aria-label')
-                      if not desc:
-                          desc = element.text_content()
-                      print("✅ 方法1提取成功")
-                  except Exception as e:
-                      print(f"⚠️ 方法1失败: {e}")
-                  
-                  # 方法2: 使用 JavaScript 提取
-                  if not desc or len(desc) < 20:
-                      try:
-                          desc = page.evaluate('''
-                              () => {
-                                  // 尝试多个选择器
-                                  const selectors = [
-                                      '.encyclopedia-description',
-                                      '[class*="encyclopedia-description"]',
-                                      '.b_wpt_bl .encyclopedia-content .encyclopedia-text div:last-child'
-                                  ];
-                                  for (let sel of selectors) {
-                                      const el = document.querySelector(sel);
-                                      if (el) {
-                                          const content = el.getAttribute('aria-label') || el.textContent;
-                                          if (content && content.length > 50) {
-                                              return content;
-                                          }
-                                      }
-                                  }
-                                  return '';
-                              }
-                          ''')
-                          if desc and len(desc) > 20:
-                              print("✅ 方法2提取成功")
-                      except Exception as e:
-                          print(f"⚠️ 方法2失败: {e}")
-                  
-                  # 方法3: 等待更长时间后重试
-                  if not desc or len(desc) < 20:
-                      try:
-                          time.sleep(2)
-                          desc = page.evaluate('''
-                              () => {
-                                  const el = document.querySelector('.encyclopedia-description');
-                                  if (el) {
-                                      return el.getAttribute('aria-label') || el.textContent;
-                                  }
-                                  return '';
-                              }
-                          ''')
-                          if desc and len(desc) > 20:
-                              print("✅ 方法3提取成功")
-                      except Exception as e:
-                          print(f"⚠️ 方法3失败: {e}")
-                  
-                  browser.close()
-          except Exception as e:
-              print(f"❌ Playwright 执行失败: {e}")
-              desc = ''
-          
-          # 如果所有方法都失败，使用 copyright 作为备用
-          if not desc or len(desc) < 20:
-              desc = copyright_text
-              print("⚠️ 使用 copyright 作为备用描述")
-          
-          # ✅ 清理 title：去掉 (© ...)
-          clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
-          clean_title = re.sub(r'\s*,\s*$', '', clean_title)
-          
-          # ✅ 提取 subtitle：按逗号分割，第一部分作 title，其余作 subtitle
+          urlbase = img.get('urlbase', '')
+
+          # 构建日期
+          if len(enddate) == 8:
+              date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}"
+              date_display = f"{enddate[:4]}年{enddate[4:6]}月{enddate[6:8]}日"
+          else:
+              date_str = enddate
+              date_display = enddate
+
+          # 清理 title
+          clean_title = copyright_text.replace(/\s*\(©[^)]*\)\s*/g, '')
+          clean_title = clean_title.replace(/\s*,\s*$/g, '')
+
+          # 提取 subtitle
           subtitle = ''
           if '，' in clean_title:
               parts = clean_title.split('，')
               if len(parts) > 1:
-                  clean_title = parts[0].strip()
-                  subtitle = '，'.join(parts[1:]).strip()
-          
-          # ✅ 构建日期
-          if len(enddate) == 8:
-              date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}"
-          else:
-              date_str = enddate
-          
-          # ✅ 构建 bing_url
-          urlbase = img.get('urlbase', '')
+                  clean_title = parts[0]
+                  subtitle = '，'.join(parts[1:])
+
+          # ========== 从多个来源提取 description ==========
+          description = ''
+          source_used = ''
+
+          # 构建 bing_url
           bing_url = f"https://bing.com{urlbase}_UHD.jpg" if urlbase else ''
-          
-          # ✅ 保存结果到文件
+
+          # ---- 来源1: bing.ee123.net ----
+          try:
+              print("🔗 尝试从 bing.ee123.net 提取...")
+              detail_url = f"https://bing.ee123.net/detail/{enddate}"
+              response = requests.get(detail_url, timeout=15, headers={
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+              })
+
+              if response.status_code == 200:
+                  html = response.text
+
+                  # 提取描述（从 .description .sub p 标签中提取）
+                  # 方法1: 查找 description 容器中的所有 p 标签
+                  desc_parts = []
+                  
+                  # 查找 .description .sub 中的 p 标签
+                  sub_match = re.search(r'<span[^>]*class="sub"[^>]*>([\s\S]*?)</span>', html)
+                  if sub_match:
+                      sub_content = sub_match.group(1)
+                      # 提取所有 p 标签内容
+                      p_tags = re.findall(r'<p>(.*?)</p>', sub_content, re.DOTALL)
+                      desc_parts = [p.strip() for p in p_tags if p.strip()]
+                  
+                  # 如果没找到，尝试查找 .description 中的所有 p 标签
+                  if not desc_parts:
+                      desc_match = re.search(r'<div[^>]*class="description"[^>]*>([\s\S]*?)</div>', html)
+                      if desc_match:
+                          desc_content = desc_match.group(1)
+                          p_tags = re.findall(r'<p>(.*?)</p>', desc_content, re.DOTALL)
+                          desc_parts = [p.strip() for p in p_tags if p.strip()]
+
+                  if desc_parts:
+                      # 过滤掉标题行（包含 "|" 或 "&nbsp;" 的）
+                      clean_parts = []
+                      for p in desc_parts:
+                          # 跳过包含 "|" 或 "&nbsp;" 的标题行
+                          if '|' not in p and '&nbsp;' not in p and 'nbsp;' not in p:
+                              # 清理 HTML 实体
+                              p = p.replace('&nbsp;', ' ')
+                              p = p.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
+                              p = p.replace('&quot;', '"').replace('&#39;', "'")
+                              if p.strip():
+                                  clean_parts.append(p.strip())
+                      
+                      if clean_parts:
+                          description = '\n'.join(clean_parts)
+                          source_used = 'bing.ee123.net'
+                          print(f"✅ 从 bing.ee123.net 提取成功，共 {len(clean_parts)} 段")
+
+                      # 如果清理后为空，尝试直接使用所有段落
+                      if not description and desc_parts:
+                          description = '\n'.join(desc_parts)
+                          source_used = 'bing.ee123.net'
+                          print(f"✅ 从 bing.ee123.net 提取成功（原始格式）")
+          except Exception as e:
+              print(f"⚠️ bing.ee123.net 提取失败: {e}")
+
+          # ---- 来源2: dailybing.cn ----
+          if not description:
+              try:
+                  print("🔗 尝试从 dailybing.cn 提取...")
+                  detail_url = f"https://www.dailybing.cn/view/zh-cn/{enddate}.html"
+                  response = requests.get(detail_url, timeout=15, headers={
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                  })
+
+                  if response.status_code == 200:
+                      html = response.text
+
+                      # 提取 description（从 story-content 中的 story-paragraph）
+                      desc_parts = []
+                      
+                      # 查找 story-content 中的所有 story-paragraph
+                      story_match = re.search(r'<div[^>]*class="story-content"[^>]*>([\s\S]*?)</div>', html)
+                      if story_match:
+                          story_content = story_match.group(1)
+                          # 提取所有 story-paragraph
+                          p_tags = re.findall(r'<div[^>]*class="story-paragraph"[^>]*>(.*?)</div>', story_content, re.DOTALL)
+                          desc_parts = [p.strip() for p in p_tags if p.strip()]
+                      
+                      # 如果没找到 story-paragraph，尝试查找所有 p 标签
+                      if not desc_parts:
+                          p_tags = re.findall(r'<div[^>]*class="story-paragraph"[^>]*>([\s\S]*?)</div>', html, re.DOTALL)
+                          desc_parts = [p.strip() for p in p_tags if p.strip()]
+
+                      if desc_parts:
+                          # 清理 HTML 实体
+                          clean_parts = []
+                          for p in desc_parts:
+                              p = p.replace('&nbsp;', ' ')
+                              p = p.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
+                              p = p.replace('&quot;', '"').replace('&#39;', "'")
+                              # 移除多余的空白
+                              p = re.sub(r'\s+', ' ', p).strip()
+                              if p:
+                                  clean_parts.append(p)
+                          
+                          if clean_parts:
+                              description = '\n'.join(clean_parts)
+                              source_used = 'dailybing.cn'
+                              print(f"✅ 从 dailybing.cn 提取成功，共 {len(clean_parts)} 段")
+              except Exception as e:
+                  print(f"⚠️ dailybing.cn 提取失败: {e}")
+
+          # ---- 备用: 使用 copyright 作为描述 ----
+          if not description:
+              description = copyright_text
+              source_used = 'copyright (fallback)'
+              print(f"⚠️ 使用 copyright 作为备用描述")
+
+          print(f"📝 描述长度: {len(description)} 字符")
+          print(f"📝 来源: {source_used}")
+
+          # ========== 构建最终 JSON ==========
           result = {
               "title": clean_title,
               "subtitle": subtitle,
-              "description": desc,
+              "description": description,
               "date": date_str,
-              "bing_url": bing_url
+              "bing_url": bing_url,
+              "_meta": {
+                  "source": source_used,
+                  "enddate": enddate
+              }
           }
-          
+
           with open('today_clean.json', 'w', encoding='utf-8') as f:
               json.dump(result, f, ensure_ascii=False, indent=2)
-          
+
           print(f"✅ 处理完成")
           print(f"📝 标题: {clean_title}")
           print(f"📝 副标题: {subtitle}")
-          print(f"📝 描述长度: {len(desc)} 字符")
           print(f"📅 日期: {date_str}")
           EOF
 
@@ -205,7 +215,7 @@ jobs:
           
           cat "docs/${YEAR_FILE}" > year_old.json
           
-          # 合并去重
+          # 合并去重（按 date 去重）
           jq -s '.[0] + [.[1]] | unique_by(.date) | sort_by(.date) | reverse' \
             year_old.json today_clean.json > "docs/${YEAR_FILE}"
           
