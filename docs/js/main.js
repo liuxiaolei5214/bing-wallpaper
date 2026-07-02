@@ -14,11 +14,6 @@ function getBeijingTime() {
     return new Date(beijingStr);
 }
 
-function formatDisplayDate(dateStr) {
-    if (!dateStr) return '未知日期';
-    return dateStr;
-}
-
 // 获取"今日"日期字符串 (YYYY-MM-DD)
 function getTodayStr() {
     const now = getBeijingTime();
@@ -28,22 +23,18 @@ function getTodayStr() {
     return `${y}-${m}-${d}`;
 }
 
-// 构建"光影回顾"详情链接
+// 构建"光影回顾"详情链接（日期减1天）
 function buildDetailUrl(item) {
     let topic = item.title || item.subtitle || '壁纸';
     if (topic.includes('，')) topic = topic.split('，')[0].trim();
     if (topic.includes(',')) topic = topic.split(',')[0].trim();
     topic = topic.replace(/\s*\(©[^)]*\)\s*$/, '');
 
-    // ✅ 日期减1天
     let dateParam = item.date || '';
     if (dateParam) {
-        // 将 YYYY-MM-DD 转换为 Date 对象
         const parts = dateParam.split('-');
         const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-        // 减1天
         date.setDate(date.getDate() - 1);
-        // 格式化为 YYYYMMDD
         const y = date.getFullYear();
         const m = String(date.getMonth() + 1).padStart(2, '0');
         const d = String(date.getDate()).padStart(2, '0');
@@ -110,35 +101,55 @@ function renderToday(images) {
         todayItem = images[0];
     }
 
-    const url = todayItem.bing_url || '';
-    const title = todayItem.title || 'Bing 每日壁纸';
-    const subtitle = todayItem.subtitle || '';
+    // ✅ 清理 URL 中的双斜杠
+    let url = todayItem.bing_url || '';
+    url = url.replace(/(https?:\/\/)[^\/]+(\/\/+)/g, '$1$2');
+
+    // ✅ 修正数据：title 是副标题，subtitle 是主标题
+    const rawTitle = todayItem.title || 'Bing 每日壁纸';
+    const rawSubtitle = todayItem.subtitle || '';
     const description = todayItem.description || '';
     const dateStr = todayItem.date || '';
 
-    // 判断 subtitle 是否显示（不为空且不等于 title）
-    const showSubtitle = subtitle && subtitle !== title;
+    // ✅ 正确的标题：subtitle 是主标题（位置/主题），title 是副标题（描述）
+    const mainTitle = rawSubtitle || rawTitle;
+    const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
 
-    // 4K 链接：直接使用原始链接（已经是 UHD）
+    // ✅ 构建展示名称：主标题 | 副标题 - 日期
+    let displayTitle = mainTitle;
+    if (subTitle) {
+        displayTitle = `${mainTitle} | ${subTitle}`;
+    }
+    if (dateStr) {
+        displayTitle = `${displayTitle} - ${dateStr}`;
+    }
+
+    // ✅ 4K 链接：直接使用原始链接（已经是 UHD）
     let hd4kUrl = url;
-    // 1080P 链接：替换为 1920x1080
+    // ✅ 1080P 链接：替换为 1920x1080（用于页面显示）
     let hd1080Url = url.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+    // ✅ 如果替换后没有变化，尝试其他格式
+    if (hd1080Url === url) {
+        hd1080Url = url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+    }
 
     const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
 
-    // 处理描述文字：将 \n 转换为 <br>，并添加首行缩进
+    // 处理描述文字
     let descHtml = description || '';
     if (descHtml) {
-        // 将换行符转换为 <br>，并包裹在 p 标签中实现每段缩进
         const paragraphs = descHtml.split('\n').filter(p => p.trim());
         descHtml = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
     }
 
+    // ✅ 页面默认使用 1080P 图片（加载更快）
+    const displayUrl = hd1080Url || url;
+
     container.innerHTML = `
-        <img src="${url}" alt="${title}" loading="eager" />
+        <img src="${displayUrl}" alt="${mainTitle}" loading="eager" />
         <div class="info">
-            <div class="title-line">${title}</div>
-            ${showSubtitle ? `<div class="subtitle-line">${subtitle}</div>` : ''}
+            <div class="title-line">${displayTitle}</div>
+            ${subTitle ? `<div class="subtitle-line">${subTitle}</div>` : ''}
             ${descHtml ? `<div class="desc-line pre-wrap">${descHtml}</div>` : ''}
             <div class="actions">
                 <div class="btn-group">
@@ -150,6 +161,11 @@ function renderToday(images) {
             </div>
         </div>
     `;
+
+    container.onclick = function(e) {
+        if (e.target.closest('a')) return;
+        openModal(todayItem);
+    };
 }
 
 // ============ 模态框 ==========
@@ -161,58 +177,44 @@ function openModal(item) {
         setTimeout(() => openModal(item), 50);
         return;
     }
-    document.getElementById('modalImg').src = item.bing_url || '';
-    document.getElementById('modalTitle').textContent = item.title || '壁纸';
 
-    const subtitle = item.subtitle || '';
+    // ✅ 修正数据：title 是副标题，subtitle 是主标题
+    const rawTitle = item.title || '壁纸';
+    const rawSubtitle = item.subtitle || '';
+    const dateStr = item.date || '';
+    const mainTitle = rawSubtitle || rawTitle;
+    const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
+
+    // ✅ 构建模态框标题
+    let modalTitle = mainTitle;
+    if (subTitle) {
+        modalTitle = `${mainTitle} | ${subTitle}`;
+    }
+    if (dateStr) {
+        modalTitle = `${modalTitle} - ${dateStr}`;
+    }
+    document.getElementById('modalTitle').textContent = modalTitle;
+
+    document.getElementById('modalImg').src = item.bing_url || '';
+
     const subtitleEl = document.getElementById('modalSubtitle');
-    if (subtitle && subtitle !== item.title) {
-        subtitleEl.textContent = subtitle;
+    if (subTitle) {
+        subtitleEl.textContent = subTitle;
         subtitleEl.style.display = 'block';
     } else {
         subtitleEl.style.display = 'none';
     }
 
-    // ✅ 处理描述文字：去除多余空行
+    // 处理描述文字
     let desc = item.description || '暂无详细介绍';
-
-    // 统一换行符
     desc = desc.replace(/\r\n/g, '\n');
     desc = desc.replace(/\r/g, '\n');
     desc = desc.replace(/<br\s*\/?>/gi, '\n');
 
-    // ✅ 分割段落，过滤空段落，去除首尾空格
     const paragraphs = desc.split('\n')
         .map(p => p.trim())
         .filter(p => p !== '');
 
-    // ✅ 如果只有一个段落但包含多个句子，用句号分割
-    if (paragraphs.length === 1 && desc.length > 50) {
-        const sentences = desc.split(/[。？！；]\s*/)
-            .map(s => s.trim())
-            .filter(s => s !== '');
-        
-        if (sentences.length > 1) {
-            const grouped = [];
-            for (let i = 0; i < sentences.length; i += 2) {
-                let group = sentences.slice(i, i + 2).join('。');
-                if (group) {
-                    if (!group.endsWith('。') && !group.endsWith('？') && !group.endsWith('！')) {
-                        group = group + '。';
-                    }
-                    grouped.push(group);
-                }
-            }
-            // ✅ 用 <p> 包裹，段落之间没有空行
-            const descHtml = grouped.map(p => `<p>${p}</p>`).join('');
-            document.getElementById('modalDesc').innerHTML = descHtml;
-            overlay.classList.add('open');
-            document.body.style.overflow = 'hidden';
-            return;
-        }
-    }
-
-    // ✅ 正常情况：每个段落用 <p> 包裹，没有空行
     const descHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
     document.getElementById('modalDesc').innerHTML = descHtml;
 
@@ -253,6 +255,7 @@ function createModal() {
         if (e.key === 'Escape') closeModal();
     });
 }
+
 // ============ 电影感壁纸轮播 ==========
 
 let movieData = [];
@@ -278,8 +281,11 @@ function renderMovieCarousel(images) {
     movieIndex = 0;
 
     thumbs.innerHTML = movieData.map((img, index) => {
+        // ✅ 使用 1080P 图片作为缩略图
+        let thumbUrl = img.bing_url || '';
+        thumbUrl = thumbUrl.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
         return `<div class="thumb-item ${index === 0 ? 'active' : ''}" 
-                    style="background-image: url('${img.bing_url}');" 
+                    style="background-image: url('${thumbUrl}');" 
                     data-index="${index}"></div>`;
     }).join('');
 
@@ -301,6 +307,13 @@ function renderMovieCarousel(images) {
     if (prevBtn) prevBtn.onclick = () => { changeMovie(-1); };
     if (nextBtn) nextBtn.onclick = () => { changeMovie(1); };
 
+    slide.onclick = function(e) {
+        if (e.target.closest('.movie-actions')) return;
+        if (movieData[movieIndex]) {
+            openModal(movieData[movieIndex]);
+        }
+    };
+
     startMovieTimer();
 }
 
@@ -314,19 +327,29 @@ function updateMovieSlide(data) {
 
     if (!slide || !data) return;
 
-    slide.style.backgroundImage = `url('${data.bing_url}')`;
+    // ✅ 使用 1080P 图片作为轮播背景（加载更快）
+    let displayUrl = data.bing_url || '';
+    displayUrl = displayUrl.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+    slide.style.backgroundImage = `url('${displayUrl}')`;
 
-    if (dateEl) dateEl.textContent = `📅 ${data.date || ''}`;
-    
-    let displayTitle = data.title || 'Bing 壁纸';
-    if (data.subtitle && data.subtitle !== data.title) {
-        displayTitle = `${data.subtitle} | ${data.title}`;
+    // ✅ 修正标题显示
+    const rawTitle = data.title || 'Bing 壁纸';
+    const rawSubtitle = data.subtitle || '';
+    const dateStr = data.date || '';
+    const mainTitle = rawSubtitle || rawTitle;
+    const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
+
+    if (dateEl) dateEl.textContent = `📅 ${dateStr || ''}`;
+
+    let displayTitle = mainTitle;
+    if (subTitle) {
+        displayTitle = `${mainTitle} | ${subTitle}`;
     }
     if (titleEl) titleEl.textContent = displayTitle;
 
+    // ✅ 下载按钮使用 4K 链接
     if (downloadBtn) {
         let hdUrl = data.bing_url || '';
-        hdUrl = hdUrl.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
         downloadBtn.href = hdUrl;
     }
     if (viewBtn) viewBtn.href = data.bing_url || '';
@@ -378,7 +401,6 @@ async function main() {
     if (todayContainer) todayContainer.innerHTML = '<div class="loading">加载今日壁纸中...</div>';
     if (slide) slide.style.backgroundImage = '';
 
-    // 更新时钟
     function updateClock() {
         const el = document.getElementById('currentTime');
         if (!el) return;
