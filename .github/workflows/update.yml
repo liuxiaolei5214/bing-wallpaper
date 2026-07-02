@@ -185,28 +185,50 @@ jobs:
           print(f"📅 日期: {date_str}")
           EOF
 
-      - name: Merge into year file
+      - name: Direct write to year file
         run: |
           CURRENT_YEAR=$(date +'%Y')
           YEAR_FILE="zh.${CURRENT_YEAR}.json"
           
-          if [ ! -f "docs/${YEAR_FILE}" ]; then
-            echo '[]' > "docs/${YEAR_FILE}"
-          fi
+          # ✅ 直接写入：用新数据替换当天记录
+          python3 << 'EOF'
+          import json
+          from datetime import datetime
           
-          cp "docs/${YEAR_FILE}" year_old.json
+          # 读取现有数据
+          year = "${{ env.CURRENT_YEAR }}"
+          year_file = f"docs/zh.{year}.json"
           
-          echo "📄 合并前 year_old.json 条数: $(jq 'length' year_old.json)"
+          try:
+              with open(year_file, 'r', encoding='utf-8') as f:
+                  existing = json.load(f)
+          except (FileNotFoundError, json.JSONDecodeError):
+              existing = []
           
-          # ✅ 正确合并：将两个数组合并，按 date 去重，保留最新的
-          jq -s '.[0] + [.[1]] | unique_by(.date) | sort_by(.date) | reverse' \
-            year_old.json today_clean.json > "docs/${YEAR_FILE}"
+          # 读取新数据
+          with open('today_clean.json', 'r', encoding='utf-8') as f:
+              new_data = json.load(f)
           
-          echo "✅ 已更新 ${YEAR_FILE}，共 $(jq 'length' "docs/${YEAR_FILE}") 张壁纸"
+          new_date = new_data['date']
           
-          # ✅ 显示更新后的第一条数据
-          echo "📄 更新后的第一条数据:"
-          jq '.[0]' "docs/${YEAR_FILE}"
+          # ✅ 直接替换当天数据：删除当天的旧数据，添加新数据
+          existing = [item for item in existing if item.get('date') != new_date]
+          existing.append(new_data)
+          
+          # 按日期降序排列
+          existing.sort(key=lambda x: x.get('date', ''), reverse=True)
+          
+          # 写入文件
+          with open(year_file, 'w', encoding='utf-8') as f:
+              json.dump(existing, f, ensure_ascii=False, indent=2)
+          
+          print(f"✅ 已更新 {year_file}，共 {len(existing)} 张壁纸")
+          
+          # 显示更新后的第一条
+          if existing:
+              print("📄 更新后的第一条数据:")
+              print(json.dumps(existing[0], ensure_ascii=False, indent=2))
+          EOF
 
       - name: Generate combined history.json
         run: |
