@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bing 每日壁纸 · 4K</title>
-    <meta name="description" content="每日更新的必应超清壁纸，4K 高清下载" />
+    <title>光影回顾 · Bing 每日壁纸</title>
+    <meta name="description" content="每日更新的必应超清壁纸，4K 高清下载 · 光影回顾" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌅</text></svg>" />
     <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
     <header>
         <div class="header-inner">
-            <h1>🌅 Bing 每日壁纸</h1>
+            <h1>🌅 光影回顾</h1>
             <p>每日更新 · 4K 超清 · 免费下载</p>
             <div id="currentTime" class="time-display"></div>
         </div>
@@ -26,32 +26,26 @@
             </div>
         </section>
 
-        <!-- ===== 电影感壁纸轮播 ===== -->
+        <!-- ===== 电影感壁纸轮播（光影回顾） ===== -->
         <section id="movieCarouselSection">
             <h2>🎬 光影回顾</h2>
             <div class="carousel-movie">
-                <!-- 当前展示的壁纸将作为背景 -->
                 <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
                     <div class="movie-overlay">
-                    <div class="movie-content">
-                         <!-- 按钮放在上方 -->
-                         <div class="movie-actions" id="movieActions">
-                             <a href="#" class="btn btn-primary movie-btn-small" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
-                             <a href="#" class="btn btn-secondary movie-btn-small" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
-                         </div>
-                         <!-- 日期和标题移到下方 -->
-                         <div class="movie-info">
-                             <div class="movie-date" id="movieDate"></div>
-                             <div class="movie-title" id="movieTitle"></div>
-                         </div>
-                     </div>
+                        <div class="movie-content">
+                            <div class="movie-actions" id="movieActions">
+                                <a href="#" class="btn btn-primary movie-btn-small" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
+                                <a href="#" class="btn btn-secondary movie-btn-small" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
+                                <a href="#" class="btn btn-secondary movie-btn-small" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
+                            </div>
+                            <div class="movie-info">
+                                <div class="movie-date" id="movieDate"></div>
+                                <div class="movie-title" id="movieTitle"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <!-- 缩略图导航栏 -->
-                <div class="movie-thumbnails" id="movieThumbnails">
-                    <!-- 由 JavaScript 生成 -->
-                </div>
-                <!-- 控制按钮 -->
+                <div class="movie-thumbnails" id="movieThumbnails"></div>
                 <button class="movie-btn prev" id="moviePrev">‹</button>
                 <button class="movie-btn next" id="movieNext">›</button>
             </div>
@@ -62,6 +56,21 @@
         <p>数据来源：Bing 每日壁纸 · 自动更新 · 仅供个人欣赏</p>
         <p class="footer-small">Powered by GitHub Pages</p>
     </footer>
+
+    <!-- ===== 模态框 ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-image">
+                <img id="modalImg" src="" alt="壁纸大图" />
+            </div>
+            <div class="modal-content">
+                <div class="modal-title" id="modalTitle"></div>
+                <div class="modal-subtitle" id="modalSubtitle"></div>
+                <div class="modal-desc" id="modalDesc"></div>
+            </div>
+        </div>
+    </div>
 
     <script src="js/main.js"></script>
 </body>
