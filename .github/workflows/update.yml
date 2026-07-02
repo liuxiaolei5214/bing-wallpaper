@@ -48,14 +48,13 @@ jobs:
           else:
               date_str = enddate
 
-          # ========== 从多个来源提取数据 ==========
           description = ''
           source_used = ''
           display_title = ''
           subtitle = ''
           clean_title = ''
 
-          # ---- 来源1: bing.ee123.net（优先） ----
+          # ---- 来源1: bing.ee123.net ----
           try:
               print("🔗 尝试从 bing.ee123.net 提取...")
               detail_url = f"https://bing.ee123.net/detail/{enddate}"
@@ -66,7 +65,6 @@ jobs:
               if response.status_code == 200:
                   html = response.text
 
-                  # ===== 提取网页展示名称 =====
                   title_match = re.search(r'<p[^>]*class="title"[^>]*>(.*?)</p>', html, re.DOTALL)
                   if title_match:
                       raw_title = title_match.group(1)
@@ -90,7 +88,6 @@ jobs:
                       
                       print(f"✅ 提取到展示名称: {display_title}")
 
-                  # ===== 提取描述 =====
                   sub_match = re.search(r'<span[^>]*class="sub"[^>]*>([\s\S]*?)</span>', html)
                   if sub_match:
                       sub_content = sub_match.group(1)
@@ -111,7 +108,7 @@ jobs:
           except Exception as e:
               print(f"⚠️ bing.ee123.net 提取失败: {e}")
 
-          # ---- 来源2: dailybing.cn（备用） ----
+          # ---- 来源2: dailybing.cn ----
           if not description or not display_title:
               try:
                   print("🔗 尝试从 dailybing.cn 提取...")
@@ -170,7 +167,6 @@ jobs:
 
           bing_url = f"https://bing.com{urlbase}_UHD.jpg" if urlbase else ''
 
-          # ========== 构建最终 JSON ==========
           result = {
               "title": clean_title,
               "subtitle": subtitle,
@@ -179,12 +175,7 @@ jobs:
               "bing_url": bing_url
           }
 
-          # ✅ 保存到当前目录
           with open('today_clean.json', 'w', encoding='utf-8') as f:
-              json.dump(result, f, ensure_ascii=False, indent=2)
-
-          # ✅ 同时保存到 docs 目录（确保合并时能找到）
-          with open('docs/today_clean.json', 'w', encoding='utf-8') as f:
               json.dump(result, f, ensure_ascii=False, indent=2)
 
           print(f"✅ 处理完成")
@@ -192,19 +183,7 @@ jobs:
           print(f"📝 副标题: {subtitle}")
           print(f"📝 描述长度: {len(description)} 字符")
           print(f"📅 日期: {date_str}")
-          
-          # ✅ 打印 JSON 内容用于调试
-          print("📄 JSON 内容:")
-          print(json.dumps(result, ensure_ascii=False, indent=2))
           EOF
-
-      - name: Debug - Show generated JSON
-        run: |
-          echo "📄 today_clean.json 内容:"
-          cat today_clean.json
-          echo ""
-          echo "📄 docs/today_clean.json 内容:"
-          cat docs/today_clean.json 2>/dev/null || echo "文件不存在"
 
       - name: Merge into year file
         run: |
@@ -215,28 +194,19 @@ jobs:
             echo '[]' > "docs/${YEAR_FILE}"
           fi
           
-          # ✅ 备份原文件
           cp "docs/${YEAR_FILE}" year_old.json
           
-          # ✅ 检查 today_clean.json 是否存在
-          if [ ! -f "today_clean.json" ]; then
-            echo "❌ today_clean.json 不存在!"
-            exit 1
-          fi
-          
           echo "📄 合并前 year_old.json 条数: $(jq 'length' year_old.json)"
-          echo "📄 today_clean.json 内容:"
-          cat today_clean.json
           
-          # ✅ 合并去重（按 date 去重）
+          # ✅ 正确合并：将两个数组合并，按 date 去重，保留最新的
           jq -s '.[0] + [.[1]] | unique_by(.date) | sort_by(.date) | reverse' \
             year_old.json today_clean.json > "docs/${YEAR_FILE}"
           
           echo "✅ 已更新 ${YEAR_FILE}，共 $(jq 'length' "docs/${YEAR_FILE}") 张壁纸"
           
-          # ✅ 显示更新后的数据
-          echo "📄 更新后的 ${YEAR_FILE} 前3条:"
-          jq '.[:3]' "docs/${YEAR_FILE}"
+          # ✅ 显示更新后的第一条数据
+          echo "📄 更新后的第一条数据:"
+          jq '.[0]' "docs/${YEAR_FILE}"
 
       - name: Generate combined history.json
         run: |
