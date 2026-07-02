@@ -1,18 +1,17 @@
-/* ========== 全局重置 ========== */
+/* ========== 全局重置 & 基础 ========== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* ========== 基础样式 ========== */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: #0a0a0a;
-    color: #e0e0e0;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background: #0b0b0b;
+    color: #e8e8e8;
     min-height: 100vh;
     padding: 0 20px 20px;
-    overflow-x: hidden;  /* 防止水平滚动条 */
+    overflow-x: hidden;
 }
 
 /* ========== 头部 ========== */
@@ -93,26 +92,20 @@ section h2 {
     background: #111;
 }
 
-/* ===== 今日壁纸信息 - 半透明浮层（默认隐藏，hover显示） ===== */
+/* ===== 今日壁纸信息 - 半透明浮层（始终显示） ===== */
 #todayCard .info {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     padding: 30px 28px 24px;
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
     color: #fff;
     pointer-events: none;
-    transition: opacity 0.4s ease;
-    opacity: 1;  /* ✅ 始终显示 */
-    visibility: visible;  /* ✅ 始终可见 */
+    opacity: 1;
+    visibility: visible;
 }
 
-#todayCard:hover .info {
-    opacity: 1;  /* hover 时显示 */
-}
-
-/* 按钮需要可点击，所以单独设置 pointer-events */
 #todayCard .info .actions {
     pointer-events: auto;
 }
@@ -143,13 +136,9 @@ section h2 {
     overflow: hidden;
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
     line-height: 1.6;
-}
-
-/* 描述文字每段首行缩进2字符（使用 text-indent） */
-#todayCard .info .desc-line {
     text-indent: 2em;
 }
-/* 对于多段文字，使用伪元素无法处理多行，改用 js 处理或在数据中加 \n 后使用 white-space: pre-wrap */
+
 #todayCard .info .desc-line.pre-wrap {
     white-space: pre-wrap;
     display: block;
@@ -213,7 +202,7 @@ section h2 {
     background: rgba(77, 150, 255, 0.1);
 }
 
-/* ========== 电影感壁纸轮播（光影回顾） ========== */
+/* ========== 电影感壁纸轮播 ========== */
 #movieCarouselSection {
     max-width: 1200px;
     margin: 40px auto 20px;
@@ -235,7 +224,6 @@ section h2 {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
-/* 主幻灯片 - 动态背景 */
 .movie-slide {
     position: relative;
     width: 100%;
@@ -247,7 +235,6 @@ section h2 {
     will-change: transform;
 }
 
-/* 背景图片的视差放大效果 */
 .movie-slide::after {
     content: '';
     position: absolute;
@@ -268,7 +255,6 @@ section h2 {
     transform: scale(1.08);
 }
 
-/* 渐变遮罩层 */
 .movie-overlay {
     position: absolute;
     top: 0;
@@ -281,7 +267,6 @@ section h2 {
     align-items: center;
 }
 
-/* 文字内容 - 左对齐 */
 .movie-content {
     padding: 5%;
     max-width: 55%;
@@ -310,7 +295,6 @@ section h2 {
     line-height: 1.2;
 }
 
-/* 电影感轮播按钮 - 左下角 */
 .movie-actions {
     position: absolute;
     bottom: 30px;
@@ -355,7 +339,6 @@ section h2 {
     transform: translateY(-2px);
 }
 
-/* 缩略图导航栏 */
 .movie-thumbnails {
     display: flex;
     gap: 8px;
@@ -404,7 +387,6 @@ section h2 {
     filter: grayscale(0);
 }
 
-/* 控制按钮 */
 .movie-btn {
     position: absolute;
     top: 50%;
@@ -443,7 +425,7 @@ section h2 {
     right: 16px;
 }
 
-/* ========== 模态框（弹窗） ========== */
+/* ========== 模态框 ========== */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -467,10 +449,10 @@ section h2 {
 .modal-box {
     background: #1a1a1a;
     border-radius: 28px;
-    max-width: 1000px;
+    max-width: 900px;
     width: 100%;
     max-height: 85vh;
-    overflow: hidden;  /* ✅ 完全隐藏滚动条 */
+    overflow: hidden;
     box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
     padding: 0;
     position: relative;
@@ -480,24 +462,6 @@ section h2 {
 
 .modal-overlay.open .modal-box {
     transform: scale(1);
-}
-
-/* ✅ 内容区域独立滚动（如果需要） */
-.modal-content {
-    padding: 20px 28px 32px;
-    max-height: 45vh;  /* ✅ 限制高度，内容过多时内部滚动 */
-    overflow-y: auto;  /* ✅ 只在内容区域滚动 */
-    overflow-x: hidden;
-}
-
-/* ✅ 隐藏内容区域的滚动条（但保留滚动功能） */
-.modal-content::-webkit-scrollbar {
-    width: 0px;  /* ✅ 完全隐藏滚动条 */
-    background: transparent;
-}
-
-.modal-content {
-    scrollbar-width: none;  /* ✅ Firefox 隐藏滚动条 */
 }
 
 .modal-close {
@@ -543,6 +507,19 @@ section h2 {
     background: #0b0b0b;
 }
 
+.modal-content {
+    padding: 20px 28px 32px;
+    max-height: 45vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+
+.modal-content::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
 .modal-title {
     font-size: 1.6rem;
     font-weight: 600;
@@ -555,7 +532,6 @@ section h2 {
     margin-bottom: 12px;
 }
 
-/* ✅ 描述文字 - 段落之间没有空行 */
 .modal-desc {
     font-size: 0.95rem;
     line-height: 1.8;
@@ -566,13 +542,13 @@ section h2 {
 
 .modal-desc p {
     text-indent: 2em;
-    margin: 0;  /* ✅ 完全去掉段落间距 */
+    margin: 0;
     padding: 0;
     line-height: 1.8;
 }
 
 .modal-desc p + p {
-    margin-top: 0;  /* ✅ 确保段落之间没有间距 */
+    margin-top: 0;
 }
 
 /* ========== 加载状态 ========== */
@@ -597,9 +573,7 @@ section h2 {
 }
 
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
 .error {
@@ -630,160 +604,50 @@ footer .footer-small {
 
 /* ========== 响应式 ========== */
 @media (max-width: 1024px) {
-    .movie-slide {
-        padding-top: 55%;
-    }
+    .movie-slide { padding-top: 55%; }
 }
 
 @media (max-width: 768px) {
-    header h1 {
-        font-size: 2rem;
-    }
-    header p {
-        font-size: 0.9rem;
-    }
-    .movie-slide {
-        padding-top: 65%;
-    }
-    .movie-content {
-        max-width: 80%;
-    }
-    .movie-title {
-        font-size: 1.4rem;
-    }
-    .movie-date {
-        font-size: 0.75rem;
-    }
-    .thumb-item {
-        flex: 0 0 60px;
-        height: 40px;
-    }
-    .movie-btn {
-        width: 36px;
-        height: 36px;
-        font-size: 1.5rem;
-    }
-    .movie-actions {
-        bottom: 20px;
-        left: 5%;
-        gap: 8px;
-    }
-    .movie-btn-small {
-        font-size: 0.7rem;
-        padding: 4px 12px;
-    }
-    .btn {
-        padding: 6px 16px;
-        font-size: 0.8rem;
-    }
-    .modal-box {
-        max-width: 100%;
-        margin: 10px;
-        border-radius: 20px;
-    }
-    .modal-image {
-        border-radius: 20px 20px 0 0;
-    }
-    .modal-content {
-        padding: 16px 18px 24px;
-    }
-    .modal-close {
-        top: 12px;
-        right: 12px;
-        width: 38px;
-        height: 38px;
-        font-size: 1.2rem;
-    }
-    #todayCard .info .title-line {
-        font-size: 1.3rem;
-    }
-    #todayCard .info .desc-line {
-        max-width: 100%;
-        font-size: 0.8rem;
-    }
+    header h1 { font-size: 2rem; }
+    header p { font-size: 0.9rem; }
+    .movie-slide { padding-top: 65%; }
+    .movie-content { max-width: 80%; }
+    .movie-title { font-size: 1.4rem; }
+    .movie-date { font-size: 0.75rem; }
+    .thumb-item { flex: 0 0 60px; height: 40px; }
+    .movie-btn { width: 36px; height: 36px; font-size: 1.5rem; }
+    .movie-actions { bottom: 20px; gap: 8px; }
+    .movie-btn-small { font-size: 0.7rem; padding: 4px 12px; }
+    .btn { padding: 6px 16px; font-size: 0.8rem; }
+    #todayCard .info .title-line { font-size: 1.3rem; }
+    #todayCard .info .desc-line { max-width: 100%; font-size: 0.8rem; }
+    .modal-box { max-width: 100%; margin: 10px; border-radius: 20px; }
+    .modal-image { border-radius: 20px 20px 0 0; }
+    .modal-content { padding: 16px 18px 24px; max-height: 40vh; }
+    .modal-close { top: 12px; right: 12px; width: 38px; height: 38px; font-size: 1.2rem; }
 }
 
 @media (max-width: 480px) {
-    body {
-        padding: 0 12px 12px;
-    }
-    header {
-        padding: 20px 0 16px;
-    }
-    header h1 {
-        font-size: 1.6rem;
-    }
-    .movie-slide {
-        padding-top: 75%;
-    }
-    .movie-title {
-        font-size: 1.1rem;
-    }
-    .movie-content {
-        max-width: 90%;
-    }
-    .thumb-item {
-        flex: 0 0 50px;
-        height: 34px;
-    }
-    .movie-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 1.2rem;
-    }
-    .movie-actions {
-        bottom: 14px;
-        gap: 6px;
-    }
-    .movie-btn-small {
-        font-size: 0.65rem;
-        padding: 3px 10px;
-    }
-    #todayCard .info {
-        padding: 16px 14px 14px;
-    }
-    #todayCard .info .title-line {
-        font-size: 1.1rem;
-    }
-    #todayCard .info .subtitle-line {
-        font-size: 0.85rem;
-    }
-    #todayCard .info .desc-line {
-        font-size: 0.75rem;
-        max-width: 100%;
-    }
-    #todayCard .info .actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    #todayCard .info .actions .btn-group {
-        justify-content: center;
-    }
-    .btn {
-        padding: 5px 14px;
-        font-size: 0.75rem;
-    }
-    .modal-box {
-        border-radius: 16px;
-        margin: 8px;
-    }
-    .modal-image {
-        border-radius: 16px 16px 0 0;
-    }
-    .modal-content {
-        padding: 12px 14px 18px;
-    }
-    .modal-title {
-        font-size: 1.2rem;
-    }
-    .modal-desc {
-        font-size: 0.85rem;
-    }
-    .modal-close {
-        top: 10px;
-        right: 10px;
-        width: 34px;
-        height: 34px;
-        font-size: 1rem;
-    }
+    body { padding: 0 12px 12px; }
+    header { padding: 20px 0 16px; }
+    header h1 { font-size: 1.6rem; }
+    .movie-slide { padding-top: 75%; }
+    .movie-title { font-size: 1.1rem; }
+    .movie-content { max-width: 90%; }
+    .thumb-item { flex: 0 0 50px; height: 34px; }
+    .movie-btn { width: 28px; height: 28px; font-size: 1.2rem; }
+    .movie-actions { bottom: 14px; gap: 6px; }
+    .movie-btn-small { font-size: 0.65rem; padding: 3px 10px; }
+    #todayCard .info { padding: 16px 14px 14px; }
+    #todayCard .info .title-line { font-size: 1.1rem; }
+    #todayCard .info .desc-line { font-size: 0.75rem; max-width: 100%; }
+    #todayCard .info .actions { flex-direction: column; align-items: stretch; }
+    #todayCard .info .actions .btn-group { justify-content: center; }
+    .btn { padding: 5px 14px; font-size: 0.75rem; }
+    .modal-box { border-radius: 16px; margin: 8px; }
+    .modal-image { border-radius: 16px 16px 0 0; }
+    .modal-content { padding: 12px 14px 18px; max-height: 35vh; }
+    .modal-title { font-size: 1.2rem; }
+    .modal-desc { font-size: 0.85rem; }
+    .modal-close { top: 10px; right: 10px; width: 34px; height: 34px; font-size: 1rem; }
 }
