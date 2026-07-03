@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -190,13 +190,12 @@ jobs:
 
       - name: Direct write to year file
         run: |
-          CURRENT_YEAR=$(date +'%Y')
-          YEAR_FILE="zh.${CURRENT_YEAR}.json"
-          
           python3 << 'EOF'
           import json
+          from datetime import datetime
           
-          year = "${{ env.CURRENT_YEAR }}"
+          # ✅ 直接在 Python 中获取当前年份
+          year = datetime.now().strftime('%Y')
           year_file = f"docs/zh.{year}.json"
           
           try:
@@ -210,9 +209,11 @@ jobs:
           
           new_date = new_data['date']
           
+          # 删除当天旧数据，添加新数据
           existing = [item for item in existing if item.get('date') != new_date]
           existing.append(new_data)
           
+          # 按日期降序排列
           existing.sort(key=lambda x: x.get('date', ''), reverse=True)
           
           with open(year_file, 'w', encoding='utf-8') as f:
