@@ -111,7 +111,7 @@ function renderToday(images) {
     const description = todayItem.description || '';
     const dateStr = todayItem.date || '';
 
-    // ✅ 标题：去掉日期后缀
+    // 标题：去掉日期后缀
     const mainTitle = rawSubtitle || rawTitle;
     const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
 
@@ -140,7 +140,6 @@ function renderToday(images) {
     // 页面默认使用 1080P 图片
     const displayUrl = hd1080Url || url;
 
-    // ✅ 取消点击弹窗 - 移除 onclick 事件
     container.innerHTML = `
         <img src="${displayUrl}" alt="${mainTitle}" loading="eager" />
         <div class="info">
@@ -156,9 +155,6 @@ function renderToday(images) {
             </div>
         </div>
     `;
-
-    // ✅ 取消点击弹窗 - 不绑定 onclick
-    // container.onclick = function(e) { ... };  // 已移除
 }
 
 // ============ 电影感壁纸轮播 ==========
@@ -297,15 +293,6 @@ async function main() {
 
     if (todayContainer) todayContainer.innerHTML = '<div class="loading">加载今日壁纸中...</div>';
     if (slide) slide.style.backgroundImage = '';
-
-    function updateClock() {
-        const el = document.getElementById('currentTime');
-        if (!el) return;
-        const now = getBeijingTime();
-        el.textContent = `🕐 ${now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })} (北京时间)`;
-    }
-    updateClock();
-    setInterval(updateClock, 30000);
 
     try {
         const images = await loadAllData();
