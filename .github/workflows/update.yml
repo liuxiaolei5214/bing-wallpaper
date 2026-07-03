@@ -74,8 +74,7 @@ jobs:
                           subtitle = parts[0].strip()
                           second_part = parts[1].strip()
                           if ' - ' in second_part:
-                              location_parts = second_part.split(' - ')
-                              clean_title = location_parts[0].strip()
+                              clean_title = second_part.split(' - ')[0].strip()
                           else:
                               clean_title = second_part
                       else:
