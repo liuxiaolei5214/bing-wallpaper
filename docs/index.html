@@ -8,7 +8,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌅</text></svg>" />
     <link rel="stylesheet" href="css/style.css" />
     <style>
-        /* ===== 隐藏所有滚动条（横向+纵向） ===== */
+        /* ===== 隐藏所有滚动条 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -52,8 +52,241 @@
             align-items: center;
             position: relative;
             overflow: hidden;
-            padding: 1.2rem;
+            padding: 0;  /* 移除内边距，让图片全屏 */
             box-sizing: border-box;
+        }
+
+        /* ===== 今日壁纸 - 全屏无空隙 ===== */
+        #today {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0;  /* 移除内边距 */
+            background: radial-gradient(circle at 30% 20%, #1f2a30, #0e1218);
+        }
+
+        #todayCard {
+            width: 100%;
+            height: 100%;  /* 改为100%撑满 */
+            border-radius: 0;  /* 去掉圆角，让图片全屏 */
+            overflow: hidden;
+            box-shadow: none;  /* 去掉阴影，全屏显示 */
+            background: #1e232b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        #todayCard img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .loading {
+            color: #8a9aa8;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            font-weight: 300;
+            animation: pulse 1.8s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.9; }
+            100% { opacity: 0.3; }
+        }
+
+        /* ===== 电影感轮播 - 全屏无空隙 ===== */
+        #movieCarouselSection {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0;  /* 移除内边距 */
+            background: radial-gradient(circle at 70% 60%, #1a262e, #0b1015);
+        }
+
+        .carousel-movie {
+            width: 100%;
+            height: 100%;  /* 改为100%撑满 */
+            position: relative;
+            border-radius: 0;  /* 去掉圆角，让图片全屏 */
+            overflow: hidden;
+            box-shadow: none;  /* 去掉阴影 */
+            background: #14191f;
+        }
+
+        .movie-slide {
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            align-items: flex-end;
+            position: relative;
+        }
+
+        .movie-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(0,0,0,0.7) 10%, rgba(0,0,0,0.1) 60%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 2rem 2.5rem;
+        }
+
+        .movie-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+        }
+
+        .movie-info {
+            color: #f0f0ea;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        }
+        .movie-title {
+            font-size: clamp(1.4rem, 3.5vw, 2.6rem);
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 0.2rem;
+        }
+        .movie-date {
+            font-size: clamp(0.8rem, 1.2vw, 1rem);
+            opacity: 0.7;
+            letter-spacing: 1px;
+        }
+
+        /* ===== 按钮固定在右上角 ===== */
+        .movie-actions {
+            position: fixed;
+            top: 1.2rem;
+            right: 1.2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            align-items: center;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 0.6rem 1.2rem;
+            border-radius: 60px;
+            border: 1px solid rgba(255,255,240,0.08);
+            z-index: 50;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 400;
+            letter-spacing: 0.8px;
+            text-decoration: none;
+            color: #f0ede8;
+            background: rgba(200, 200, 200, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: rgba(220, 210, 180, 0.15);
+            border-color: rgba(240, 230, 200, 0.2);
+        }
+        .btn-primary:hover {
+            background: rgba(220, 210, 180, 0.3);
+            transform: scale(1.03);
+        }
+        .btn-secondary:hover {
+            background: rgba(200, 200, 200, 0.15);
+            transform: scale(1.02);
+        }
+
+        /* 轮播控制按钮 */
+        .movie-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(10, 14, 18, 0.5);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(200, 200, 200, 0.1);
+            color: #e0ddd0;
+            font-size: 2.2rem;
+            font-weight: 200;
+            width: 3.4rem;
+            height: 3.4rem;
+            border-radius: 60px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            z-index: 10;
+            opacity: 0.7;
+            line-height: 1;
+        }
+        .movie-btn:hover {
+            background: rgba(30, 40, 48, 0.7);
+            opacity: 1;
+            transform: translateY(-50%) scale(1.05);
+        }
+        .movie-btn.prev {
+            left: 1.2rem;
+        }
+        .movie-btn.next {
+            right: 1.2rem;
+        }
+
+        /* 缩略图导航 */
+        .movie-thumbnails {
+            position: absolute;
+            bottom: 1.2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.6rem;
+            padding: 0.4rem 0.8rem;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            border-radius: 60px;
+            border: 1px solid rgba(255,255,240,0.06);
+            z-index: 10;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 80%;
+        }
+        .movie-thumbnails .thumb {
+            width: 3.4rem;
+            height: 2.2rem;
+            border-radius: 12px;
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            opacity: 0.5;
+            flex-shrink: 0;
+        }
+        .movie-thumbnails .thumb.active {
+            border-color: #e8e0d0;
+            opacity: 1;
+            transform: scale(1.08);
+            box-shadow: 0 0 20px rgba(200, 180, 140, 0.2);
+        }
+        .movie-thumbnails .thumb:hover {
+            opacity: 0.9;
+            transform: scale(1.04);
         }
 
         /* ===== 底部滚动指示 ===== */
@@ -84,6 +317,44 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-4px); }
         }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 640px) {
+            .movie-overlay {
+                padding: 1.2rem 1.2rem;
+            }
+            .movie-actions {
+                top: 0.6rem;
+                right: 0.6rem;
+                padding: 0.4rem 0.8rem;
+                gap: 0.3rem;
+                border-radius: 40px;
+            }
+            .btn {
+                font-size: 0.55rem;
+                padding: 0.2rem 0.6rem;
+            }
+            .movie-btn {
+                width: 2.6rem;
+                height: 2.6rem;
+                font-size: 1.8rem;
+            }
+            .movie-btn.prev {
+                left: 0.4rem;
+            }
+            .movie-btn.next {
+                right: 0.4rem;
+            }
+            .movie-thumbnails .thumb {
+                width: 2.4rem;
+                height: 1.6rem;
+            }
+            .movie-thumbnails {
+                gap: 0.3rem;
+                padding: 0.3rem 0.6rem;
+                bottom: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -103,17 +374,9 @@
             <div class="carousel-movie">
                 <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
                     <div class="movie-overlay">
-                        <div class="movie-actions" id="movieActions">
-                            <a href="#" class="btn btn-primary movie-btn-small" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
-                            <a href="#" class="btn btn-secondary movie-btn-small" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
-                            <a href="#" class="btn btn-secondary movie-btn-small" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
-                            <a href="/archive.html" class="btn btn-secondary movie-btn-small">📚 壁纸归档</a>
-                        </div>
-                        <div class="movie-content">
-                            <div class="movie-info">
-                                <div class="movie-title" id="movieTitle"></div>
-                                <div class="movie-date" id="movieDate"></div>
-                            </div>
+                        <div class="movie-info">
+                            <div class="movie-title" id="movieTitle"></div>
+                            <div class="movie-date" id="movieDate"></div>
                         </div>
                     </div>
                 </div>
@@ -122,6 +385,14 @@
                 <button class="movie-btn next" id="movieNext">›</button>
             </div>
         </section>
+    </div>
+
+    <!-- ===== 按钮固定在右上角（独立于轮播之外） ===== -->
+    <div class="movie-actions" id="movieActions">
+        <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
+        <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
+        <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
+        <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
     </div>
 
     <!-- 底部提示 -->
@@ -162,7 +433,7 @@
                 }, 300);
             }
 
-            console.log('✨ 整屏切换已启用');
+            console.log('✨ 整屏切换已启用 · 按钮固定在右上角');
         })();
     </script>
 </body>
