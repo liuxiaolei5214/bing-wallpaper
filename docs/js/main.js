@@ -96,24 +96,47 @@ function renderToday(images) {
     }
 
     const todayStr = getTodayStr();
-    let todayItem = images.find(item => item.date === todayStr);
+    console.log(`📅 今日日期: ${todayStr}`);
+    console.log(`📊 总数据量: ${images.length}`);
+    console.log(`📊 第一条数据日期: ${images[0]?.date}`);
+
+    // 打印所有日期，方便排查
+    const dates = images.map(item => item.date);
+    console.log(`📊 所有日期: ${dates.join(', ')}`);
+
+    // ✅ 兼容处理：去除 date 字段中的空格
+    let todayItem = images.find(item => {
+        const date = item.date ? item.date.trim() : '';
+        return date === todayStr;
+    });
+
     if (!todayItem) {
+        // 如果还是找不到，尝试用 startsWith
+        todayItem = images.find(item => {
+            const date = item.date ? item.date.trim() : '';
+            return date.startsWith(todayStr);
+        });
+    }
+
+    if (!todayItem) {
+        console.warn(`⚠️ 未找到 ${todayStr} 的数据，使用第一条`);
         todayItem = images[0];
+    } else {
+        console.log(`✅ 找到今日数据: ${todayItem.title}`);
     }
 
     let url = todayItem.bing_url || '';
     url = url.replace(/(https?:\/\/)[^\/]+(\/\/+)/g, '$1$2');
 
-    // ✅ title 保持不变（包含日期）
+    // title 保持不变（包含日期）
     const rawTitle = todayItem.title || 'Bing 每日壁纸';
     const rawSubtitle = todayItem.subtitle || '';
     const description = todayItem.description || '';
     const dateStr = todayItem.date || '';
 
-    // ✅ 页面显示标题：subtitle | title（title 已包含日期）
-    const mainTitle = rawSubtitle || rawTitle;
-    let displayTitle = mainTitle;
-    if (rawSubtitle && rawTitle) {
+    // 页面显示标题：subtitle | title（title 已包含日期）
+    let displayTitle = rawTitle;
+    if (rawSubtitle) {
         displayTitle = `${rawSubtitle} | ${rawTitle}`;
     }
 
@@ -217,7 +240,7 @@ function updateMovieSlide(data) {
     displayUrl = displayUrl.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
     slide.style.backgroundImage = `url('${displayUrl}')`;
 
-    // ✅ 页面显示标题：subtitle | title（title 已包含日期）
+    // 页面显示标题：subtitle | title（title 已包含日期）
     const rawTitle = data.title || 'Bing 壁纸';
     const rawSubtitle = data.subtitle || '';
     const dateStr = data.date || '';
@@ -285,6 +308,8 @@ async function main() {
 
     try {
         const images = await loadAllData();
+
+        console.log(`📊 loadAllData 返回 ${images.length} 条数据`);
 
         if (!images || images.length === 0) {
             todayContainer.innerHTML = '<div class="error">❌ 未能获取壁纸数据</div>';
