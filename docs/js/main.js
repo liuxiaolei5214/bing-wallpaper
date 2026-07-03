@@ -251,7 +251,6 @@ function updateMovieSlide(data) {
     }
 
     if (titleEl) titleEl.textContent = displayTitle;
-    if (dateEl) dateEl.textContent = dateStr || '';
 
     if (downloadBtn) {
         let hdUrl = data.bing_url || '';
