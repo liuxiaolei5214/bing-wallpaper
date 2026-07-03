@@ -194,7 +194,19 @@ function renderMovieCarousel(images) {
         return;
     }
 
-    movieData = images.slice(0, 12);
+    // ===== 过滤掉今天的数据，只显示昨天及之前的壁纸 =====
+    const todayStr = getTodayStr();
+    const filteredImages = images.filter(item => {
+        const date = item.date ? item.date.trim() : '';
+        return date !== todayStr;
+    });
+
+    if (filteredImages.length === 0) {
+        if (thumbs) thumbs.innerHTML = '<div style="padding: 10px; color: #666;">暂无历史壁纸</div>';
+        return;
+    }
+
+    movieData = filteredImages.slice(0, 20);
     movieIndex = 0;
 
     thumbs.innerHTML = movieData.map((img, index) => {
