@@ -251,6 +251,8 @@ function updateMovieSlide(data) {
     }
 
     if (titleEl) titleEl.textContent = displayTitle;
+    // 日期已包含在标题中，不再单独显示
+    if (dateEl) dateEl.textContent = '';
 
     if (downloadBtn) {
         let hdUrl = data.bing_url || '';
