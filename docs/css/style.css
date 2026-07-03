@@ -73,7 +73,7 @@ body {
 }
 
 #todayCard .info .title-line {
-    font-size: 2.2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: #fff;
     text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
@@ -208,7 +208,7 @@ body {
 }
 
 .movie-title {
-    font-size: 2.2rem;
+    font-size: 1.5rem;
     font-weight: 700;
     text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
     margin-bottom: 4px;
