@@ -2,45 +2,155 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>光影回顾 · Bing 每日壁纸</title>
     <meta name="description" content="每日更新的必应超清壁纸，4K 高清下载 · 光影回顾" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌅</text></svg>" />
+    <!-- ===== 原有 CSS（保持不变） ===== -->
     <link rel="stylesheet" href="css/style.css" />
+    <style>
+        /* ===== 仅新增整屏滚动切换样式 ===== */
+        body {
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .viewport {
+            height: 100vh;
+            width: 100vw;
+            overflow-y: scroll;
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .viewport::-webkit-scrollbar {
+            display: none;
+        }
+
+        .fullscreen-section {
+            height: 100vh;
+            width: 100vw;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 1.2rem;
+        }
+
+        /* ===== 底部滚动指示 ===== */
+        .scroll-hint {
+            position: fixed;
+            bottom: 1.8rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(12, 18, 24, 0.5);
+            backdrop-filter: blur(6px);
+            padding: 0.3rem 1.6rem;
+            border-radius: 60px;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            color: #b0c0c8;
+            border: 1px solid rgba(180, 190, 180, 0.08);
+            z-index: 30;
+            pointer-events: none;
+            white-space: nowrap;
+            opacity: 0.6;
+            transition: opacity 0.5s;
+        }
+        .scroll-hint span {
+            display: inline-block;
+            animation: bobble 2.4s infinite;
+        }
+        @keyframes bobble {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+    </style>
 </head>
 <body>
-    <!-- ===== 今日壁纸 - 全屏 ===== -->
-    <section id="today" class="fullscreen-section">
-        <div id="todayCard">
-            <div class="loading">加载中...</div>
-        </div>
-    </section>
 
-    <!-- ===== 电影感壁纸轮播（光影回顾）- 全屏 ===== -->
-    <section id="movieCarouselSection" class="fullscreen-section">
-        <div class="carousel-movie">
-            <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
-                <div class="movie-overlay">
-                    <div class="movie-actions" id="movieActions">
-                        <a href="#" class="btn btn-primary movie-btn-small" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
-                        <a href="#" class="btn btn-secondary movie-btn-small" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
-                        <a href="#" class="btn btn-secondary movie-btn-small" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
-                        <a href="/archive.html" class="btn btn-secondary movie-btn-small">📚 壁纸归档</a>
-                    </div>
-                    <div class="movie-content">
-                        <div class="movie-info">
-                            <div class="movie-title" id="movieTitle"></div>
-                            <div class="movie-date" id="movieDate"></div>
+    <!-- ===== 整屏滚动容器 ===== -->
+    <div class="viewport" id="viewport">
+
+        <!-- ===== 今日壁纸 - 全屏 ===== -->
+        <section id="today" class="fullscreen-section">
+            <div id="todayCard">
+                <div class="loading">加载中...</div>
+            </div>
+        </section>
+
+        <!-- ===== 电影感壁纸轮播（光影回顾）- 全屏 ===== -->
+        <section id="movieCarouselSection" class="fullscreen-section">
+            <div class="carousel-movie">
+                <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
+                    <div class="movie-overlay">
+                        <div class="movie-actions" id="movieActions">
+                            <a href="#" class="btn btn-primary movie-btn-small" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
+                            <a href="#" class="btn btn-secondary movie-btn-small" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
+                            <a href="#" class="btn btn-secondary movie-btn-small" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
+                            <a href="/archive.html" class="btn btn-secondary movie-btn-small">📚 壁纸归档</a>
+                        </div>
+                        <div class="movie-content">
+                            <div class="movie-info">
+                                <div class="movie-title" id="movieTitle"></div>
+                                <div class="movie-date" id="movieDate"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <div class="movie-thumbnails" id="movieThumbnails"></div>
+                <button class="movie-btn prev" id="moviePrev">‹</button>
+                <button class="movie-btn next" id="movieNext">›</button>
             </div>
-            <div class="movie-thumbnails" id="movieThumbnails"></div>
-            <button class="movie-btn prev" id="moviePrev">‹</button>
-            <button class="movie-btn next" id="movieNext">›</button>
-        </div>
-    </section>
+        </section>
+    </div>
 
+    <!-- 底部提示 -->
+    <div class="scroll-hint"><span>⬇ 滚动 · 整屏切换</span></div>
+
+    <!-- ===== 原有 JS（保持不变） ===== -->
     <script src="js/main.js"></script>
+    <script>
+        (function() {
+            "use strict";
+
+            // ===== 滚动指示器交互 =====
+            const hint = document.querySelector('.scroll-hint');
+            const viewport = document.getElementById('viewport');
+            let hintTimeout;
+
+            if (hint && viewport) {
+                viewport.addEventListener('scroll', function() {
+                    hint.style.opacity = '0.15';
+                    clearTimeout(hintTimeout);
+                    hintTimeout = setTimeout(() => {
+                        const sections = document.querySelectorAll('.fullscreen-section');
+                        const lastSection = sections[sections.length - 1];
+                        if (lastSection) {
+                            const rect = lastSection.getBoundingClientRect();
+                            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                                hint.style.opacity = '0.1';
+                            } else {
+                                hint.style.opacity = '0.6';
+                            }
+                        } else {
+                            hint.style.opacity = '0.6';
+                        }
+                    }, 1000);
+                });
+
+                setTimeout(() => {
+                    hint.style.opacity = '0.6';
+                }, 300);
+            }
+
+            console.log('✨ 整屏切换已启用 · 样式完全保留');
+        })();
+    </script>
 </body>
 </html>
