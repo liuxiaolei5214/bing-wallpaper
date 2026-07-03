@@ -101,29 +101,22 @@ function renderToday(images) {
         todayItem = images[0];
     }
 
-    // 清理 URL 中的双斜杠
     let url = todayItem.bing_url || '';
     url = url.replace(/(https?:\/\/)[^\/]+(\/\/+)/g, '$1$2');
 
-    // 修正数据：title 是副标题，subtitle 是主标题
+    // ✅ title 保持不变（包含日期）
     const rawTitle = todayItem.title || 'Bing 每日壁纸';
     const rawSubtitle = todayItem.subtitle || '';
     const description = todayItem.description || '';
     const dateStr = todayItem.date || '';
 
-    // ✅ 标题格式：主标题 | 副标题 - 日期
+    // ✅ 页面显示标题：subtitle | title（title 已包含日期）
     const mainTitle = rawSubtitle || rawTitle;
-    const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
-
     let displayTitle = mainTitle;
-    if (subTitle) {
-        displayTitle = `${mainTitle} | ${subTitle}`;
-    }
-    if (dateStr) {
-        displayTitle = `${displayTitle} - ${dateStr}`;
+    if (rawSubtitle && rawTitle) {
+        displayTitle = `${rawSubtitle} | ${rawTitle}`;
     }
 
-    // 4K 和 1080P 链接
     let hd4kUrl = url;
     let hd1080Url = url.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
     if (hd1080Url === url) {
@@ -132,21 +125,18 @@ function renderToday(images) {
 
     const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
 
-    // 处理描述文字
     let descHtml = description || '';
     if (descHtml) {
         const paragraphs = descHtml.split('\n').filter(p => p.trim());
         descHtml = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
     }
 
-    // 页面默认使用 1080P 图片
     const displayUrl = hd1080Url || url;
 
     container.innerHTML = `
-        <img src="${displayUrl}" alt="${mainTitle}" loading="eager" />
+        <img src="${displayUrl}" alt="${displayTitle}" loading="eager" />
         <div class="info">
             <div class="title-line">${displayTitle}</div>
-            ${subTitle ? `<div class="subtitle-line">${subTitle}</div>` : ''}
             ${descHtml ? `<div class="desc-line pre-wrap">${descHtml}</div>` : ''}
             <div class="actions">
                 <div class="btn-group">
@@ -223,30 +213,23 @@ function updateMovieSlide(data) {
 
     if (!slide || !data) return;
 
-    // 使用 1080P 图片作为轮播背景
     let displayUrl = data.bing_url || '';
     displayUrl = displayUrl.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
     slide.style.backgroundImage = `url('${displayUrl}')`;
 
-    // ✅ 标题格式：主标题 | 副标题 - 日期
+    // ✅ 页面显示标题：subtitle | title（title 已包含日期）
     const rawTitle = data.title || 'Bing 壁纸';
     const rawSubtitle = data.subtitle || '';
     const dateStr = data.date || '';
-    const mainTitle = rawSubtitle || rawTitle;
-    const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
 
-    let displayTitle = mainTitle;
-    if (subTitle) {
-        displayTitle = `${mainTitle} | ${subTitle}`;
-    }
-    if (dateStr) {
-        displayTitle = `${displayTitle} - ${dateStr}`;
+    let displayTitle = rawTitle;
+    if (rawSubtitle) {
+        displayTitle = `${rawSubtitle} | ${rawTitle}`;
     }
 
     if (titleEl) titleEl.textContent = displayTitle;
     if (dateEl) dateEl.textContent = dateStr || '';
 
-    // 下载按钮使用 4K 链接
     if (downloadBtn) {
         let hdUrl = data.bing_url || '';
         downloadBtn.href = hdUrl;
