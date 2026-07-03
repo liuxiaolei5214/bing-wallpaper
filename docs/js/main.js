@@ -194,7 +194,7 @@ function renderMovieCarousel(images) {
         return;
     }
 
-    movieData = images.slice(0, 20);
+    movieData = images.slice(0, 12);
     movieIndex = 0;
 
     thumbs.innerHTML = movieData.map((img, index) => {
