@@ -5,9 +5,6 @@ on:
     - cron: '30 16 * * *'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -31,6 +28,7 @@ jobs:
           import requests
           from datetime import datetime
 
+          # 读取 today.json
           with open('today.json', 'r', encoding='utf-8') as f:
               data = json.load(f)
 
@@ -43,13 +41,19 @@ jobs:
           copyright_text = img.get('copyright', '')
           urlbase = img.get('urlbase', '')
 
-          date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}" if len(enddate) == 8 else enddate
+          # 构建日期
+          if len(enddate) == 8:
+              date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}"
+          else:
+              date_str = enddate
 
           description = ''
           subtitle = ''
           clean_title = ''
 
+          # ---- 来源1: bing.ee123.net ----
           try:
+              print("🔗 尝试从 bing.ee123.net 提取...")
               detail_url = f"https://bing.ee123.net/detail/{enddate}"
               response = requests.get(detail_url, timeout=15, headers={
                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -57,6 +61,7 @@ jobs:
 
               if response.status_code == 200:
                   html = response.text
+
                   title_match = re.search(r'<p[^>]*class="title"[^>]*>(.*?)</p>', html, re.DOTALL)
                   if title_match:
                       raw_title = title_match.group(1)
@@ -68,23 +73,88 @@ jobs:
                       if len(parts) >= 2:
                           subtitle = parts[0].strip()
                           second_part = parts[1].strip()
-                          clean_title = second_part.split(' - ')[0].strip() if ' - ' in second_part else second_part
+                          if ' - ' in second_part:
+                              location_parts = second_part.split(' - ')
+                              clean_title = location_parts[0].strip()
+                          else:
+                              clean_title = second_part
+                      else:
+                          clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
+                          clean_title = re.sub(r'\s*,\s*$', '', clean_title)
+                          subtitle = clean_title
+                      
+                      print(f"✅ 提取到展示名称: {display_title}")
 
                   sub_match = re.search(r'<span[^>]*class="sub"[^>]*>([\s\S]*?)</span>', html)
                   if sub_match:
-                      p_tags = re.findall(r'<p>(.*?)</p>', sub_match.group(1), re.DOTALL)
+                      sub_content = sub_match.group(1)
+                      p_tags = re.findall(r'<p>(.*?)</p>', sub_content, re.DOTALL)
                       desc_parts = [p.strip() for p in p_tags if p.strip()]
                       if desc_parts:
-                          description = '\n'.join(desc_parts)
+                          clean_parts = []
+                          for p in desc_parts:
+                              p = p.replace('&nbsp;', ' ')
+                              p = p.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
+                              p = p.replace('&quot;', '"').replace('&#39;', "'")
+                              if p.strip():
+                                  clean_parts.append(p.strip())
+                          if clean_parts:
+                              description = '\n'.join(clean_parts)
+                              print(f"✅ 从 bing.ee123.net 提取成功，共 {len(clean_parts)} 段描述")
           except Exception as e:
-              print(f"⚠️ 提取失败: {e}")
+              print(f"⚠️ bing.ee123.net 提取失败: {e}")
+
+          # ---- 来源2: dailybing.cn ----
+          if not description or not clean_title:
+              try:
+                  print("🔗 尝试从 dailybing.cn 提取...")
+                  detail_url = f"https://www.dailybing.cn/view/zh-cn/{enddate}.html"
+                  response = requests.get(detail_url, timeout=15, headers={
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                  })
+
+                  if response.status_code == 200:
+                      html = response.text
+
+                      if not subtitle:
+                          alt_match = re.search(r'<img[^>]*alt="([^"]+)"', html)
+                          if alt_match:
+                              subtitle = alt_match.group(1).strip()
+                              print(f"✅ 提取到副标题: {subtitle}")
+
+                      story_match = re.search(r'<div[^>]*class="story-content"[^>]*>([\s\S]*?)</div>', html)
+                      if story_match:
+                          story_content = story_match.group(1)
+                          p_tags = re.findall(r'<div[^>]*class="story-paragraph"[^>]*>(.*?)</div>', story_content, re.DOTALL)
+                          desc_parts = [p.strip() for p in p_tags if p.strip()]
+                          if desc_parts:
+                              clean_parts = []
+                              for p in desc_parts:
+                                  p = p.replace('&nbsp;', ' ')
+                                  p = p.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
+                                  p = p.replace('&quot;', '"').replace('&#39;', "'")
+                                  p = re.sub(r'\s+', ' ', p).strip()
+                                  if p:
+                                      clean_parts.append(p)
+                              if clean_parts:
+                                  description = '\n'.join(clean_parts)
+                                  print(f"✅ 从 dailybing.cn 提取成功，共 {len(clean_parts)} 段描述")
+
+                      if not clean_title:
+                          clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
+                          clean_title = re.sub(r'\s*,\s*$', '', clean_title)
+
+              except Exception as e:
+                  print(f"⚠️ dailybing.cn 提取失败: {e}")
+
+          # ---- 备用 ----
+          if not description:
+              description = copyright_text
+              print(f"⚠️ 使用 copyright 作为备用描述")
 
           if not clean_title:
               clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
               clean_title = re.sub(r'\s*,\s*$', '', clean_title)
-
-          if not description:
-              description = copyright_text
 
           if not subtitle:
               subtitle = clean_title
@@ -106,6 +176,7 @@ jobs:
           print(f"📝 标题: {clean_title}")
           print(f"📝 副标题: {subtitle}")
           print(f"📝 描述长度: {len(description)} 字符")
+          print(f"📅 日期: {date_str}")
           EOF
 
       - name: Direct write to year file
@@ -173,14 +244,18 @@ jobs:
           touch docs/index.html
           echo "✅ Cache refreshed at $(date)" >> docs/cache.log
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
-          publish_branch: gh-pages
-          force_orphan: true
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: 'Deploy: Daily update'
-          enable_jekyll: false
+      - name: Commit and push changes
+        env:
+          TOKEN: ${{ secrets.MY_GIT_TOKEN }}
+        run: |
+          git config --local user.email "liuxiaolei5214@gmail.com"
+          git config --local user.name "liuxiaolei5214"
+          git config --local --unset http.https://github.com/.extraheader || true
+          git remote set-url origin https://x-access-token:${TOKEN}@github.com/liuxiaolei5214/bing-wallpaper.git
+          git add docs/zh.*.json docs/history.json docs/index.html docs/cache.log
+          if git diff --cached --quiet; then
+            echo "No changes to commit, skipping push."
+          else
+            git commit -m "Daily update: $(date +'%Y-%m-%d %H:%M:%S')"
+            git push origin main
+          fi
