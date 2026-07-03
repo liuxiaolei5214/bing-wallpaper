@@ -9,47 +9,37 @@
     <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    <header>
-        <div class="header-inner">
-            <h1>🌅 光影回顾</h1>
-            <p>每日更新 · 4K 超清 · 免费下载</p>
-            <div id="currentTime" class="time-display"></div>
+    <!-- ===== 今日壁纸 - 全屏 ===== -->
+    <section id="today">
+        <div id="todayCard">
+            <div class="loading">加载中...</div>
         </div>
-    </header>
+    </section>
 
-    <main>
-        <!-- ===== 今日壁纸 ===== -->
-        <section id="today">
-            <div id="todayCard">
-                <div class="loading">加载中...</div>
-            </div>
-        </section>
-
-        <!-- ===== 电影感壁纸轮播（光影回顾） ===== -->
-        <section id="movieCarouselSection">
-            <h2>🎬 光影回顾</h2>
-            <div class="carousel-movie">
-                <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
-                    <div class="movie-overlay">
-                        <div class="movie-content">
-                            <div class="movie-actions" id="movieActions">
-                                <a href="#" class="btn btn-primary movie-btn-small" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
-                                <a href="#" class="btn btn-secondary movie-btn-small" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
-                                <a href="#" class="btn btn-secondary movie-btn-small" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
-                            </div>
-                            <div class="movie-info">
-                                <div class="movie-date" id="movieDate"></div>
-                                <div class="movie-title" id="movieTitle"></div>
-                            </div>
+    <!-- ===== 电影感壁纸轮播（光影回顾） ===== -->
+    <section id="movieCarouselSection">
+        <h2>🎬 光影回顾</h2>
+        <div class="carousel-movie">
+            <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
+                <div class="movie-overlay">
+                    <div class="movie-content">
+                        <div class="movie-actions" id="movieActions">
+                            <a href="#" class="btn btn-primary movie-btn-small" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
+                            <a href="#" class="btn btn-secondary movie-btn-small" id="movieViewBtn" target="_blank">🖼️ 查看原图</a>
+                            <a href="#" class="btn btn-secondary movie-btn-small" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
+                        </div>
+                        <div class="movie-info">
+                            <div class="movie-date" id="movieDate"></div>
+                            <div class="movie-title" id="movieTitle"></div>
                         </div>
                     </div>
                 </div>
-                <div class="movie-thumbnails" id="movieThumbnails"></div>
-                <button class="movie-btn prev" id="moviePrev">‹</button>
-                <button class="movie-btn next" id="movieNext">›</button>
             </div>
-        </section>
-    </main>
+            <div class="movie-thumbnails" id="movieThumbnails"></div>
+            <button class="movie-btn prev" id="moviePrev">‹</button>
+            <button class="movie-btn next" id="movieNext">›</button>
+        </div>
+    </section>
 
     <footer>
         <p>数据来源：Bing 每日壁纸 · 自动更新 · 仅供个人欣赏</p>
