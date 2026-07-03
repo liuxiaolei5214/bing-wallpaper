@@ -249,5 +249,5 @@ jobs:
           force_orphan: true
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: 'Deploy: ${{ github.event.head_commit.message || format("Daily update {0}", github.event.repository.updated_at) }}'
+          commit_message: 'Deploy: Daily update'
           enable_jekyll: false
