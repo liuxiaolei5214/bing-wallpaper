@@ -1,443 +1,320 @@
-/* ========== 全局重置 & 基础 ========== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/**
+ * Bing 每日壁纸 - 光影回顾版
+ * 适配 zh.2026.json 格式
+ */
+
+// ============ 配置 ============
+const BING_BASE = 'https://bing.com';
+
+// ============ 工具函数 ============
+
+function getBeijingTime() {
+    const now = new Date();
+    const beijingStr = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+    return new Date(beijingStr);
 }
 
-html {
-    scroll-behavior: smooth;
-    scroll-snap-type: y mandatory;
-    overflow-y: scroll;
+// 获取"今日"日期字符串 (YYYY-MM-DD)
+function getTodayStr() {
+    const now = getBeijingTime();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
 }
 
-body {
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-    background: #0b0b0b;
-    color: #e8e8e8;
-    min-height: 100vh;
-    overflow-x: hidden;
+// 构建"光影回顾"详情链接（日期减1天）
+function buildDetailUrl(item) {
+    let topic = item.title || item.subtitle || '壁纸';
+    if (topic.includes('，')) topic = topic.split('，')[0].trim();
+    if (topic.includes(',')) topic = topic.split(',')[0].trim();
+    topic = topic.replace(/\s*\(©[^)]*\)\s*$/, '');
+
+    let dateParam = item.date || '';
+    if (dateParam) {
+        const parts = dateParam.split('-');
+        const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        date.setDate(date.getDate() - 1);
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        dateParam = y + m + d + '_1600';
+    }
+
+    const encodedTopic = encodeURIComponent(topic);
+    return `https://cn.bing.com/search?q=${encodedTopic}&form=BGALM&filters=HpDate%3a%22${dateParam}%22+mgzv3configlist%3a%22BingQA_Encyclopedia_Layout%22&pc=W011&bwa=1`;
 }
 
-/* ========== 全屏滚动容器 ========== */
-.fullscreen-section {
-    width: 100%;
-    height: 100vh;
-    scroll-snap-align: start;
-    position: relative;
-    overflow: hidden;
+// ============ 从 JSON 文件读取数据 ============
+
+async function loadYearData(year) {
+    try {
+        const resp = await fetch(`zh.${year}.json`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        return Array.isArray(data) ? data : [];
+    } catch (e) {
+        console.warn(`加载 ${year} 数据失败:`, e);
+        return [];
+    }
 }
 
-/* ========== 今日壁纸 ========== */
-#todayCard {
-    width: 100%;
-    height: 100vh;
-    background: #0b0b0b;
-    position: relative;
-    overflow: hidden;
+async function loadAllData() {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let y = 2020; y <= currentYear; y++) {
+        years.push(y);
+    }
+
+    const results = await Promise.allSettled(years.map(y => loadYearData(y)));
+
+    let all = [];
+    results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value.length) {
+            const year = years[index];
+            const items = result.value.map(item => ({ ...item, year }));
+            all = all.concat(items);
+        }
+    });
+
+    all.sort((a, b) => {
+        const da = a.date || '';
+        const db = b.date || '';
+        return db.localeCompare(da);
+    });
+
+    return all;
 }
 
-#todayCard img {
-    width: 100%;
-    height: 100vh;
-    object-fit: cover;
-    display: block;
+// ============ 渲染今日壁纸 ============
+
+function renderToday(images) {
+    const container = document.getElementById('todayCard');
+    if (!images || images.length === 0) {
+        container.innerHTML = '<div class="error">❌ 暂无壁纸数据</div>';
+        return;
+    }
+
+    const todayStr = getTodayStr();
+    let todayItem = images.find(item => item.date === todayStr);
+    if (!todayItem) {
+        todayItem = images[0];
+    }
+
+    // 清理 URL 中的双斜杠
+    let url = todayItem.bing_url || '';
+    url = url.replace(/(https?:\/\/)[^\/]+(\/\/+)/g, '$1$2');
+
+    // 修正数据：title 是副标题，subtitle 是主标题
+    const rawTitle = todayItem.title || 'Bing 每日壁纸';
+    const rawSubtitle = todayItem.subtitle || '';
+    const description = todayItem.description || '';
+    const dateStr = todayItem.date || '';
+
+    // ✅ 标题格式：主标题 | 副标题 - 日期
+    const mainTitle = rawSubtitle || rawTitle;
+    const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
+
+    let displayTitle = mainTitle;
+    if (subTitle) {
+        displayTitle = `${mainTitle} | ${subTitle}`;
+    }
+    if (dateStr) {
+        displayTitle = `${displayTitle} - ${dateStr}`;
+    }
+
+    // 4K 和 1080P 链接
+    let hd4kUrl = url;
+    let hd1080Url = url.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+    if (hd1080Url === url) {
+        hd1080Url = url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+    }
+
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+
+    // 处理描述文字
+    let descHtml = description || '';
+    if (descHtml) {
+        const paragraphs = descHtml.split('\n').filter(p => p.trim());
+        descHtml = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+    }
+
+    // 页面默认使用 1080P 图片
+    const displayUrl = hd1080Url || url;
+
+    container.innerHTML = `
+        <img src="${displayUrl}" alt="${mainTitle}" loading="eager" />
+        <div class="info">
+            <div class="title-line">${displayTitle}</div>
+            ${subTitle ? `<div class="subtitle-line">${subTitle}</div>` : ''}
+            ${descHtml ? `<div class="desc-line pre-wrap">${descHtml}</div>` : ''}
+            <div class="actions">
+                <div class="btn-group">
+                    <a href="${hd4kUrl}" class="btn btn-primary" target="_blank">${svgIcon} 4K</a>
+                    <a href="${hd1080Url}" class="btn btn-secondary" target="_blank">${svgIcon} 1080P</a>
+                    <a href="${buildDetailUrl(todayItem)}" class="btn btn-secondary" target="_blank">📖 光影回顾</a>
+                    <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
-/* ===== 今日壁纸信息 - 半透明浮层 ===== */
-#todayCard .info {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 40px 50px 30px;
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
-    color: #fff;
-    pointer-events: none;
+// ============ 电影感壁纸轮播 ==========
+
+let movieData = [];
+let movieIndex = 0;
+let movieInterval = null;
+
+function renderMovieCarousel(images) {
+    const slide = document.getElementById('movieSlide');
+    const thumbs = document.getElementById('movieThumbnails');
+    const dateEl = document.getElementById('movieDate');
+    const titleEl = document.getElementById('movieTitle');
+    const downloadBtn = document.getElementById('movieDownloadBtn');
+    const viewBtn = document.getElementById('movieViewBtn');
+    const detailBtn = document.getElementById('movieDetailBtn');
+
+    if (!slide || !thumbs || !images || images.length === 0) {
+        if (slide) slide.style.backgroundImage = '';
+        if (thumbs) thumbs.innerHTML = '<div style="padding: 10px; color: #666;">暂无历史壁纸</div>';
+        return;
+    }
+
+    movieData = images.slice(0, 20);
+    movieIndex = 0;
+
+    thumbs.innerHTML = movieData.map((img, index) => {
+        let thumbUrl = img.bing_url || '';
+        thumbUrl = thumbUrl.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+        return `<div class="thumb-item ${index === 0 ? 'active' : ''}" 
+                    style="background-image: url('${thumbUrl}');" 
+                    data-index="${index}"></div>`;
+    }).join('');
+
+    updateMovieSlide(movieData[0]);
+
+    thumbs.querySelectorAll('.thumb-item').forEach(el => {
+        el.addEventListener('click', function() {
+            const idx = parseInt(this.dataset.index);
+            if (idx === movieIndex) return;
+            movieIndex = idx;
+            updateMovieSlide(movieData[idx]);
+            updateMovieThumbs();
+            resetMovieTimer();
+        });
+    });
+
+    const prevBtn = document.getElementById('moviePrev');
+    const nextBtn = document.getElementById('movieNext');
+    if (prevBtn) prevBtn.onclick = () => { changeMovie(-1); };
+    if (nextBtn) nextBtn.onclick = () => { changeMovie(1); };
+
+    startMovieTimer();
 }
 
-#todayCard .info .actions {
-    pointer-events: auto;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 14px;
+function updateMovieSlide(data) {
+    const slide = document.getElementById('movieSlide');
+    const dateEl = document.getElementById('movieDate');
+    const titleEl = document.getElementById('movieTitle');
+    const downloadBtn = document.getElementById('movieDownloadBtn');
+    const viewBtn = document.getElementById('movieViewBtn');
+    const detailBtn = document.getElementById('movieDetailBtn');
+
+    if (!slide || !data) return;
+
+    // 使用 1080P 图片作为轮播背景
+    let displayUrl = data.bing_url || '';
+    displayUrl = displayUrl.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+    slide.style.backgroundImage = `url('${displayUrl}')`;
+
+    // ✅ 标题格式：主标题 | 副标题 - 日期
+    const rawTitle = data.title || 'Bing 壁纸';
+    const rawSubtitle = data.subtitle || '';
+    const dateStr = data.date || '';
+    const mainTitle = rawSubtitle || rawTitle;
+    const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
+
+    let displayTitle = mainTitle;
+    if (subTitle) {
+        displayTitle = `${mainTitle} | ${subTitle}`;
+    }
+    if (dateStr) {
+        displayTitle = `${displayTitle} - ${dateStr}`;
+    }
+
+    if (titleEl) titleEl.textContent = displayTitle;
+    if (dateEl) dateEl.textContent = dateStr || '';
+
+    // 下载按钮使用 4K 链接
+    if (downloadBtn) {
+        let hdUrl = data.bing_url || '';
+        downloadBtn.href = hdUrl;
+    }
+    if (viewBtn) viewBtn.href = data.bing_url || '';
+    if (detailBtn) {
+        detailBtn.href = buildDetailUrl(data);
+    }
 }
 
-#todayCard .info .actions .btn-group {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+function updateMovieThumbs() {
+    document.querySelectorAll('.thumb-item').forEach((el, i) => {
+        el.classList.toggle('active', i === movieIndex);
+    });
 }
 
-#todayCard .info .title-line {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #fff;
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
-    margin-bottom: 2px;
-    line-height: 1.3;
+function changeMovie(direction) {
+    const total = movieData.length;
+    if (total === 0) return;
+    movieIndex = (movieIndex + direction + total) % total;
+    updateMovieSlide(movieData[movieIndex]);
+    updateMovieThumbs();
+    resetMovieTimer();
 }
 
-#todayCard .info .subtitle-line {
-    font-size: 1rem;
-    color: #d4a373;
-    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-    margin-bottom: 6px;
+function startMovieTimer() {
+    stopMovieTimer();
+    movieInterval = setInterval(() => {
+        changeMovie(1);
+    }, 5000);
 }
 
-#todayCard .info .desc-line {
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.85);
-    max-width: 70%;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
-    line-height: 1.7;
-    text-indent: 2em;
+function stopMovieTimer() {
+    if (movieInterval) {
+        clearInterval(movieInterval);
+        movieInterval = null;
+    }
 }
 
-#todayCard .info .desc-line.pre-wrap {
-    white-space: pre-wrap;
-    display: block;
-    -webkit-line-clamp: unset;
-    overflow: visible;
+function resetMovieTimer() {
+    stopMovieTimer();
+    startMovieTimer();
 }
 
-.btn {
-    display: inline-block;
-    padding: 8px 22px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #e0e0e0;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
+// ============ 主函数 ============
+
+async function main() {
+    const todayContainer = document.getElementById('todayCard');
+    const slide = document.getElementById('movieSlide');
+
+    if (todayContainer) todayContainer.innerHTML = '<div class="loading">加载今日壁纸中...</div>';
+    if (slide) slide.style.backgroundImage = '';
+
+    try {
+        const images = await loadAllData();
+
+        if (!images || images.length === 0) {
+            todayContainer.innerHTML = '<div class="error">❌ 未能获取壁纸数据</div>';
+            return;
+        }
+
+        renderToday(images);
+        renderMovieCarousel(images.filter(item => item.date !== getTodayStr()));
+
+    } catch (error) {
+        console.error('主流程错误:', error);
+        todayContainer.innerHTML = `<div class="error">❌ 加载失败：${error.message || '未知错误'}</div>`;
+    }
 }
 
-.btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.4);
-}
-
-.btn-primary {
-    background: #4d96ff;
-    border-color: #4d96ff;
-    color: #fff;
-}
-
-.btn-primary:hover {
-    background: #3a7bd5;
-    border-color: #3a7bd5;
-}
-
-.btn-secondary {
-    background: rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.3);
-    color: #fff;
-}
-
-.btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-/* ========== 电影感壁纸轮播 - 全屏 ========== */
-.carousel-movie {
-    width: 100%;
-    height: 100vh;
-    background: #0b0b0b;
-    position: relative;
-    overflow: hidden;
-}
-
-.movie-slide {
-    width: 100%;
-    height: 100vh;
-    background-size: cover;
-    background-position: center;
-    transition: background-image 0.8s ease-in-out;
-}
-
-.movie-slide::after {
-    content: '';
-    position: absolute;
-    top: -5%;
-    left: -5%;
-    width: 110%;
-    height: 110%;
-    background: inherit;
-    background-size: cover;
-    background-position: center;
-    filter: blur(0px);
-    transition: transform 6s ease-out;
-    z-index: 0;
-}
-
-.carousel-movie:hover .movie-slide::after,
-.movie-slide.active::after {
-    transform: scale(1.08);
-}
-
-.movie-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.1) 60%, rgba(0, 0, 0, 0.4) 100%);
-    z-index: 1;
-    display: flex;
-    align-items: flex-end;
-    padding-bottom: 80px;
-}
-
-.movie-content {
-    padding: 0 50px;
-    max-width: 60%;
-    color: #fff;
-    z-index: 2;
-    position: relative;
-}
-
-.movie-title {
-    font-size: 2.2rem;
-    font-weight: 700;
-    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
-    margin-bottom: 4px;
-    line-height: 1.3;
-}
-
-.movie-date {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.7);
-    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-}
-
-/* ===== 按钮固定到右上角（不随图片变化） ===== */
-.movie-actions {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    z-index: 10;
-    display: flex;
-    gap: 10px;
-}
-
-.movie-btn-small {
-    font-size: 0.8rem;
-    padding: 8px 18px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.movie-btn-small.btn-primary {
-    background: #4d96ff;
-    color: #fff;
-    border: none;
-}
-
-.movie-btn-small.btn-primary:hover {
-    background: #3a7bd5;
-    transform: translateY(-2px);
-}
-
-.movie-btn-small.btn-secondary {
-    background: rgba(0, 0, 0, 0.5);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
-}
-
-.movie-btn-small.btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px);
-}
-
-/* ===== 缩略图导航栏 ===== */
-.movie-thumbnails {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    gap: 8px;
-    padding: 12px 20px;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    overflow-x: auto;
-    scrollbar-width: thin;
-    z-index: 5;
-}
-
-.movie-thumbnails::-webkit-scrollbar {
-    height: 4px;
-}
-
-.movie-thumbnails::-webkit-scrollbar-thumb {
-    background: #4d96ff;
-    border-radius: 4px;
-}
-
-.thumb-item {
-    flex: 1;
-    min-width: 0;
-    max-width: 120px;
-    height: 50px;
-    border-radius: 6px;
-    background-size: cover;
-    background-position: center;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.3s ease;
-    opacity: 0.5;
-    filter: grayscale(0.6);
-    aspect-ratio: 16 / 9;
-}
-
-.thumb-item:hover {
-    opacity: 0.9;
-    transform: scale(1.05);
-}
-
-.thumb-item.active {
-    border-color: #4d96ff;
-    opacity: 1;
-    filter: grayscale(0);
-}
-
-/* ===== 左右控制按钮 ===== */
-.movie-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 6;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    font-size: 2rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    opacity: 0;
-}
-
-.carousel-movie:hover .movie-btn {
-    opacity: 1;
-}
-
-.movie-btn:hover {
-    background: rgba(77, 150, 255, 0.6);
-    border-color: #4d96ff;
-}
-
-.movie-btn.prev {
-    left: 20px;
-}
-
-.movie-btn.next {
-    right: 20px;
-}
-
-/* ========== 加载状态 ========== */
-.loading {
-    text-align: center;
-    padding: 60px 0;
-    color: #666;
-    font-size: 1rem;
-}
-
-.loading::after {
-    content: "";
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin-left: 10px;
-    border: 3px solid #2a2a2a;
-    border-top-color: #4d96ff;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    vertical-align: middle;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.error {
-    text-align: center;
-    padding: 40px;
-    color: #ff6b6b;
-    background: #1a0a0a;
-    border-radius: 12px;
-    border: 1px solid #3a1a1a;
-}
-
-/* ========== 滚动条样式 ========== */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: #0b0b0b;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #4d96ff;
-    border-radius: 3px;
-}
-
-/* ========== 响应式 ========== */
-@media (max-width: 1024px) {
-    .movie-content { max-width: 70%; }
-}
-
-@media (max-width: 768px) {
-    #todayCard .info { padding: 25px 24px 20px; }
-    #todayCard .info .title-line { font-size: 1.5rem; }
-    #todayCard .info .desc-line { max-width: 100%; font-size: 0.8rem; }
-    .movie-content { max-width: 80%; padding: 0 24px; }
-    .movie-title { font-size: 1.5rem; }
-    .movie-date { font-size: 0.8rem; }
-    .movie-actions { top: 16px; right: 16px; gap: 6px; }
-    .movie-btn-small { font-size: 0.7rem; padding: 6px 14px; }
-    .thumb-item { flex: 0 0 60px; height: 40px; }
-    .movie-btn { width: 36px; height: 36px; font-size: 1.5rem; }
-    .movie-btn.prev { left: 12px; }
-    .movie-btn.next { right: 12px; }
-    .btn { padding: 6px 16px; font-size: 0.8rem; }
-}
-
-@media (max-width: 480px) {
-    #todayCard .info { padding: 16px 16px 14px; }
-    #todayCard .info .title-line { font-size: 1.1rem; }
-    #todayCard .info .desc-line { font-size: 0.75rem; max-width: 100%; -webkit-line-clamp: 2; }
-    #todayCard .info .actions { flex-direction: column; align-items: stretch; gap: 8px; }
-    #todayCard .info .actions .btn-group { justify-content: center; }
-    .movie-content { max-width: 90%; padding: 0 16px; }
-    .movie-title { font-size: 1.1rem; }
-    .movie-date { font-size: 0.7rem; }
-    .movie-actions { top: 12px; right: 12px; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
-    .movie-btn-small { font-size: 0.6rem; padding: 4px 10px; }
-    .thumb-item { flex: 0 0 50px; height: 34px; }
-    .movie-btn { width: 28px; height: 28px; font-size: 1.2rem; }
-    .btn { padding: 5px 14px; font-size: 0.75rem; }
-}
+document.addEventListener('DOMContentLoaded', main);
