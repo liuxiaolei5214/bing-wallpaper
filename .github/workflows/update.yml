@@ -30,9 +30,7 @@ jobs:
           import re
           import requests
           from datetime import datetime
-          import os
 
-          # 读取 today.json
           with open('today.json', 'r', encoding='utf-8') as f:
               data = json.load(f)
 
@@ -45,21 +43,13 @@ jobs:
           copyright_text = img.get('copyright', '')
           urlbase = img.get('urlbase', '')
 
-          # 构建日期
-          if len(enddate) == 8:
-              date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}"
-          else:
-              date_str = enddate
+          date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}" if len(enddate) == 8 else enddate
 
           description = ''
-          source_used = ''
-          display_title = ''
           subtitle = ''
           clean_title = ''
 
-          # ---- 来源1: bing.ee123.net ----
           try:
-              print("🔗 尝试从 bing.ee123.net 提取...")
               detail_url = f"https://bing.ee123.net/detail/{enddate}"
               response = requests.get(detail_url, timeout=15, headers={
                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -67,7 +57,6 @@ jobs:
 
               if response.status_code == 200:
                   html = response.text
-
                   title_match = re.search(r'<p[^>]*class="title"[^>]*>(.*?)</p>', html, re.DOTALL)
                   if title_match:
                       raw_title = title_match.group(1)
@@ -79,91 +68,23 @@ jobs:
                       if len(parts) >= 2:
                           subtitle = parts[0].strip()
                           second_part = parts[1].strip()
-                          if ' - ' in second_part:
-                              location_parts = second_part.split(' - ')
-                              clean_title = location_parts[0].strip()
-                          else:
-                              clean_title = second_part
-                      else:
-                          clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
-                          clean_title = re.sub(r'\s*,\s*$', '', clean_title)
-                          subtitle = clean_title
-                      
-                      print(f"✅ 提取到展示名称: {display_title}")
+                          clean_title = second_part.split(' - ')[0].strip() if ' - ' in second_part else second_part
 
                   sub_match = re.search(r'<span[^>]*class="sub"[^>]*>([\s\S]*?)</span>', html)
                   if sub_match:
-                      sub_content = sub_match.group(1)
-                      p_tags = re.findall(r'<p>(.*?)</p>', sub_content, re.DOTALL)
+                      p_tags = re.findall(r'<p>(.*?)</p>', sub_match.group(1), re.DOTALL)
                       desc_parts = [p.strip() for p in p_tags if p.strip()]
                       if desc_parts:
-                          clean_parts = []
-                          for p in desc_parts:
-                              p = p.replace('&nbsp;', ' ')
-                              p = p.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
-                              p = p.replace('&quot;', '"').replace('&#39;', "'")
-                              if p.strip():
-                                  clean_parts.append(p.strip())
-                          if clean_parts:
-                              description = '\n'.join(clean_parts)
-                              source_used = 'bing.ee123.net'
-                              print(f"✅ 从 bing.ee123.net 提取成功，共 {len(clean_parts)} 段描述")
+                          description = '\n'.join(desc_parts)
           except Exception as e:
-              print(f"⚠️ bing.ee123.net 提取失败: {e}")
-
-          # ---- 来源2: dailybing.cn ----
-          if not description or not display_title:
-              try:
-                  print("🔗 尝试从 dailybing.cn 提取...")
-                  detail_url = f"https://www.dailybing.cn/view/zh-cn/{enddate}.html"
-                  response = requests.get(detail_url, timeout=15, headers={
-                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                  })
-
-                  if response.status_code == 200:
-                      html = response.text
-
-                      if not subtitle:
-                          alt_match = re.search(r'<img[^>]*alt="([^"]+)"', html)
-                          if alt_match:
-                              subtitle = alt_match.group(1).strip()
-                              print(f"✅ 提取到副标题: {subtitle}")
-
-                      story_match = re.search(r'<div[^>]*class="story-content"[^>]*>([\s\S]*?)</div>', html)
-                      if story_match:
-                          story_content = story_match.group(1)
-                          p_tags = re.findall(r'<div[^>]*class="story-paragraph"[^>]*>(.*?)</div>', story_content, re.DOTALL)
-                          desc_parts = [p.strip() for p in p_tags if p.strip()]
-                          if desc_parts:
-                              clean_parts = []
-                              for p in desc_parts:
-                                  p = p.replace('&nbsp;', ' ')
-                                  p = p.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
-                                  p = p.replace('&quot;', '"').replace('&#39;', "'")
-                                  p = re.sub(r'\s+', ' ', p).strip()
-                                  if p:
-                                      clean_parts.append(p)
-                              if clean_parts:
-                                  description = '\n'.join(clean_parts)
-                                  source_used = 'dailybing.cn'
-                                  print(f"✅ 从 dailybing.cn 提取成功，共 {len(clean_parts)} 段描述")
-
-                      if not clean_title:
-                          clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
-                          clean_title = re.sub(r'\s*,\s*$', '', clean_title)
-
-              except Exception as e:
-                  print(f"⚠️ dailybing.cn 提取失败: {e}")
-
-          # ---- 备用 ----
-          if not description:
-              description = copyright_text
-              source_used = 'copyright (fallback)'
-              print(f"⚠️ 使用 copyright 作为备用描述")
+              print(f"⚠️ 提取失败: {e}")
 
           if not clean_title:
               clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
               clean_title = re.sub(r'\s*,\s*$', '', clean_title)
+
+          if not description:
+              description = copyright_text
 
           if not subtitle:
               subtitle = clean_title
@@ -185,7 +106,6 @@ jobs:
           print(f"📝 标题: {clean_title}")
           print(f"📝 副标题: {subtitle}")
           print(f"📝 描述长度: {len(description)} 字符")
-          print(f"📅 日期: {date_str}")
           EOF
 
       - name: Direct write to year file
@@ -194,26 +114,31 @@ jobs:
           import json
           from datetime import datetime
           
-          # ✅ 直接在 Python 中获取当前年份
           year = datetime.now().strftime('%Y')
           year_file = f"docs/zh.{year}.json"
+          
+          print(f"📄 目标文件: {year_file}")
           
           try:
               with open(year_file, 'r', encoding='utf-8') as f:
                   existing = json.load(f)
-          except (FileNotFoundError, json.JSONDecodeError):
+              print(f"📊 读取到 {len(existing)} 条数据")
+          except (FileNotFoundError, json.JSONDecodeError) as e:
+              print(f"⚠️ 读取失败: {e}")
               existing = []
           
           with open('today_clean.json', 'r', encoding='utf-8') as f:
               new_data = json.load(f)
           
           new_date = new_data['date']
+          print(f"📅 新数据日期: {new_date}")
           
-          # 删除当天旧数据，添加新数据
+          before_count = len(existing)
           existing = [item for item in existing if item.get('date') != new_date]
-          existing.append(new_data)
+          removed_count = before_count - len(existing)
+          print(f"🗑️ 删除了 {removed_count} 条日期为 {new_date} 的旧数据")
           
-          # 按日期降序排列
+          existing.append(new_data)
           existing.sort(key=lambda x: x.get('date', ''), reverse=True)
           
           with open(year_file, 'w', encoding='utf-8') as f:
@@ -221,9 +146,13 @@ jobs:
           
           print(f"✅ 已更新 {year_file}，共 {len(existing)} 张壁纸")
           
-          if existing:
-              print("📄 更新后的第一条数据:")
-              print(json.dumps(existing[0], ensure_ascii=False, indent=2))
+          # 验证
+          with open(year_file, 'r', encoding='utf-8') as f:
+              verify_data = json.load(f)
+          
+          print(f"🔍 验证: 文件中现在有 {len(verify_data)} 条数据")
+          if verify_data:
+              print(f"📄 验证: 第一条数据日期为 {verify_data[0].get('date')}")
           EOF
 
       - name: Generate combined history.json
