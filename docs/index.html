@@ -121,29 +121,22 @@
             position: relative;
         }
 
-        /* ===== 顶部栏：标题 + 按钮 同一行 ===== */
-        .movie-top-bar {
+        /* ===== 标题 - 独立在左上角 ===== */
+        .movie-title-bar {
             position: absolute;
             top: 1.2rem;
-            left: 0;
-            right: 0;
-            padding: 0 2.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            left: 2.5rem;
             z-index: 15;
             pointer-events: none;
         }
 
-        .movie-top-bar .movie-info {
+        .movie-title-bar .movie-info {
             color: #f0f0ea;
             text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
             pointer-events: auto;
-            flex: 0 1 auto;
-            max-width: 60%;
         }
 
-        .movie-top-bar .movie-title {
+        .movie-title-bar .movie-title {
             font-size: 1.5rem !important;
             font-weight: 300;
             letter-spacing: 2px;
@@ -151,28 +144,30 @@
             line-height: 1.4;
         }
 
-        .movie-top-bar .movie-date {
+        .movie-title-bar .movie-date {
             font-size: clamp(0.7rem, 1vw, 0.9rem);
             opacity: 0.6;
             letter-spacing: 1px;
         }
 
-        /* ===== 按钮在右上角（在顶部栏内） ===== */
-        .movie-top-bar .movie-actions {
-            display: flex !important;
+        /* ===== 按钮 - 独立在右上角 ===== */
+        .movie-actions {
+            position: absolute;
+            top: 1.2rem;
+            right: 2.5rem;
+            display: flex;
             flex-wrap: wrap;
             gap: 0.6rem;
             align-items: center;
-            pointer-events: auto;
-            flex-shrink: 0;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             padding: 0.6rem 1.2rem;
             border-radius: 60px;
             border: 1px solid rgba(255, 255, 240, 0.08);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            position: relative;
             z-index: 20;
+            pointer-events: auto;
         }
 
         .btn {
@@ -316,16 +311,13 @@
 
         /* ===== 响应式 ===== */
         @media (max-width: 640px) {
-            .movie-top-bar {
+            .movie-title-bar {
                 top: 0.6rem;
-                padding: 0 1.2rem;
-                flex-wrap: wrap;
-                gap: 0.6rem;
+                left: 1.2rem;
             }
-            .movie-top-bar .movie-info {
-                max-width: 100%;
-            }
-            .movie-top-bar .movie-actions {
+            .movie-actions {
+                top: 0.6rem;
+                right: 1.2rem;
                 padding: 0.4rem 0.8rem;
                 gap: 0.3rem;
                 border-radius: 40px;
@@ -373,18 +365,19 @@
         <section id="movieCarouselSection" class="fullscreen-section">
             <div class="carousel-movie">
                 <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
-                    <!-- 顶部栏：标题 + 按钮 同一行 -->
-                    <div class="movie-top-bar">
+                    <!-- 标题 - 独立在左上角 -->
+                    <div class="movie-title-bar">
                         <div class="movie-info">
                             <div class="movie-title" id="movieTitle"></div>
                             <div class="movie-date" id="movieDate"></div>
                         </div>
-                        <div class="movie-actions" id="movieActions">
-                            <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
-                            <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank">⬇️ 下载1080P</a>
-                            <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
-                            <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
-                        </div>
+                    </div>
+                    <!-- 按钮 - 独立在右上角 -->
+                    <div class="movie-actions" id="movieActions">
+                        <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
+                        <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank">⬇️ 下载1080P</a>
+                        <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
+                        <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
                     </div>
                     <!-- 缩略图 -->
                     <div class="movie-thumbnails" id="movieThumbnails"></div>
@@ -433,7 +426,7 @@
                 }, 300);
             }
 
-            console.log('✨ 整屏切换已启用 · 标题与按钮同一行');
+            console.log('✨ 整屏切换已启用 · 标题在左上角，按钮在右上角');
         })();
     </script>
 </body>
