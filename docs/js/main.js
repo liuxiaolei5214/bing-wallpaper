@@ -98,43 +98,38 @@ function renderToday(images) {
     const todayStr = getTodayStr();
     console.log(`📅 今日日期: ${todayStr}`);
     console.log(`📊 总数据量: ${images.length}`);
-    console.log(`📊 第一条数据日期: ${images[0]?.date}`);
 
-    // 打印所有日期，方便排查
-    const dates = images.map(item => item.date);
-    console.log(`📊 所有日期: ${dates.join(', ')}`);
-
-    // ✅ 兼容处理：去除 date 字段中的空格
+    // ===== 方式1：精确匹配今天 =====
     let todayItem = images.find(item => {
         const date = item.date ? item.date.trim() : '';
         return date === todayStr;
     });
 
+    // ===== 方式2：如果没有今天的数据，取日期最大的（最新） =====
     if (!todayItem) {
-        // 如果还是找不到，尝试用 startsWith
-        todayItem = images.find(item => {
-            const date = item.date ? item.date.trim() : '';
-            return date.startsWith(todayStr);
+        console.log(`⚠️ 未找到 ${todayStr} 的数据，取最新日期`);
+        // 按日期降序排序，取第一条
+        const sorted = [...images].sort((a, b) => {
+            return (b.date || '').localeCompare(a.date || '');
         });
+        todayItem = sorted[0];
+        console.log(`✅ 最新数据日期: ${todayItem?.date}`);
     }
 
     if (!todayItem) {
-        console.warn(`⚠️ 未找到 ${todayStr} 的数据，使用第一条`);
-        todayItem = images[0];
-    } else {
-        console.log(`✅ 找到今日数据: ${todayItem.title}`);
+        container.innerHTML = '<div class="error">❌ 暂无壁纸数据</div>';
+        return;
     }
+
+    console.log(`✅ 显示壁纸: ${todayItem.title} (${todayItem.date})`);
 
     let url = todayItem.bing_url || '';
     url = url.replace(/(https?:\/\/)[^\/]+(\/\/+)/g, '$1$2');
 
-    // title 保持不变（包含日期）
     const rawTitle = todayItem.title || 'Bing 每日壁纸';
     const rawSubtitle = todayItem.subtitle || '';
     const description = todayItem.description || '';
-    const dateStr = todayItem.date || '';
 
-    // 页面显示标题：subtitle | title（title 已包含日期）
     let displayTitle = rawTitle;
     if (rawSubtitle) {
         displayTitle = `${rawSubtitle} | ${rawTitle}`;
