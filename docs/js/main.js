@@ -258,12 +258,10 @@ function updateMovieSlide(data) {
     if (titleEl) titleEl.textContent = displayTitle;
     if (dateEl) dateEl.textContent = '';
 
-    // ===== 下载4K按钮 =====
     if (downloadBtn) {
         downloadBtn.href = data.bing_url || '';
     }
 
-    // ===== 下载1080P按钮（修改这里） =====
     if (viewBtn) {
         let hd1080Url = data.bing_url || '';
         hd1080Url = hd1080Url.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
@@ -272,6 +270,15 @@ function updateMovieSlide(data) {
 
     if (detailBtn) {
         detailBtn.href = buildDetailUrl(data);
+    }
+
+    // ===== 强制显示按钮容器 =====
+    const actionsContainer = document.getElementById('movieActions');
+    if (actionsContainer) {
+        actionsContainer.style.display = 'flex';
+        actionsContainer.style.opacity = '1';
+        actionsContainer.style.visibility = 'visible';
+        actionsContainer.style.pointerEvents = 'auto';
     }
 }
 
