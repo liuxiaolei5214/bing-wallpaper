@@ -221,7 +221,7 @@ body {
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
 
-/* ===== 按钮固定到右上角（不随图片变化） ===== */
+/* ===== 按钮固定到右上角 ===== */
 .movie-actions {
     position: absolute;
     top: 24px;
@@ -229,6 +229,15 @@ body {
     z-index: 10;
     display: flex;
     gap: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+/* 轮播页显示 */
+.movie-actions.visible {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .movie-btn-small {
