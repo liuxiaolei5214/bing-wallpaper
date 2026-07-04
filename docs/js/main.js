@@ -247,10 +247,8 @@ function updateMovieSlide(data) {
     displayUrl = displayUrl.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
     slide.style.backgroundImage = `url('${displayUrl}')`;
 
-    // 页面显示标题：subtitle | title（title 已包含日期）
     const rawTitle = data.title || 'Bing 壁纸';
     const rawSubtitle = data.subtitle || '';
-    const dateStr = data.date || '';
 
     let displayTitle = rawTitle;
     if (rawSubtitle) {
@@ -258,14 +256,20 @@ function updateMovieSlide(data) {
     }
 
     if (titleEl) titleEl.textContent = displayTitle;
-    // 日期已包含在标题中，不再单独显示
     if (dateEl) dateEl.textContent = '';
 
+    // ===== 下载4K按钮 =====
     if (downloadBtn) {
-        let hdUrl = data.bing_url || '';
-        downloadBtn.href = hdUrl;
+        downloadBtn.href = data.bing_url || '';
     }
-    if (viewBtn) viewBtn.href = data.bing_url || '';
+
+    // ===== 下载1080P按钮（修改这里） =====
+    if (viewBtn) {
+        let hd1080Url = data.bing_url || '';
+        hd1080Url = hd1080Url.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+        viewBtn.href = hd1080Url;
+    }
+
     if (detailBtn) {
         detailBtn.href = buildDetailUrl(data);
     }
