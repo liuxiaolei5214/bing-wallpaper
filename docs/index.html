@@ -131,51 +131,55 @@
             padding: 2rem 2.5rem;
         }
 
-        /* ===== 文字信息 - 在缩略图上方 ===== */
-        .movie-info-wrapper {
+        /* ===== 顶部栏：标题 + 按钮 同一行 ===== */
+        .movie-top-bar {
             position: absolute;
-            bottom: 95.5rem;
+            top: 1.2rem;
             left: 0;
             right: 0;
             padding: 0 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
             z-index: 15;
             pointer-events: none;
         }
 
-        .movie-info {
+        .movie-top-bar .movie-info {
             color: #f0f0ea;
             text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
             pointer-events: auto;
+            flex: 0 1 auto;
+            max-width: 60%;
         }
-        .movie-title {
+
+        .movie-top-bar .movie-title {
             font-size: 1.5rem !important;
             font-weight: 300;
             letter-spacing: 2px;
             margin-bottom: 0.1rem;
             line-height: 1.4;
         }
-        .movie-date {
+
+        .movie-top-bar .movie-date {
             font-size: clamp(0.7rem, 1vw, 0.9rem);
             opacity: 0.6;
             letter-spacing: 1px;
         }
 
-        /* ===== 按钮固定在右上角 ===== */
-        .movie-actions {
-            position: fixed;
-            top: 1.2rem;
-            right: 1.2rem;
+        /* ===== 按钮在右上角（在顶部栏内） ===== */
+        .movie-top-bar .movie-actions {
             display: flex;
             flex-wrap: wrap;
             gap: 0.6rem;
             align-items: center;
+            pointer-events: auto;
+            flex-shrink: 0;
             background: rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(12px);
-            /* -webkit-backdrop-filter: blur(12px); 删除这行 */
             padding: 0.6rem 1.2rem;
-            border-radius: 60px;   /* ← 保留这个，胶囊形状还在 */
+            border-radius: 60px;
             border: 1px solid rgba(255, 255, 240, 0.08);
-            z-index: 50;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
 
@@ -320,13 +324,16 @@
 
         /* ===== 响应式 ===== */
         @media (max-width: 640px) {
-            .movie-info-wrapper {
-                bottom: 4.5rem;
-                padding: 0 1.2rem;
-            }
-            .movie-actions {
+            .movie-top-bar {
                 top: 0.6rem;
-                right: 0.6rem;
+                padding: 0 1.2rem;
+                flex-wrap: wrap;
+                gap: 0.6rem;
+            }
+            .movie-top-bar .movie-info {
+                max-width: 100%;
+            }
+            .movie-top-bar .movie-actions {
                 padding: 0.4rem 0.8rem;
                 gap: 0.3rem;
                 border-radius: 40px;
@@ -374,17 +381,17 @@
         <section id="movieCarouselSection" class="fullscreen-section">
             <div class="carousel-movie">
                 <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
-                    <!-- 文字信息 - 独立在缩略图上方 -->
+                    <!-- 顶部栏：标题 + 按钮 同一行 -->
                     <div class="movie-top-bar">
                         <div class="movie-info">
                             <div class="movie-title" id="movieTitle"></div>
                             <div class="movie-date" id="movieDate"></div>
                         </div>
                         <div class="movie-actions" id="movieActions">
-                                <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
-                                <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank">⬇️ 下载1080P</a>
-                                <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
-                                <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
+                            <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
+                            <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank">⬇️ 下载1080P</a>
+                            <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
+                            <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
                         </div>
                     </div>
                     <!-- 缩略图 -->
@@ -394,6 +401,7 @@
                 </div>
             </div>
         </section>
+    </div>
 
     <!-- 底部提示 -->
     <div class="scroll-hint"><span>⬇ 滚动 · 整屏切换</span></div>
@@ -433,22 +441,7 @@
                 }, 300);
             }
 
-            console.log('✨ 整屏切换已启用 · 文字在缩略图上方');
-            // ===== 检测轮播页是否可见，控制右上角按钮 =====
-            const movieActions = document.getElementById('movieActions');
-            const carouselSection = document.getElementById('movieCarouselSection');
-
-            function checkMovieActions() {
-                if (!carouselSection || !movieActions) return;
-                const rect = carouselSection.getBoundingClientRect();
-                const isVisible = rect.top < window.innerHeight * 0.6 && rect.bottom > 0;
-                movieActions.classList.toggle('visible', isVisible);
-            }
-
-            viewport.addEventListener('scroll', checkMovieActions);
-            window.addEventListener('resize', checkMovieActions);
-            // 初始检测
-            setTimeout(checkMovieActions, 300);
+            console.log('✨ 整屏切换已启用 · 标题与按钮同一行');
         })();
     </script>
 </body>
