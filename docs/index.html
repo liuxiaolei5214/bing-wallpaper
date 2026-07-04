@@ -169,8 +169,8 @@
             flex-wrap: wrap;
             gap: 0.6rem;
             align-items: center;
-            background: rgba(0, 0, 0, 0.1);  删除这行 */
-            backdrop-filter: blur(12px);       删除这行 */
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(12px);
             /* -webkit-backdrop-filter: blur(12px); 删除这行 */
             padding: 0.6rem 1.2rem;
             border-radius: 60px;   /* ← 保留这个，胶囊形状还在 */
@@ -437,6 +437,21 @@
             }
 
             console.log('✨ 整屏切换已启用 · 文字在缩略图上方');
+            // ===== 检测轮播页是否可见，控制右上角按钮 =====
+            const movieActions = document.getElementById('movieActions');
+            const carouselSection = document.getElementById('movieCarouselSection');
+
+            function checkMovieActions() {
+                if (!carouselSection || !movieActions) return;
+                const rect = carouselSection.getBoundingClientRect();
+                const isVisible = rect.top < window.innerHeight * 0.6 && rect.bottom > 0;
+                movieActions.classList.toggle('visible', isVisible);
+            }
+
+            viewport.addEventListener('scroll', checkMovieActions);
+            window.addEventListener('resize', checkMovieActions);
+            // 初始检测
+            setTimeout(checkMovieActions, 300);
         })();
     </script>
 </body>
