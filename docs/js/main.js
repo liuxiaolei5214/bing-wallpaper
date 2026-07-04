@@ -156,6 +156,14 @@ function renderToday(images) {
         <div class="info">
             <div class="title-line">${displayTitle}</div>
             ${descHtml ? `<div class="desc-line pre-wrap">${descHtml}</div>` : ''}
+            <div class="actions">
+                <div class="btn-group">
+                    <a href="${hd4kUrl}" class="btn btn-primary" target="_blank">${svgIcon} 4K</a>
+                    <a href="${hd1080Url}" class="btn btn-secondary" target="_blank">${svgIcon} 1080P</a>
+                    <a href="${buildDetailUrl(todayItem)}" class="btn btn-secondary" target="_blank">📖 光影回顾</a>
+                    <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
+                </div>
+            </div>
         </div>
     `;
 }
