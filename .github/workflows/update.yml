@@ -13,6 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          pip install beautifulsoup4 requests lxml
+
       - name: Fetch today's wallpaper from Bing API
         id: fetch
         run: |
@@ -27,6 +31,7 @@ jobs:
           import re
           import requests
           from datetime import datetime
+          from bs4 import BeautifulSoup
 
           # 读取 today.json
           with open('today.json', 'r', encoding='utf-8') as f:
@@ -53,11 +58,9 @@ jobs:
           clean_title = ''
           search_query = ''
 
-          # ---- 优先来源: 从必应首页提取（Puppeteer方式） ----
+          # ---- 优先来源: 从必应首页提取 ----
           print("🔗 优先: 从必应首页提取百科内容...")
           try:
-              from bs4 import BeautifulSoup
-              
               # 获取搜索词
               copyright_link = img.get('copyrightlink', '')
               if copyright_link and 'search?q=' in copyright_link:
@@ -66,83 +69,71 @@ jobs:
                       search_query = match.group(1)
                       search_query = re.sub(r'%([0-9A-F]{2})', lambda x: chr(int(x.group(1), 16)), search_query)
                       print(f"✅ 搜索词: {search_query}")
-              
+
               # 构建日期参数
               date_param = f"{enddate}_1600"
-              
-              # 使用requests + BeautifulSoup，更轻量
+
               search_url = f"https://cn.bing.com/search?q={search_query}&form=hpcapt&filters=HpDate:%22{date_param}%22+mgzv3configlist:%22BingQA_Encyclopedia_Layout%22"
-              
+
               headers = {
                   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0',
                   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
                   'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
                   'Referer': 'https://cn.bing.com/'
               }
-              
+
               # 先获取首页Cookie
               session = requests.Session()
               session.get('https://cn.bing.com/', headers=headers, timeout=10)
-              
+
               # 搜索
               response = session.get(search_url, headers=headers, timeout=15)
-              
+
               if response.status_code == 200:
                   soup = BeautifulSoup(response.text, 'html.parser')
-                  
-                  # 提取主标题（从API的title或从页面提取）
+
+                  # 提取主标题
                   if not clean_title:
                       clean_title = title_from_api
-                  
-                  # 提取副标题（从copyright中提取）
+
+                  # 提取副标题
                   if not subtitle:
                       subtitle = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
                       subtitle = re.sub(r'\s*,\s*$', '', subtitle)
-                  
+
                   # 提取详细描述
                   expanded = soup.find('div', class_='encyclopedia-expanded')
                   if expanded:
-                      # 获取innerHTML，保留段落结构
-                      html_content = str(expanded)
-                      
-                      # 提取文本，保留段落分隔
-                      import html as html_lib
-                      
-                      # 获取所有文本节点
+                      # 获取所有文本，保留段落结构
                       text_parts = []
                       for child in expanded.children:
                           if child.name == 'br':
                               text_parts.append('\n')
                           elif child.string:
-                              text_parts.append(child.string.strip())
-                          elif child.name == 'a':
-                              text_parts.append(child.get_text(strip=True))
+                              text = child.string.strip()
+                              if text:
+                                  text_parts.append(text)
                           else:
                               text = child.get_text(strip=True)
                               if text:
                                   text_parts.append(text)
-                      
-                      # 合并文本
+
                       full_text = ''.join(text_parts)
-                      # 按换行分割成段落
                       paragraphs = [p.strip() for p in full_text.split('\n') if p.strip()]
-                      
+
                       if paragraphs:
-                          # 合并段落，段落间用\n分隔
                           description = '\n'.join(paragraphs)
                           print(f"✅ 从必应首页提取成功，共 {len(paragraphs)} 段")
-                          
-                          # 如果没有主标题，从描述中提取
+
                           if not clean_title:
                               first_sentence = paragraphs[0][:50]
                               clean_title = first_sentence.split('，')[0] if '，' in first_sentence else first_sentence[:20]
                   else:
-                      # 尝试 encyclopedia-description
                       desc = soup.find('div', class_='encyclopedia-description')
                       if desc:
                           description = desc.get_text(strip=True)
                           print(f"✅ 从 encyclopedia-description 提取成功")
-                          
+
           except Exception as e:
               print(f"⚠️ 必应首页提取失败: {e}")
 
@@ -166,7 +157,7 @@ jobs:
                               raw_title = raw_title.replace('&nbsp;', ' ')
                               raw_title = re.sub(r'\s+', ' ', raw_title).strip()
                               display_title = re.sub(r'\s*\(©[^)]*\)\s*', '', raw_title)
-                              
+
                               parts = display_title.split(' | ')
                               if len(parts) >= 2:
                                   subtitle = parts[0].strip()
@@ -179,7 +170,7 @@ jobs:
                                   clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
                                   clean_title = re.sub(r'\s*,\s*$', '', clean_title)
                                   subtitle = clean_title
-                              
+
                               print(f"✅ 提取到展示名称: {display_title}")
 
                       # 提取描述
