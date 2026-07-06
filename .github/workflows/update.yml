@@ -13,10 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          pip install beautifulsoup4 requests lxml
-
       - name: Fetch today's wallpaper from Bing API
         id: fetch
         run: |
@@ -31,7 +27,6 @@ jobs:
           import re
           import requests
           from datetime import datetime
-          from bs4 import BeautifulSoup
 
           # 读取 today.json
           with open('today.json', 'r', encoding='utf-8') as f:
@@ -45,7 +40,6 @@ jobs:
           enddate = img.get('enddate', '')
           copyright_text = img.get('copyright', '')
           urlbase = img.get('urlbase', '')
-          title_from_api = img.get('title', '')
 
           # 构建日期
           if len(enddate) == 8:
@@ -56,145 +50,61 @@ jobs:
           description = ''
           subtitle = ''
           clean_title = ''
-          search_query = ''
 
-          # ---- 优先来源: 从必应首页提取 ----
-          print("🔗 优先: 从必应首页提取百科内容...")
+          # ---- 来源1: bing.ee123.net ----
           try:
-              # 获取搜索词
-              copyright_link = img.get('copyrightlink', '')
-              if copyright_link and 'search?q=' in copyright_link:
-                  match = re.search(r'search\?q=([^&]+)', copyright_link)
-                  if match:
-                      search_query = match.group(1)
-                      search_query = re.sub(r'%([0-9A-F]{2})', lambda x: chr(int(x.group(1), 16)), search_query)
-                      print(f"✅ 搜索词: {search_query}")
-
-              # 构建日期参数
-              date_param = f"{enddate}_1600"
-
-              search_url = f"https://cn.bing.com/search?q={search_query}&form=hpcapt&filters=HpDate:%22{date_param}%22+mgzv3configlist:%22BingQA_Encyclopedia_Layout%22"
-
-              headers = {
-                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0',
-                  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9',
-                  'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-                  'Referer': 'https://cn.bing.com/'
-              }
-
-              # 先获取首页Cookie
-              session = requests.Session()
-              session.get('https://cn.bing.com/', headers=headers, timeout=10)
-
-              # 搜索
-              response = session.get(search_url, headers=headers, timeout=15)
+              print("🔗 尝试从 bing.ee123.net 提取...")
+              detail_url = f"https://bing.ee123.net/detail/{enddate}"
+              response = requests.get(detail_url, timeout=15, headers={
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+              })
 
               if response.status_code == 200:
-                  soup = BeautifulSoup(response.text, 'html.parser')
+                  html = response.text
 
-                  # 提取主标题
-                  if not clean_title:
-                      clean_title = title_from_api
-
-                  # 提取副标题
-                  if not subtitle:
-                      subtitle = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
-                      subtitle = re.sub(r'\s*,\s*$', '', subtitle)
-
-                  # 提取详细描述
-                  expanded = soup.find('div', class_='encyclopedia-expanded')
-                  if expanded:
-                      # 获取所有文本，保留段落结构
-                      text_parts = []
-                      for child in expanded.children:
-                          if child.name == 'br':
-                              text_parts.append('\n')
-                          elif child.string:
-                              text = child.string.strip()
-                              if text:
-                                  text_parts.append(text)
+                  title_match = re.search(r'<p[^>]*class="title"[^>]*>(.*?)</p>', html, re.DOTALL)
+                  if title_match:
+                      raw_title = title_match.group(1)
+                      raw_title = raw_title.replace('&nbsp;', ' ')
+                      raw_title = re.sub(r'\s+', ' ', raw_title).strip()
+                      display_title = re.sub(r'\s*\(©[^)]*\)\s*', '', raw_title)
+                      
+                      parts = display_title.split(' | ')
+                      if len(parts) >= 2:
+                          subtitle = parts[0].strip()
+                          second_part = parts[1].strip()
+                          if ' - ' in second_part:
+                              clean_title = second_part.split(' - ')[0].strip()
                           else:
-                              text = child.get_text(strip=True)
-                              if text:
-                                  text_parts.append(text)
+                              clean_title = second_part
+                      else:
+                          clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
+                          clean_title = re.sub(r'\s*,\s*$', '', clean_title)
+                          subtitle = clean_title
+                      
+                      print(f"✅ 提取到展示名称: {display_title}")
 
-                      full_text = ''.join(text_parts)
-                      paragraphs = [p.strip() for p in full_text.split('\n') if p.strip()]
-
-                      if paragraphs:
-                          description = '\n'.join(paragraphs)
-                          print(f"✅ 从必应首页提取成功，共 {len(paragraphs)} 段")
-
-                          if not clean_title:
-                              first_sentence = paragraphs[0][:50]
-                              clean_title = first_sentence.split('，')[0] if '，' in first_sentence else first_sentence[:20]
-                  else:
-                      desc = soup.find('div', class_='encyclopedia-description')
-                      if desc:
-                          description = desc.get_text(strip=True)
-                          print(f"✅ 从 encyclopedia-description 提取成功")
-
+                  sub_match = re.search(r'<span[^>]*class="sub"[^>]*>([\s\S]*?)</span>', html)
+                  if sub_match:
+                      sub_content = sub_match.group(1)
+                      p_tags = re.findall(r'<p>(.*?)</p>', sub_content, re.DOTALL)
+                      desc_parts = [p.strip() for p in p_tags if p.strip()]
+                      if desc_parts:
+                          clean_parts = []
+                          for p in desc_parts:
+                              p = p.replace('&nbsp;', ' ')
+                              p = p.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
+                              p = p.replace('&quot;', '"').replace('&#39;', "'")
+                              if p.strip():
+                                  clean_parts.append(p.strip())
+                          if clean_parts:
+                              description = '\n'.join(clean_parts)
+                              print(f"✅ 从 bing.ee123.net 提取成功，共 {len(clean_parts)} 段描述")
           except Exception as e:
-              print(f"⚠️ 必应首页提取失败: {e}")
+              print(f"⚠️ bing.ee123.net 提取失败: {e}")
 
-          # ---- 来源2: bing.ee123.net ----
-          if not description:
-              try:
-                  print("🔗 尝试从 bing.ee123.net 提取...")
-                  detail_url = f"https://bing.ee123.net/detail/{enddate}"
-                  response = requests.get(detail_url, timeout=15, headers={
-                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                  })
-
-                  if response.status_code == 200:
-                      html = response.text
-
-                      # 提取标题
-                      if not clean_title:
-                          title_match = re.search(r'<p[^>]*class="title"[^>]*>(.*?)</p>', html, re.DOTALL)
-                          if title_match:
-                              raw_title = title_match.group(1)
-                              raw_title = raw_title.replace('&nbsp;', ' ')
-                              raw_title = re.sub(r'\s+', ' ', raw_title).strip()
-                              display_title = re.sub(r'\s*\(©[^)]*\)\s*', '', raw_title)
-
-                              parts = display_title.split(' | ')
-                              if len(parts) >= 2:
-                                  subtitle = parts[0].strip()
-                                  second_part = parts[1].strip()
-                                  if ' - ' in second_part:
-                                      clean_title = second_part.split(' - ')[0].strip()
-                                  else:
-                                      clean_title = second_part
-                              else:
-                                  clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
-                                  clean_title = re.sub(r'\s*,\s*$', '', clean_title)
-                                  subtitle = clean_title
-
-                              print(f"✅ 提取到展示名称: {display_title}")
-
-                      # 提取描述
-                      sub_match = re.search(r'<span[^>]*class="sub"[^>]*>([\s\S]*?)</span>', html)
-                      if sub_match:
-                          sub_content = sub_match.group(1)
-                          p_tags = re.findall(r'<p>(.*?)</p>', sub_content, re.DOTALL)
-                          desc_parts = [p.strip() for p in p_tags if p.strip()]
-                          if desc_parts:
-                              clean_parts = []
-                              for p in desc_parts:
-                                  p = p.replace('&nbsp;', ' ')
-                                  p = p.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
-                                  p = p.replace('&quot;', '"').replace('&#39;', "'")
-                                  if p.strip():
-                                      clean_parts.append(p.strip())
-                              if clean_parts:
-                                  description = '\n'.join(clean_parts)
-                                  print(f"✅ 从 bing.ee123.net 提取成功，共 {len(clean_parts)} 段描述")
-              except Exception as e:
-                  print(f"⚠️ bing.ee123.net 提取失败: {e}")
-
-          # ---- 来源3: dailybing.cn ----
-          if not description:
+          # ---- 来源2: dailybing.cn ----
+          if not description or not clean_title:
               try:
                   print("🔗 尝试从 dailybing.cn 提取...")
                   detail_url = f"https://www.dailybing.cn/view/zh-cn/{enddate}.html"
@@ -229,6 +139,10 @@ jobs:
                                   description = '\n'.join(clean_parts)
                                   print(f"✅ 从 dailybing.cn 提取成功，共 {len(clean_parts)} 段描述")
 
+                      if not clean_title:
+                          clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
+                          clean_title = re.sub(r'\s*,\s*$', '', clean_title)
+
               except Exception as e:
                   print(f"⚠️ dailybing.cn 提取失败: {e}")
 
@@ -238,7 +152,7 @@ jobs:
               print(f"⚠️ 使用 copyright 作为备用描述")
 
           if not clean_title:
-              clean_title = title_from_api or re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
+              clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
               clean_title = re.sub(r'\s*,\s*$', '', clean_title)
 
           if not subtitle:
