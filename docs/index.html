@@ -88,6 +88,62 @@
             display: block;
         }
 
+        /* ===== 今日壁纸 - 文字浮层（只改这里） ===== */
+        #todayCard .today-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 32px 28px;
+            z-index: 2;
+            max-height: 60%;
+            overflow-y: auto;
+            scrollbar-width: none;
+            background: linear-gradient(to top, 
+                rgba(0, 0, 0, 0.92) 0%, 
+                rgba(0, 0, 0, 0.6) 40%,
+                rgba(0, 0, 0, 0.2) 70%,
+                transparent 100%
+            );
+            pointer-events: none;
+        }
+
+        #todayCard .today-overlay::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        #todayCard .today-overlay .today-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+        }
+
+        #todayCard .today-overlay .today-desc {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            opacity: 0.92;
+            white-space: normal;
+            word-break: break-word;
+            color: #f0f0f0;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+            pointer-events: auto;
+        }
+
+        #todayCard .today-overlay .today-desc p {
+            text-indent: 2em;
+            margin: 0;
+            padding: 0;
+            line-height: 1.8;
+        }
+
+        #todayCard .today-overlay .today-desc p + p {
+            margin-top: 0;
+        }
+
         /* ===== 电影感轮播 ===== */
         #movieCarouselSection {
             height: 100vh;
@@ -161,8 +217,6 @@
             align-items: center;
             background: rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(12px);
-           /* -webkit-backdrop-filter: blur(12px);*/
-            /* padding: 0.4rem 0.6rem;*/
             border-radius: 60px;
             border: 1px solid rgba(255, 255, 240, 0.08);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -311,6 +365,17 @@
 
         /* ===== 响应式 ===== */
         @media (max-width: 640px) {
+            #todayCard .today-overlay {
+                padding: 12px 16px 16px;
+                max-height: 50%;
+            }
+            #todayCard .today-overlay .today-title {
+                font-size: 1.2rem;
+            }
+            #todayCard .today-overlay .today-desc {
+                font-size: 0.85rem;
+                line-height: 1.7;
+            }
             .movie-title-bar {
                 top: 0.6rem;
                 left: 1.2rem;
@@ -345,6 +410,20 @@
                 gap: 0.3rem;
                 padding: 0.3rem 0.6rem;
                 bottom: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #todayCard .today-overlay {
+                padding: 10px 14px 14px;
+                max-height: 45%;
+            }
+            #todayCard .today-overlay .today-title {
+                font-size: 1rem;
+            }
+            #todayCard .today-overlay .today-desc {
+                font-size: 0.8rem;
+                line-height: 1.6;
             }
         }
     </style>
@@ -393,6 +472,10 @@
 
     <script src="js/main.js"></script>
     <script>
+        // ============================================================
+        // 只修改了今日壁纸的文字浮层样式
+        // 其他功能保持不变
+        // ============================================================
         (function() {
             "use strict";
 
