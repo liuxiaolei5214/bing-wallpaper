@@ -241,7 +241,7 @@
             border-radius: 28px;
             max-width: 1200px;
             width: 100%;
-            max-height: 85vh;
+            max-height: 95vh;
             overflow: hidden;
             box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
             padding: 0;
@@ -254,7 +254,6 @@
             transform: scale(1);
         }
 
-        /* ===== 图片容器 - 全屏显示 ===== */
         .modal-image {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -270,7 +269,6 @@
             display: block;
         }
 
-        /* ===== 半透明遮罩层 - 在图片底部 ===== */
         .modal-image::after {
             content: '';
             position: absolute;
@@ -288,7 +286,6 @@
             z-index: 1;
         }
 
-        /* ===== 文字内容 - 浮在遮罩上方 ===== */
         .modal-content {
             position: absolute;
             bottom: 0;
@@ -339,7 +336,6 @@
             margin-top: 0;
         }
 
-        /* ===== 关闭按钮 ===== */
         .modal-close {
             position: absolute;
             top: 16px;
@@ -595,6 +591,33 @@
             return result;
         }
 
+        // ============ 标题格式化函数 ============
+        function formatTitle(item) {
+            // title 是副标题，subtitle 是主标题
+            const rawTitle = item.title || '';
+            const rawSubtitle = item.subtitle || '';
+            const dateStr = item.date || '';
+
+            let mainTitle = rawSubtitle || rawTitle;
+            
+            // 如果同时存在 title 和 subtitle，用 | 连接
+            let displayTitle = mainTitle;
+            if (rawSubtitle && rawTitle && rawTitle !== rawSubtitle) {
+                displayTitle = `${rawSubtitle} | ${rawTitle}`;
+            }
+
+            // 格式化日期为 2026/07/07 格式
+            let formattedDate = dateStr;
+            if (dateStr && dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    formattedDate = `${parts[0]}/${parts[1]}/${parts[2]}`;
+                }
+            }
+
+            return `${displayTitle} - ${formattedDate}`;
+        }
+
         const DOWNLOAD_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
 
         // ============ 数据加载 ============
@@ -701,21 +724,14 @@
                 return;
             }
 
-            const rawTitle = item.title || '壁纸';
-            const rawSubtitle = item.subtitle || '';
-            const dateStr = item.date || '';
-            const mainTitle = rawSubtitle || rawTitle;
-
-            let modalTitle = mainTitle;
-            if (dateStr) {
-                modalTitle = `${modalTitle} - ${dateStr}`;
-            }
-            document.getElementById('modalTitle').textContent = modalTitle;
+            // 使用格式化标题
+            const displayTitle = formatTitle(item);
+            document.getElementById('modalTitle').textContent = displayTitle;
 
             const img = document.getElementById('modalImg');
             const imgUrl = get1080pUrl(item.bing_url || '');
             img.src = imgUrl;
-            img.alt = mainTitle;
+            img.alt = displayTitle;
 
             document.getElementById('modalSubtitle').style.display = 'none';
 
@@ -769,18 +785,8 @@
                 const url = img.bing_url || '';
                 const dateStr = img.date || '';
 
-                const rawTitle = img.title || 'Bing 壁纸';
-                const rawSubtitle = img.subtitle || '';
-                const mainTitle = rawSubtitle || rawTitle;
-                const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
-
-                let displayTitle = mainTitle;
-                if (subTitle) {
-                    displayTitle = `${mainTitle} | ${subTitle}`;
-                }
-                if (dateStr) {
-                    displayTitle = `${displayTitle} - ${dateStr}`;
-                }
+                // 使用格式化标题
+                const displayTitle = formatTitle(img);
 
                 const displayUrl = get1080pUrl(url);
                 const hd4kUrl = get4kUrl(url);
@@ -790,7 +796,7 @@
 
                 return `
                     <div class="card" data-item="${escapedData}">
-                        <img src="${displayUrl}" alt="${mainTitle}" loading="lazy" onerror="this.style.display='none'" />
+                        <img src="${displayUrl}" alt="${displayTitle}" loading="lazy" onerror="this.style.display='none'" />
                         <div class="info">
                             <div class="date">📅 ${dateStr}</div>
                             <div class="title">${displayTitle}</div>
