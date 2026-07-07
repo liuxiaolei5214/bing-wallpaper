@@ -6,7 +6,6 @@
     <title>光影回顾 · Bing 每日壁纸</title>
     <meta name="description" content="每日更新的必应超清壁纸，4K 高清下载 · 光影回顾" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌅</text></svg>" />
-    <link rel="stylesheet" href="css/style.css" />
     <style>
         /* ===== 隐藏所有滚动条 ===== */
         * {
@@ -88,7 +87,7 @@
             display: block;
         }
 
-        /* ===== 今日壁纸 - 文字浮层（与模态框完全一致） ===== */
+        /* ===== 今日壁纸 - 文字浮层（与模态框一致） ===== */
         #todayCard .today-overlay {
             position: absolute;
             bottom: 0;
@@ -142,13 +141,6 @@
 
         #todayCard .today-overlay .today-desc p + p {
             margin-top: 0;
-        }
-
-        /* ===== 加载状态 ===== */
-        .loading {
-            color: #888;
-            font-size: 1rem;
-            text-align: center;
         }
 
         /* ===== 电影感轮播 ===== */
@@ -477,7 +469,6 @@
     <!-- 底部提示 -->
     <div class="scroll-hint"><span>⬇ 滚动 · 整屏切换</span></div>
 
-    <script src="js/main.js"></script>
     <script>
         (function() {
             "use strict";
@@ -512,19 +503,23 @@
                 return mainTitle || subTitle || '壁纸';
             }
 
-            // ===== 加载今日壁纸 =====
+            // ===== 加载今日壁纸 - 从 zh.2026.json 取第一条 =====
             async function loadToday() {
                 const container = document.getElementById('todayCard');
                 try {
-                    const resp = await fetch('today_clean.json');
+                    const resp = await fetch('zh.2026.json');
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const data = await resp.json();
+                    if (!Array.isArray(data) || data.length === 0) {
+                        throw new Error('数据为空');
+                    }
 
-                    const imgUrl = get1080pUrl(data.bing_url || '');
-                    const title = formatTitle(data);
-                    const desc = data.description || '暂无详细介绍';
+                    // 取第一条作为今日壁纸
+                    const item = data[0];
+                    const imgUrl = get1080pUrl(item.bing_url || '');
+                    const title = formatTitle(item);
+                    const desc = item.description || '暂无详细介绍';
 
-                    // 处理描述段落
                     let descHtml = '';
                     if (desc) {
                         const paragraphs = desc.split('\n')
@@ -542,7 +537,7 @@
                     `;
                 } catch (e) {
                     console.warn('今日壁纸加载失败:', e);
-                    container.innerHTML = `<div class="loading">⚠️ 今日壁纸加载失败</div>`;
+                    container.innerHTML = `<div class="loading">⚠️ 加载失败，请刷新</div>`;
                 }
             }
 
