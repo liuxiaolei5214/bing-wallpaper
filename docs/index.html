@@ -606,7 +606,7 @@
             let currentIndex = 0;
             let autoPlayTimer = null;
             const AUTOPLAY_INTERVAL = 6000;
-            const MAX_SLIDES = 20;
+            const MAX_SLIDES = 14;
 
             const slide = document.getElementById('movieSlide');
             const titleEl = document.getElementById('movieTitle');
@@ -624,7 +624,7 @@
                 if (!item) return;
 
                 const imgUrl = get1080pUrl(item.bing_url || '');
-                const title = formatTitle(item);
+                const title = item.title || '壁纸';
 
                 slide.style.backgroundImage = `url('${imgUrl}')`;
                 titleEl.textContent = title;
