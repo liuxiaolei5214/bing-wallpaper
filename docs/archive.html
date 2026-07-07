@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>壁纸归档 · 光影回顾</title>
-    <!-- 省略head部分，保持原样 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
     <style>
         /* ========== 全局重置 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -281,7 +281,6 @@
             transform: scale(1.05);
         }
 
-        /* ===== 图片区域：铺满，不保留白边 ===== */
         .modal-image {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -316,7 +315,6 @@
             margin-bottom: 6px;
         }
 
-        /* 隐藏 subtitle */
         .modal-subtitle {
             display: none !important;
         }
@@ -440,9 +438,47 @@
     </style>
 </head>
 <body>
-    <!-- 省略头部、筛选、网格，与原代码一致 -->
 
-    <!-- ===== 模态框（已修改） ===== -->
+    <!-- ===== 头部 ===== -->
+    <header>
+        <h1>📚 壁纸归档</h1>
+        <a href="/" class="nav-link">🏠 返回首页</a>
+    </header>
+
+    <!-- ===== 筛选器 ===== -->
+    <div class="filters">
+        <label for="yearFilter">📅 年份</label>
+        <select id="yearFilter"></select>
+        <label for="monthFilter">📆 月份</label>
+        <select id="monthFilter">
+            <option value="all">全部月份</option>
+            <option value="01">1 月</option>
+            <option value="02">2 月</option>
+            <option value="03">3 月</option>
+            <option value="04">4 月</option>
+            <option value="05">5 月</option>
+            <option value="06">6 月</option>
+            <option value="07">7 月</option>
+            <option value="08">8 月</option>
+            <option value="09">9 月</option>
+            <option value="10">10 月</option>
+            <option value="11">11 月</option>
+            <option value="12">12 月</option>
+        </select>
+        <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
+    </div>
+
+    <!-- ===== 网格 ===== -->
+    <div class="grid" id="grid">
+        <div class="loading">加载壁纸数据中...</div>
+    </div>
+
+    <!-- ===== 页脚 ===== -->
+    <footer>
+        <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
+    </footer>
+
+    <!-- ===== 模态框 ===== -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-box">
             <button class="modal-close" id="modalClose">&times;</button>
@@ -458,7 +494,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- JavaScript -->
+    <!-- JavaScript - 修复版 -->
     <!-- ============================================================ -->
     <script>
         // ============ 工具函数 ============
@@ -491,28 +527,8 @@
             return '未知';
         }
 
-        function buildDetailUrl(item) {
-            let topic = item.title || item.subtitle || '壁纸';
-            if (topic.includes('，')) topic = topic.split('，')[0].trim();
-            if (topic.includes(',')) topic = topic.split(',')[0].trim();
-            topic = topic.replace(/\s*\(©[^)]*\)\s*$/, '');
-
-            let dateParam = item.date || '';
-            if (dateParam) {
-                const parts = dateParam.split('-');
-                const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                date.setDate(date.getDate() - 1);
-                const y = date.getFullYear();
-                const m = String(date.getMonth() + 1).padStart(2, '0');
-                const d = String(date.getDate()).padStart(2, '0');
-                dateParam = y + m + d + '_1600';
-            }
-
-            const encodedTopic = encodeURIComponent(topic);
-            return `https://cn.bing.com/search?q=${encodedTopic}&form=BGALM&filters=HpDate%3a%22${dateParam}%22+mgzv3configlist%3a%22BingQA_Encyclopedia_Layout%22&pc=W011&bwa=1`;
-        }
-
         function get4kUrl(url) {
+            if (!url) return '';
             if (url.includes('_UHD.jpg')) {
                 return url;
             }
@@ -520,6 +536,7 @@
         }
 
         function get1080pUrl(url) {
+            if (!url) return '';
             let result = url;
             result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
             result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
@@ -532,7 +549,7 @@
 
         const DOWNLOAD_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
 
-        // ============ 数据加载 ============
+        // ============ 数据加载（修复版） ============
 
         async function loadYearData(year) {
             try {
@@ -551,40 +568,37 @@
 
         async function loadAllData() {
             const currentYear = parseInt(getCurrentYear());
-            const years = [];
-            for (let y = 2020; y <= currentYear; y++) {
-                years.push(y);
-            }
-
-            console.log('📅 尝试加载年份:', years);
-
-            const results = await Promise.allSettled(years.map(y => loadYearData(y)));
-
-            let all = [];
-            results.forEach((result, index) => {
-                if (result.status === 'fulfilled' && result.value.length > 0) {
-                    const year = years[index];
-                    console.log(`✅ 加载 ${year} 年成功，共 ${result.value.length} 条`);
-                    all = all.concat(result.value);
-                } else if (result.status === 'rejected') {
-                    console.warn(`❌ 加载 ${years[index]} 年失败:`, result.reason);
+            
+            // ✅ 改为只加载当前年份的数据，避免加载不存在的文件
+            console.log(`📅 尝试加载 ${currentYear} 年数据...`);
+            
+            const data = await loadYearData(currentYear);
+            
+            if (data.length === 0) {
+                console.warn(`⚠️ ${currentYear} 年暂无数据，尝试加载 ${currentYear - 1} 年...`);
+                const lastYearData = await loadYearData(currentYear - 1);
+                if (lastYearData.length > 0) {
+                    console.log(`✅ 加载 ${currentYear - 1} 年成功，共 ${lastYearData.length} 条`);
+                    return lastYearData;
                 }
-            });
-
-            console.log(`📊 总共加载 ${all.length} 张壁纸`);
-
-            all.sort((a, b) => {
+                return [];
+            }
+            
+            console.log(`✅ 加载 ${currentYear} 年成功，共 ${data.length} 条`);
+            
+            data.sort((a, b) => {
                 const da = a.date || '';
                 const db = b.date || '';
                 return db.localeCompare(da);
             });
 
-            return all;
+            return data;
         }
 
         // ============ 筛选逻辑 ============
 
         function filterImages(images, year, month) {
+            if (!images || images.length === 0) return [];
             return images.filter(img => {
                 const y = getYearFromDate(img.date);
                 const m = getMonthFromDate(img.date);
@@ -629,30 +643,24 @@
                 return;
             }
 
-            // ✅ 修正数据：title 是副标题，subtitle 是主标题
             const rawTitle = item.title || '壁纸';
             const rawSubtitle = item.subtitle || '';
             const dateStr = item.date || '';
             const mainTitle = rawSubtitle || rawTitle;
-            const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
 
-            // ✅ 构建模态框标题（只显示主标题+日期）
             let modalTitle = mainTitle;
             if (dateStr) {
                 modalTitle = `${modalTitle} - ${dateStr}`;
             }
             document.getElementById('modalTitle').textContent = modalTitle;
 
-            // ✅ 图片使用 1080P 并铺满容器
             const img = document.getElementById('modalImg');
             const imgUrl = get1080pUrl(item.bing_url || '');
             img.src = imgUrl;
             img.alt = mainTitle;
 
-            // ✅ 隐藏 subtitle
             document.getElementById('modalSubtitle').style.display = 'none';
 
-            // 处理描述文字
             let desc = item.description || '暂无详细介绍';
             desc = desc.replace(/\r\n/g, '\n');
             desc = desc.replace(/\r/g, '\n');
@@ -677,7 +685,6 @@
             }
         }
 
-        // 绑定模态框事件
         document.getElementById('modalClose').addEventListener('click', closeModal);
         document.getElementById('modalOverlay').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
@@ -704,13 +711,11 @@
                 const url = img.bing_url || '';
                 const dateStr = img.date || '';
 
-                // ✅ 修正数据：title 是副标题，subtitle 是主标题
                 const rawTitle = img.title || 'Bing 壁纸';
                 const rawSubtitle = img.subtitle || '';
                 const mainTitle = rawSubtitle || rawTitle;
                 const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
 
-                // ✅ 构建展示名称
                 let displayTitle = mainTitle;
                 if (subTitle) {
                     displayTitle = `${mainTitle} | ${subTitle}`;
@@ -719,7 +724,6 @@
                     displayTitle = `${displayTitle} - ${dateStr}`;
                 }
 
-                // ✅ 页面使用 1080P 图片
                 const displayUrl = get1080pUrl(url);
                 const hd4kUrl = get4kUrl(url);
                 const hd1080Url = get1080pUrl(url);
@@ -769,12 +773,29 @@
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
 
             try {
-                const allImages = await loadAllData();
+                // ✅ 先尝试加载当前年份
+                let allImages = await loadAllData();
+
+                // ✅ 如果当前年份没有数据，尝试加载所有年份
+                if (allImages.length === 0) {
+                    console.log('📅 当前年份无数据，尝试加载所有年份...');
+                    const currentYear = parseInt(getCurrentYear());
+                    const allData = [];
+                    for (let y = 2020; y <= currentYear; y++) {
+                        const data = await loadYearData(y);
+                        if (data.length > 0) {
+                            allData.push(...data);
+                        }
+                    }
+                    allImages = allData;
+                }
 
                 if (!allImages || allImages.length === 0) {
                     grid.innerHTML = '<div class="empty">😅 暂无壁纸数据，等待自动归档...</div>';
                     return;
                 }
+
+                console.log(`📊 总共加载 ${allImages.length} 张壁纸`);
 
                 populateFilters(allImages);
 
