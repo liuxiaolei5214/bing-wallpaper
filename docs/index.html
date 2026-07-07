@@ -87,7 +87,7 @@
             display: block;
         }
 
-        /* ===== 今日壁纸 - 文字浮层（与模态框一致） ===== */
+        /* ===== 今日壁纸 - 文字浮层 ===== */
         #todayCard .today-overlay {
             position: absolute;
             bottom: 0;
@@ -141,6 +141,13 @@
 
         #todayCard .today-overlay .today-desc p + p {
             margin-top: 0;
+        }
+
+        /* ===== 加载状态 ===== */
+        .loading {
+            color: #888;
+            font-size: 1rem;
+            text-align: center;
         }
 
         /* ===== 电影感轮播 ===== */
@@ -199,10 +206,9 @@
             line-height: 1.4;
         }
 
+        /* 隐藏日期 */
         .movie-title-bar .movie-date {
-            font-size: clamp(0.7rem, 1vw, 0.9rem);
-            opacity: 0.6;
-            letter-spacing: 1px;
+            display: none !important;
         }
 
         /* ===== 按钮 - 独立在右上角 ===== */
@@ -503,7 +509,7 @@
                 return mainTitle || subTitle || '壁纸';
             }
 
-            // ===== 加载今日壁纸 - 从 zh.2026.json 取第一条 =====
+            // ===== 加载今日壁纸 =====
             async function loadToday() {
                 const container = document.getElementById('todayCard');
                 try {
@@ -514,7 +520,6 @@
                         throw new Error('数据为空');
                     }
 
-                    // 取第一条作为今日壁纸
                     const item = data[0];
                     const imgUrl = get1080pUrl(item.bing_url || '');
                     const title = formatTitle(item);
@@ -546,6 +551,7 @@
             let currentIndex = 0;
             let autoPlayTimer = null;
             const AUTOPLAY_INTERVAL = 6000;
+            const MAX_SLIDES = 20;  // ← 只显示20张
 
             const slide = document.getElementById('movieSlide');
             const titleEl = document.getElementById('movieTitle');
@@ -564,18 +570,17 @@
 
                 const imgUrl = get1080pUrl(item.bing_url || '');
                 const title = formatTitle(item);
-                const dateStr = item.date || '';
 
                 slide.style.backgroundImage = `url('${imgUrl}')`;
                 titleEl.textContent = title;
-                dateEl.textContent = dateStr;
+                dateEl.textContent = '';  // 清空日期
 
                 const hd4k = get4kUrl(item.bing_url || '');
                 const hd1080 = get1080pUrl(item.bing_url || '');
                 downloadBtn.href = hd4k;
                 viewBtn.href = hd1080;
 
-                const detailUrl = `https://cn.bing.com/search?q=${encodeURIComponent(title)}&form=BGALM&filters=HpDate%3a%22${dateStr.replace(/-/g, '')}_1600%22+mgzv3configlist%3a%22BingQA_Encyclopedia_Layout%22&pc=W011&bwa=1`;
+                const detailUrl = `https://cn.bing.com/search?q=${encodeURIComponent(title)}&form=BGALM&filters=HpDate%3a%22${item.date.replace(/-/g, '')}_1600%22+mgzv3configlist%3a%22BingQA_Encyclopedia_Layout%22&pc=W011&bwa=1`;
                 detailBtn.href = detailUrl;
 
                 document.querySelectorAll('.thumb-item').forEach((el, i) => {
@@ -583,24 +588,26 @@
                 });
 
                 prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
-                nextBtn.style.visibility = index === allData.length - 1 ? 'hidden' : 'visible';
+                nextBtn.style.visibility = index >= allData.length - 1 ? 'hidden' : 'visible';
             }
 
             function nextSlide() {
                 if (!allData || allData.length === 0) return;
-                currentIndex = (currentIndex + 1) % allData.length;
+                const maxIndex = Math.min(allData.length, MAX_SLIDES) - 1;
+                currentIndex = currentIndex >= maxIndex ? 0 : currentIndex + 1;
                 updateSlide(currentIndex);
             }
 
             function prevSlide() {
                 if (!allData || allData.length === 0) return;
-                currentIndex = (currentIndex - 1 + allData.length) % allData.length;
+                currentIndex = currentIndex <= 0 ? Math.min(allData.length, MAX_SLIDES) - 1 : currentIndex - 1;
                 updateSlide(currentIndex);
             }
 
             function goToSlide(index) {
                 if (!allData || allData.length === 0) return;
-                if (index < 0 || index >= allData.length) return;
+                const maxIndex = Math.min(allData.length, MAX_SLIDES) - 1;
+                if (index < 0 || index > maxIndex) return;
                 currentIndex = index;
                 updateSlide(currentIndex);
                 resetAutoPlay();
@@ -611,7 +618,8 @@
                     clearInterval(autoPlayTimer);
                     autoPlayTimer = null;
                 }
-                if (allData.length > 1) {
+                const maxIndex = Math.min(allData.length, MAX_SLIDES) - 1;
+                if (maxIndex > 0) {
                     autoPlayTimer = setInterval(nextSlide, AUTOPLAY_INTERVAL);
                 }
             }
@@ -624,7 +632,8 @@
                     if (!Array.isArray(data) || data.length === 0) {
                         throw new Error('数据为空');
                     }
-                    allData = data;
+                    // 只取前20条
+                    allData = data.slice(0, MAX_SLIDES);
                     currentIndex = 0;
 
                     thumbnails.innerHTML = '';
@@ -643,7 +652,6 @@
                     console.warn('轮播加载失败:', e);
                     slide.style.backgroundImage = '';
                     titleEl.textContent = '加载失败';
-                    dateEl.textContent = '请刷新重试';
                 }
             }
 
