@@ -88,7 +88,7 @@
             display: block;
         }
 
-        /* ===== 今日壁纸 - 文字浮层（只改这里） ===== */
+        /* ===== 今日壁纸 - 文字浮层（与模态框完全一致） ===== */
         #todayCard .today-overlay {
             position: absolute;
             bottom: 0;
@@ -142,6 +142,13 @@
 
         #todayCard .today-overlay .today-desc p + p {
             margin-top: 0;
+        }
+
+        /* ===== 加载状态 ===== */
+        .loading {
+            color: #888;
+            font-size: 1rem;
+            text-align: center;
         }
 
         /* ===== 电影感轮播 ===== */
@@ -472,14 +479,210 @@
 
     <script src="js/main.js"></script>
     <script>
-        // ============================================================
-        // 只修改了今日壁纸的文字浮层样式
-        // 其他功能保持不变
-        // ============================================================
         (function() {
             "use strict";
 
-            // ===== 滚动指示器交互 =====
+            // ===== 工具函数 =====
+            function get1080pUrl(url) {
+                if (!url) return '';
+                let result = url;
+                result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+                result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
+                result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+                if (result === url) {
+                    result = url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+                }
+                return result;
+            }
+
+            function get4kUrl(url) {
+                if (!url) return '';
+                if (url.includes('_UHD.jpg')) {
+                    return url;
+                }
+                return url.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+            }
+
+            function formatTitle(item) {
+                const mainTitle = item.subtitle || '';
+                const subTitle = item.title || '';
+                if (mainTitle && subTitle && mainTitle !== subTitle) {
+                    return `${mainTitle} | ${subTitle}`;
+                }
+                return mainTitle || subTitle || '壁纸';
+            }
+
+            // ===== 加载今日壁纸 =====
+            async function loadToday() {
+                const container = document.getElementById('todayCard');
+                try {
+                    const resp = await fetch('today_clean.json');
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const data = await resp.json();
+
+                    const imgUrl = get1080pUrl(data.bing_url || '');
+                    const title = formatTitle(data);
+                    const desc = data.description || '暂无详细介绍';
+
+                    // 处理描述段落
+                    let descHtml = '';
+                    if (desc) {
+                        const paragraphs = desc.split('\n')
+                            .map(p => p.trim())
+                            .filter(p => p !== '');
+                        descHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
+                    }
+
+                    container.innerHTML = `
+                        <img src="${imgUrl}" alt="${title}" loading="lazy" onerror="this.style.display='none'" />
+                        <div class="today-overlay">
+                            <div class="today-title">${title}</div>
+                            <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
+                        </div>
+                    `;
+                } catch (e) {
+                    console.warn('今日壁纸加载失败:', e);
+                    container.innerHTML = `<div class="loading">⚠️ 今日壁纸加载失败</div>`;
+                }
+            }
+
+            // ===== 轮播功能 =====
+            let allData = [];
+            let currentIndex = 0;
+            let autoPlayTimer = null;
+            const AUTOPLAY_INTERVAL = 6000;
+
+            const slide = document.getElementById('movieSlide');
+            const titleEl = document.getElementById('movieTitle');
+            const dateEl = document.getElementById('movieDate');
+            const downloadBtn = document.getElementById('movieDownloadBtn');
+            const viewBtn = document.getElementById('movieViewBtn');
+            const detailBtn = document.getElementById('movieDetailBtn');
+            const thumbnails = document.getElementById('movieThumbnails');
+            const prevBtn = document.getElementById('moviePrev');
+            const nextBtn = document.getElementById('movieNext');
+
+            function updateSlide(index) {
+                if (!allData || allData.length === 0) return;
+                const item = allData[index];
+                if (!item) return;
+
+                const imgUrl = get1080pUrl(item.bing_url || '');
+                const title = formatTitle(item);
+                const dateStr = item.date || '';
+
+                slide.style.backgroundImage = `url('${imgUrl}')`;
+                titleEl.textContent = title;
+                dateEl.textContent = dateStr;
+
+                const hd4k = get4kUrl(item.bing_url || '');
+                const hd1080 = get1080pUrl(item.bing_url || '');
+                downloadBtn.href = hd4k;
+                viewBtn.href = hd1080;
+
+                const detailUrl = `https://cn.bing.com/search?q=${encodeURIComponent(title)}&form=BGALM&filters=HpDate%3a%22${dateStr.replace(/-/g, '')}_1600%22+mgzv3configlist%3a%22BingQA_Encyclopedia_Layout%22&pc=W011&bwa=1`;
+                detailBtn.href = detailUrl;
+
+                document.querySelectorAll('.thumb-item').forEach((el, i) => {
+                    el.classList.toggle('active', i === index);
+                });
+
+                prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
+                nextBtn.style.visibility = index === allData.length - 1 ? 'hidden' : 'visible';
+            }
+
+            function nextSlide() {
+                if (!allData || allData.length === 0) return;
+                currentIndex = (currentIndex + 1) % allData.length;
+                updateSlide(currentIndex);
+            }
+
+            function prevSlide() {
+                if (!allData || allData.length === 0) return;
+                currentIndex = (currentIndex - 1 + allData.length) % allData.length;
+                updateSlide(currentIndex);
+            }
+
+            function goToSlide(index) {
+                if (!allData || allData.length === 0) return;
+                if (index < 0 || index >= allData.length) return;
+                currentIndex = index;
+                updateSlide(currentIndex);
+                resetAutoPlay();
+            }
+
+            function resetAutoPlay() {
+                if (autoPlayTimer) {
+                    clearInterval(autoPlayTimer);
+                    autoPlayTimer = null;
+                }
+                if (allData.length > 1) {
+                    autoPlayTimer = setInterval(nextSlide, AUTOPLAY_INTERVAL);
+                }
+            }
+
+            async function loadCarousel() {
+                try {
+                    const resp = await fetch('zh.2026.json');
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const data = await resp.json();
+                    if (!Array.isArray(data) || data.length === 0) {
+                        throw new Error('数据为空');
+                    }
+                    allData = data;
+                    currentIndex = 0;
+
+                    thumbnails.innerHTML = '';
+                    allData.forEach((item, idx) => {
+                        const thumb = document.createElement('div');
+                        thumb.className = 'thumb-item' + (idx === 0 ? ' active' : '');
+                        thumb.style.backgroundImage = `url('${get1080pUrl(item.bing_url || '')}')`;
+                        thumb.title = formatTitle(item);
+                        thumb.addEventListener('click', () => goToSlide(idx));
+                        thumbnails.appendChild(thumb);
+                    });
+
+                    updateSlide(0);
+                    resetAutoPlay();
+                } catch (e) {
+                    console.warn('轮播加载失败:', e);
+                    slide.style.backgroundImage = '';
+                    titleEl.textContent = '加载失败';
+                    dateEl.textContent = '请刷新重试';
+                }
+            }
+
+            // ===== 事件绑定 =====
+            prevBtn.addEventListener('click', () => { prevSlide();
+                resetAutoPlay(); });
+            nextBtn.addEventListener('click', () => { nextSlide();
+                resetAutoPlay(); });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') { prevSlide();
+                    resetAutoPlay();
+                    e.preventDefault(); }
+                if (e.key === 'ArrowRight') { nextSlide();
+                    resetAutoPlay();
+                    e.preventDefault(); }
+            });
+
+            let touchStartX = 0;
+            let touchEndX = 0;
+            slide.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+            slide.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                const diff = touchStartX - touchEndX;
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) { nextSlide();
+                        resetAutoPlay(); } else { prevSlide();
+                        resetAutoPlay(); }
+                }
+            }, { passive: true });
+
+            // ===== 滚动指示器 =====
             const hint = document.querySelector('.scroll-hint');
             const viewport = document.getElementById('viewport');
             let hintTimeout;
@@ -503,11 +706,12 @@
                         }
                     }, 1000);
                 });
-
-                setTimeout(() => {
-                    hint.style.opacity = '0.6';
-                }, 300);
+                setTimeout(() => { hint.style.opacity = '0.6'; }, 300);
             }
+
+            // ===== 初始化 =====
+            loadToday();
+            loadCarousel();
 
             console.log('✨ 整屏切换已启用 · 标题在左上角，按钮在右上角');
         })();
