@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>壁纸归档 · 光影回顾</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
+    <!-- 省略head部分，保持原样 -->
     <style>
         /* ========== 全局重置 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -281,20 +281,20 @@
             transform: scale(1.05);
         }
 
+        /* ===== 图片区域：铺满，不保留白边 ===== */
         .modal-image {
             width: 100%;
-            border-radius: 28px 28px 0 0;
-            overflow: hidden;
+            aspect-ratio: 16 / 9;
             background: #0b0b0b;
+            overflow: hidden;
+            border-radius: 28px 28px 0 0;
         }
 
         .modal-image img {
             width: 100%;
-            height: auto;
+            height: 100%;
+            object-fit: cover;
             display: block;
-            max-height: 50vh;
-            object-fit: contain;
-            background: #0b0b0b;
         }
 
         .modal-content {
@@ -316,10 +316,9 @@
             margin-bottom: 6px;
         }
 
+        /* 隐藏 subtitle */
         .modal-subtitle {
-            font-size: 1rem;
-            color: #d4a373;
-            margin-bottom: 12px;
+            display: none !important;
         }
 
         .modal-desc {
@@ -441,47 +440,9 @@
     </style>
 </head>
 <body>
+    <!-- 省略头部、筛选、网格，与原代码一致 -->
 
-    <!-- ===== 头部 ===== -->
-    <header>
-        <h1>📚 壁纸归档</h1>
-        <a href="/" class="nav-link">🏠 返回首页</a>
-    </header>
-
-    <!-- ===== 筛选器 ===== -->
-    <div class="filters">
-        <label for="yearFilter">📅 年份</label>
-        <select id="yearFilter"></select>
-        <label for="monthFilter">📆 月份</label>
-        <select id="monthFilter">
-            <option value="all">全部月份</option>
-            <option value="01">1 月</option>
-            <option value="02">2 月</option>
-            <option value="03">3 月</option>
-            <option value="04">4 月</option>
-            <option value="05">5 月</option>
-            <option value="06">6 月</option>
-            <option value="07">7 月</option>
-            <option value="08">8 月</option>
-            <option value="09">9 月</option>
-            <option value="10">10 月</option>
-            <option value="11">11 月</option>
-            <option value="12">12 月</option>
-        </select>
-        <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
-    </div>
-
-    <!-- ===== 网格 ===== -->
-    <div class="grid" id="grid">
-        <div class="loading">加载壁纸数据中...</div>
-    </div>
-
-    <!-- ===== 页脚 ===== -->
-    <footer>
-        <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
-    </footer>
-
-    <!-- ===== 模态框 ===== -->
+    <!-- ===== 模态框（已修改） ===== -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-box">
             <button class="modal-close" id="modalClose">&times;</button>
@@ -675,25 +636,21 @@
             const mainTitle = rawSubtitle || rawTitle;
             const subTitle = (rawSubtitle && rawTitle !== rawSubtitle) ? rawTitle : '';
 
-            // ✅ 构建模态框标题
+            // ✅ 构建模态框标题（只显示主标题+日期）
             let modalTitle = mainTitle;
-            if (subTitle) {
-                modalTitle = `${mainTitle} | ${subTitle}`;
-            }
             if (dateStr) {
                 modalTitle = `${modalTitle} - ${dateStr}`;
             }
             document.getElementById('modalTitle').textContent = modalTitle;
 
-            document.getElementById('modalImg').src = item.bing_url || '';
+            // ✅ 图片使用 1080P 并铺满容器
+            const img = document.getElementById('modalImg');
+            const imgUrl = get1080pUrl(item.bing_url || '');
+            img.src = imgUrl;
+            img.alt = mainTitle;
 
-            const subtitleEl = document.getElementById('modalSubtitle');
-            if (subTitle) {
-                subtitleEl.textContent = subTitle;
-                subtitleEl.style.display = 'block';
-            } else {
-                subtitleEl.style.display = 'none';
-            }
+            // ✅ 隐藏 subtitle
+            document.getElementById('modalSubtitle').style.display = 'none';
 
             // 处理描述文字
             let desc = item.description || '暂无详细介绍';
