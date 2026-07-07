@@ -90,12 +90,12 @@
         /* ===== 今日壁纸 - 文字浮层 ===== */
         #todayCard .today-overlay {
             position: absolute;
-            bottom: 0;
+            bottom: 80px;
             left: 0;
             right: 0;
             padding: 20px 32px 28px;
             z-index: 2;
-            max-height: 60%;
+            max-height: 55%;
             overflow-y: auto;
             scrollbar-width: none;
             background: linear-gradient(to top, 
@@ -141,6 +141,26 @@
 
         #todayCard .today-overlay .today-desc p + p {
             margin-top: 0;
+        }
+
+        /* ===== 今日壁纸 - 底部按钮栏 ===== */
+        #today .bottom-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 0 20px;
+            pointer-events: none;
+        }
+
+        #today .bottom-bar .btn {
+            pointer-events: auto;
         }
 
         /* ===== 加载状态 ===== */
@@ -206,7 +226,6 @@
             line-height: 1.4;
         }
 
-        /* 隐藏日期 */
         .movie-title-bar .movie-date {
             display: none !important;
         }
@@ -334,7 +353,7 @@
             transform: scale(1.04);
         }
 
-        /* ===== 底部滚动指示 ===== */
+        /* ===== 底部滚动指示 - 轮播页也保留 ===== */
         .scroll-hint {
             position: fixed;
             bottom: 1.8rem;
@@ -372,7 +391,8 @@
         @media (max-width: 640px) {
             #todayCard .today-overlay {
                 padding: 12px 16px 16px;
-                max-height: 50%;
+                max-height: 45%;
+                bottom: 70px;
             }
             #todayCard .today-overlay .today-title {
                 font-size: 1.2rem;
@@ -380,6 +400,14 @@
             #todayCard .today-overlay .today-desc {
                 font-size: 0.85rem;
                 line-height: 1.7;
+            }
+            #today .bottom-bar {
+                bottom: 14px;
+                gap: 8px;
+            }
+            #today .bottom-bar .btn {
+                font-size: 0.6rem;
+                padding: 0.3rem 0.8rem;
             }
             .movie-title-bar {
                 top: 0.6rem;
@@ -421,7 +449,8 @@
         @media (max-width: 480px) {
             #todayCard .today-overlay {
                 padding: 10px 14px 14px;
-                max-height: 45%;
+                max-height: 40%;
+                bottom: 60px;
             }
             #todayCard .today-overlay .today-title {
                 font-size: 1rem;
@@ -429,6 +458,14 @@
             #todayCard .today-overlay .today-desc {
                 font-size: 0.8rem;
                 line-height: 1.6;
+            }
+            #today .bottom-bar {
+                bottom: 10px;
+                gap: 6px;
+            }
+            #today .bottom-bar .btn {
+                font-size: 0.5rem;
+                padding: 0.2rem 0.6rem;
             }
         }
     </style>
@@ -442,6 +479,13 @@
         <section id="today" class="fullscreen-section">
             <div id="todayCard">
                 <div class="loading">加载中...</div>
+            </div>
+            <!-- 底部按钮栏 -->
+            <div class="bottom-bar">
+                <a href="#" class="btn btn-primary" id="todayDownloadBtn" target="_blank">⬇️ 下载 4K</a>
+                <a href="#" class="btn btn-secondary" id="todayViewBtn" target="_blank">⬇️ 下载1080P</a>
+                <a href="#" class="btn btn-secondary" id="todayDetailBtn" target="_blank">📖 光影回顾</a>
+                <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
             </div>
         </section>
 
@@ -509,6 +553,9 @@
                 return mainTitle || subTitle || '壁纸';
             }
 
+            // ===== 今日壁纸数据 =====
+            let todayData = null;
+
             // ===== 加载今日壁纸 =====
             async function loadToday() {
                 const container = document.getElementById('todayCard');
@@ -520,10 +567,17 @@
                         throw new Error('数据为空');
                     }
 
-                    const item = data[0];
+                    todayData = data[0];
+                    const item = todayData;
                     const imgUrl = get1080pUrl(item.bing_url || '');
                     const title = formatTitle(item);
                     const desc = item.description || '暂无详细介绍';
+
+                    // 更新按钮
+                    document.getElementById('todayDownloadBtn').href = get4kUrl(item.bing_url || '');
+                    document.getElementById('todayViewBtn').href = get1080pUrl(item.bing_url || '');
+                    const detailUrl = `https://cn.bing.com/search?q=${encodeURIComponent(title)}&form=BGALM&filters=HpDate%3a%22${item.date.replace(/-/g, '')}_1600%22+mgzv3configlist%3a%22BingQA_Encyclopedia_Layout%22&pc=W011&bwa=1`;
+                    document.getElementById('todayDetailBtn').href = detailUrl;
 
                     let descHtml = '';
                     if (desc) {
@@ -551,7 +605,7 @@
             let currentIndex = 0;
             let autoPlayTimer = null;
             const AUTOPLAY_INTERVAL = 6000;
-            const MAX_SLIDES = 20;  // ← 只显示20张
+            const MAX_SLIDES = 15;
 
             const slide = document.getElementById('movieSlide');
             const titleEl = document.getElementById('movieTitle');
@@ -573,7 +627,7 @@
 
                 slide.style.backgroundImage = `url('${imgUrl}')`;
                 titleEl.textContent = title;
-                dateEl.textContent = '';  // 清空日期
+                dateEl.textContent = '';
 
                 const hd4k = get4kUrl(item.bing_url || '');
                 const hd1080 = get1080pUrl(item.bing_url || '');
@@ -632,7 +686,6 @@
                     if (!Array.isArray(data) || data.length === 0) {
                         throw new Error('数据为空');
                     }
-                    // 只取前20条
                     allData = data.slice(0, MAX_SLIDES);
                     currentIndex = 0;
 
