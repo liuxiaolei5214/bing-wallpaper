@@ -254,11 +254,97 @@
             transform: scale(1);
         }
 
+        /* ===== 图片容器 - 全屏显示 ===== */
+        .modal-image {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #0b0b0b;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* ===== 半透明遮罩层 - 在图片底部 ===== */
+        .modal-image::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65%;
+            background: linear-gradient(to top, 
+                rgba(0, 0, 0, 0.92) 0%, 
+                rgba(0, 0, 0, 0.6) 40%,
+                rgba(0, 0, 0, 0.2) 70%,
+                transparent 100%
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ===== 文字内容 - 浮在遮罩上方 ===== */
+        .modal-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 32px 28px;
+            z-index: 2;
+            max-height: 60%;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .modal-content::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-subtitle {
+            display: none !important;
+        }
+
+        .modal-desc {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            opacity: 0.92;
+            white-space: normal;
+            word-break: break-word;
+            color: #f0f0f0;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-desc p {
+            text-indent: 2em;
+            margin: 0;
+            padding: 0;
+            line-height: 1.8;
+        }
+
+        .modal-desc p + p {
+            margin-top: 0;
+        }
+
+        /* ===== 关闭按钮 ===== */
         .modal-close {
             position: absolute;
             top: 16px;
             right: 16px;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -272,70 +358,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 20;
+            z-index: 10;
             line-height: 1;
         }
 
         .modal-close:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
             transform: scale(1.05);
-        }
-
-        .modal-image {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background: #0b0b0b;
-            overflow: hidden;
-            border-radius: 28px 28px 0 0;
-        }
-
-        .modal-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .modal-content {
-            padding: 20px 28px 32px;
-            max-height: 45vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            scrollbar-width: none;
-        }
-
-        .modal-content::-webkit-scrollbar {
-            width: 0px;
-            background: transparent;
-        }
-
-        .modal-title {
-            font-size: 1.6rem;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .modal-subtitle {
-            display: none !important;
-        }
-
-        .modal-desc {
-            font-size: 0.95rem;
-            line-height: 1.8;
-            opacity: 0.85;
-            white-space: normal;
-            word-break: break-word;
-        }
-
-        .modal-desc p {
-            text-indent: 2em;
-            margin: 0;
-            padding: 0;
-            line-height: 1.8;
-        }
-
-        .modal-desc p + p {
-            margin-top: 0;
         }
 
         /* ========== 页脚 ========== */
@@ -373,26 +402,40 @@
             }
             .modal-box {
                 max-width: 100%;
+                max-height: 95vh;
                 margin: 10px;
                 border-radius: 20px;
             }
             .modal-image {
-                border-radius: 20px 20px 0 0;
+                aspect-ratio: 16 / 9;
             }
             .modal-content {
-                padding: 16px 18px 24px;
-                max-height: 40vh;
+                padding: 14px 20px 18px;
+                max-height: 55%;
+            }
+            .modal-title {
+                font-size: 1.2rem;
+            }
+            .modal-desc {
+                font-size: 0.85rem;
+                line-height: 1.7;
+            }
+            .modal-image::after {
+                height: 65%;
             }
             .modal-close {
-                top: 12px;
-                right: 12px;
-                width: 38px;
-                height: 38px;
+                top: 10px;
+                right: 10px;
+                width: 36px;
+                height: 36px;
                 font-size: 1.2rem;
             }
         }
 
         @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
             .grid {
                 grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
                 gap: 10px;
@@ -413,25 +456,30 @@
             .modal-box {
                 border-radius: 16px;
                 margin: 8px;
+                max-height: 98vh;
             }
             .modal-image {
-                border-radius: 16px 16px 0 0;
+                aspect-ratio: 16 / 10;
             }
             .modal-content {
-                padding: 12px 14px 18px;
-                max-height: 35vh;
+                padding: 10px 14px 14px;
+                max-height: 50%;
             }
             .modal-title {
-                font-size: 1.2rem;
+                font-size: 1rem;
             }
             .modal-desc {
-                font-size: 0.85rem;
+                font-size: 0.8rem;
+                line-height: 1.6;
+            }
+            .modal-image::after {
+                height: 70%;
             }
             .modal-close {
-                top: 10px;
-                right: 10px;
-                width: 34px;
-                height: 34px;
+                top: 8px;
+                right: 8px;
+                width: 32px;
+                height: 32px;
                 font-size: 1rem;
             }
         }
@@ -494,7 +542,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- JavaScript - 修复版 -->
+    <!-- JavaScript -->
     <!-- ============================================================ -->
     <script>
         // ============ 工具函数 ============
@@ -549,7 +597,7 @@
 
         const DOWNLOAD_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
 
-        // ============ 数据加载（修复版） ============
+        // ============ 数据加载 ============
 
         async function loadYearData(year) {
             try {
@@ -569,17 +617,27 @@
         async function loadAllData() {
             const currentYear = parseInt(getCurrentYear());
             
-            // ✅ 改为只加载当前年份的数据，避免加载不存在的文件
             console.log(`📅 尝试加载 ${currentYear} 年数据...`);
             
             const data = await loadYearData(currentYear);
             
             if (data.length === 0) {
-                console.warn(`⚠️ ${currentYear} 年暂无数据，尝试加载 ${currentYear - 1} 年...`);
-                const lastYearData = await loadYearData(currentYear - 1);
-                if (lastYearData.length > 0) {
-                    console.log(`✅ 加载 ${currentYear - 1} 年成功，共 ${lastYearData.length} 条`);
-                    return lastYearData;
+                console.warn(`⚠️ ${currentYear} 年暂无数据，尝试加载所有年份...`);
+                const allData = [];
+                for (let y = 2020; y <= currentYear; y++) {
+                    const yearData = await loadYearData(y);
+                    if (yearData.length > 0) {
+                        allData.push(...yearData);
+                    }
+                }
+                if (allData.length > 0) {
+                    console.log(`✅ 加载所有年份成功，共 ${allData.length} 条`);
+                    allData.sort((a, b) => {
+                        const da = a.date || '';
+                        const db = b.date || '';
+                        return db.localeCompare(da);
+                    });
+                    return allData;
                 }
                 return [];
             }
@@ -773,22 +831,7 @@
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
 
             try {
-                // ✅ 先尝试加载当前年份
                 let allImages = await loadAllData();
-
-                // ✅ 如果当前年份没有数据，尝试加载所有年份
-                if (allImages.length === 0) {
-                    console.log('📅 当前年份无数据，尝试加载所有年份...');
-                    const currentYear = parseInt(getCurrentYear());
-                    const allData = [];
-                    for (let y = 2020; y <= currentYear; y++) {
-                        const data = await loadYearData(y);
-                        if (data.length > 0) {
-                            allData.push(...data);
-                        }
-                    }
-                    allImages = allData;
-                }
 
                 if (!allImages || allImages.length === 0) {
                     grid.innerHTML = '<div class="empty">😅 暂无壁纸数据，等待自动归档...</div>';
