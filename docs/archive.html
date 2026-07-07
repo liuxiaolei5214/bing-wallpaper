@@ -241,7 +241,7 @@
             border-radius: 28px;
             max-width: 1200px;
             width: 100%;
-            max-height: 95vh;
+            max-height: 85vh;
             overflow: hidden;
             box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
             padding: 0;
@@ -596,26 +596,18 @@
             // title 是副标题，subtitle 是主标题
             const rawTitle = item.title || '';
             const rawSubtitle = item.subtitle || '';
-            const dateStr = item.date || '';
 
-            let mainTitle = rawSubtitle || rawTitle;
+            // 如果 subTitle 存在，直接使用（已经包含了日期）
+            if (rawSubtitle) {
+                return rawSubtitle;
+            }
             
-            // 如果同时存在 title 和 subtitle，用 | 连接
-            let displayTitle = mainTitle;
-            if (rawSubtitle && rawTitle && rawTitle !== rawSubtitle) {
-                displayTitle = `${rawSubtitle} | ${rawTitle}`;
+            // 如果没有副标题，使用标题
+            if (rawTitle) {
+                return rawTitle;
             }
-
-            // 格式化日期为 2026/07/07 格式
-            let formattedDate = dateStr;
-            if (dateStr && dateStr.includes('-')) {
-                const parts = dateStr.split('-');
-                if (parts.length === 3) {
-                    formattedDate = `${parts[0]}/${parts[1]}/${parts[2]}`;
-                }
-            }
-
-            return `${displayTitle} - ${formattedDate}`;
+            
+            return '壁纸';
         }
 
         const DOWNLOAD_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
@@ -724,7 +716,7 @@
                 return;
             }
 
-            // 使用格式化标题
+            // 使用格式化标题 - 直接使用副标题
             const displayTitle = formatTitle(item);
             document.getElementById('modalTitle').textContent = displayTitle;
 
@@ -785,7 +777,7 @@
                 const url = img.bing_url || '';
                 const dateStr = img.date || '';
 
-                // 使用格式化标题
+                // 使用格式化标题 - 直接使用副标题
                 const displayTitle = formatTitle(img);
 
                 const displayUrl = get1080pUrl(url);
