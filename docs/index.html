@@ -87,7 +87,7 @@
             display: block;
         }
 
-        /* ===== 今日壁纸 - 遮层容器（包含文字+按钮+滚动提示） ===== */
+        /* ===== 今日壁纸 - 遮层容器 ===== */
         #todayCard .today-overlay {
             position: absolute;
             bottom: 0;
@@ -153,9 +153,11 @@
         #todayCard .today-overlay .today-actions {
             display: flex;
             flex-wrap: wrap;
+            align-items: center;
             gap: 10px;
             margin-top: 12px;
             pointer-events: auto;
+            position: relative;
         }
 
         #todayCard .today-overlay .today-actions .btn {
@@ -187,17 +189,19 @@
             transform: scale(1.02);
         }
 
-        /* ===== 底部滚动提示（在遮层内） ===== */
-        #todayCard .today-overlay .today-scroll-hint {
-            margin-top: 14px;
+        /* ===== 滚动提示（居中） ===== */
+        #todayCard .today-overlay .today-actions .today-scroll-hint {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
             font-size: 0.65rem;
             letter-spacing: 2px;
             color: rgba(255, 255, 255, 0.4);
             pointer-events: none;
-            text-align: center;
+            white-space: nowrap;
         }
 
-        #todayCard .today-overlay .today-scroll-hint span {
+        #todayCard .today-overlay .today-actions .today-scroll-hint span {
             display: inline-block;
             animation: bobble 2.4s infinite;
         }
@@ -402,11 +406,6 @@
             transform: scale(1.04);
         }
 
-        /* ===== 全局滚动提示（仅轮播页保留，今日壁纸已内置在遮层） ===== */
-        .scroll-hint {
-            display: none;
-        }
-
         /* ===== 响应式 ===== */
         @media (max-width: 640px) {
             #todayCard .today-overlay {
@@ -425,9 +424,8 @@
                 font-size: 0.6rem;
                 padding: 4px 12px;
             }
-            #todayCard .today-overlay .today-scroll-hint {
+            #todayCard .today-overlay .today-actions .today-scroll-hint {
                 font-size: 0.55rem;
-                margin-top: 10px;
             }
             .movie-title-bar {
                 top: 0.6rem;
@@ -483,9 +481,8 @@
                 font-size: 0.5rem;
                 padding: 3px 10px;
             }
-            #todayCard .today-overlay .today-scroll-hint {
+            #todayCard .today-overlay .today-actions .today-scroll-hint {
                 font-size: 0.5rem;
-                margin-top: 8px;
             }
         }
     </style>
@@ -525,8 +522,6 @@
             </div>
         </section>
     </div>
-
-    <!-- 全局滚动提示已隐藏，今日壁纸内置在遮层 -->
 
     <script>
         (function() {
@@ -596,8 +591,8 @@
                                 <a href="${get1080pUrl(item.bing_url || '')}" class="btn btn-secondary" target="_blank">⬇️ 下载1080P</a>
                                 <a href="https://cn.bing.com/search?q=${encodeURIComponent(title)}&form=BGALM&filters=HpDate%3a%22${item.date.replace(/-/g, '')}_1600%22+mgzv3configlist%3a%22BingQA_Encyclopedia_Layout%22&pc=W011&bwa=1" class="btn btn-secondary" target="_blank">📖 光影回顾</a>
                                 <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
+                                <span class="today-scroll-hint"><span>⬇ 滚动 · 整屏切换</span></span>
                             </div>
-                            <div class="today-scroll-hint"><span>⬇ 滚动 · 整屏切换</span></div>
                         </div>
                     `;
                 } catch (e) {
@@ -743,9 +738,6 @@
                         resetAutoPlay(); }
                 }
             }, { passive: true });
-
-            // ===== 滚动指示器 =====
-            const viewport = document.getElementById('viewport');
 
             // ===== 初始化 =====
             loadToday();
