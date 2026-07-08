@@ -310,8 +310,8 @@
         }
 
         /* ===== 响应式（仅移动端） ===== */
-        @media (max-width: 640px) {
-            /* 今日壁纸图片竖版适配 */
+        @media (max-width: 768px) {
+            /* ===== 1. 今日壁纸图片强制竖版 1080x1920 ===== */
             #todayCard img {
                 width: 100%;
                 height: 100%;
@@ -319,12 +319,33 @@
                 object-position: center;
             }
 
-            /* 今日壁纸左下角按钮下移 */
-            #todayCard .actions {
-                bottom: 4.5rem !important;
+            /* ===== 2. 今日壁纸按钮：一行显示，自动适配大小 ===== */
+            #todayCard .actions .btn-group {
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 0.3rem;
+                justify-content: center;
+                width: 100%;
+            }
+            #todayCard .actions .btn-group .btn {
+                font-size: 0.5rem;
+                padding: 0.25rem 0.5rem;
+                flex: 1 1 auto;
+                min-width: 0;
+                text-align: center;
+                white-space: nowrap;
+                letter-spacing: 0.3px;
             }
 
-            /* 轮播标题移到缩略图上方 */
+            /* 今日壁纸左下角按钮位置 */
+            #todayCard .actions {
+                bottom: 4.5rem !important;
+                left: 0.8rem !important;
+                right: 0.8rem !important;
+                width: auto !important;
+            }
+
+            /* ===== 3. 轮播页标题：移到缩略图上方 ===== */
             .movie-title-bar {
                 top: auto;
                 bottom: 5.5rem;
@@ -337,41 +358,60 @@
                 max-width: 100%;
             }
             .movie-title-bar .movie-title {
-                font-size: 1rem !important;
+                font-size: 0.9rem !important;
+                line-height: 1.3;
             }
             .movie-title-bar .movie-date {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
             }
 
-            /* 轮播按钮移到右下角 */
+            /* ===== 4. 轮播页按钮：右上角，一行显示 ===== */
             .movie-actions {
-                top: auto;
-                bottom: 1.2rem;
-                right: 1.2rem;
-                padding: 0.3rem 0.8rem;
+                position: absolute;
+                top: 0.8rem;
+                right: 0.8rem;
+                bottom: auto;
+                left: auto;
+                display: flex;
+                flex-wrap: nowrap;
                 gap: 0.2rem;
-                border-radius: 40px;
-                z-index: 20;
-                background: rgba(0, 0, 0, 0.6);
+                align-items: center;
+                background: rgba(0, 0, 0, 0.55);
                 backdrop-filter: blur(12px);
                 -webkit-backdrop-filter: blur(12px);
-                flex-wrap: nowrap;
+                padding: 0.25rem 0.6rem;
+                border-radius: 40px;
+                border: 1px solid rgba(255, 255, 240, 0.08);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+                z-index: 25;
+                pointer-events: auto;
             }
             .movie-actions .btn {
-                font-size: 0.5rem;
-                padding: 0.15rem 0.5rem;
-                letter-spacing: 0.3px;
+                font-size: 0.4rem;
+                padding: 0.12rem 0.35rem;
+                white-space: nowrap;
+                letter-spacing: 0.2px;
+                border-radius: 30px;
+                flex-shrink: 0;
+            }
+            .movie-actions .btn-primary {
+                font-size: 0.4rem;
+                padding: 0.12rem 0.35rem;
+            }
+            .movie-actions .btn-secondary {
+                font-size: 0.4rem;
+                padding: 0.12rem 0.35rem;
             }
 
-            /* 缩略图强制一行，左右到头 */
+            /* ===== 5. 缩略图强制一行，左右到头 ===== */
             .movie-thumbnails {
                 bottom: 0;
                 left: 0;
                 right: 0;
                 transform: none;
                 border-radius: 0;
-                padding: 0.3rem 0.6rem;
-                gap: 0.3rem;
+                padding: 0.25rem 0.5rem;
+                gap: 0.25rem;
                 max-width: 100%;
                 width: 100%;
                 justify-content: flex-start;
@@ -388,30 +428,30 @@
                 display: none;
             }
             .movie-thumbnails .thumb-item {
-                width: 3rem;
-                height: 1.8rem;
+                width: 2.6rem;
+                height: 1.5rem;
                 flex-shrink: 0;
-                border-radius: 6px;
+                border-radius: 4px;
             }
 
-            /* 轮播控制按钮 */
+            /* ===== 轮播控制按钮 ===== */
             .movie-btn {
-                width: 2.2rem;
-                height: 2.2rem;
-                font-size: 1.4rem;
+                width: 2rem;
+                height: 2rem;
+                font-size: 1.2rem;
             }
             .movie-btn.prev {
-                left: 0.3rem;
+                left: 0.2rem;
             }
             .movie-btn.next {
-                right: 0.3rem;
+                right: 0.2rem;
             }
 
-            /* 底部滚动提示 */
+            /* ===== 底部滚动提示 ===== */
             .scroll-hint {
                 bottom: 3.5rem;
-                font-size: 0.5rem;
-                padding: 0.2rem 1rem;
+                font-size: 0.45rem;
+                padding: 0.2rem 0.8rem;
                 opacity: 0.4;
             }
         }
@@ -442,10 +482,10 @@
                     </div>
                     <!-- 按钮 - 独立在右上角 -->
                     <div class="movie-actions" id="movieActions" style="display:flex !important; opacity:1 !important; visibility:visible !important;">
-                        <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
-                        <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank">⬇️ 下载1080P</a>
-                        <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
-                        <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
+                        <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank">⬇️ 4K</a>
+                        <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank">⬇️ 1080P</a>
+                        <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank">📖 回顾</a>
+                        <a href="/archive.html" class="btn btn-secondary">📚 归档</a>
                     </div>
                     <!-- 缩略图 -->
                     <div class="movie-thumbnails" id="movieThumbnails"></div>
@@ -463,6 +503,41 @@
     <script>
         (function() {
             "use strict";
+
+            // ===== 检测移动端，强制使用 1080x1920 竖版图片 =====
+            const isMobile = window.innerWidth <= 768;
+
+            // 保存原始 updateMovieSlide 引用
+            const originalUpdate = window.updateMovieSlide;
+
+            // 重写 updateMovieSlide 以支持移动端竖版
+            const originalUpdateMovieSlide = window.updateMovieSlide;
+            if (typeof updateMovieSlide === 'function') {
+                const origFunc = updateMovieSlide;
+                updateMovieSlide = function(data) {
+                    // 调用原函数
+                    origFunc(data);
+
+                    // 移动端强制使用 1080x1920
+                    if (isMobile && data && data.bing_url) {
+                        const slide = document.getElementById('movieSlide');
+                        if (slide) {
+                            let mobileUrl = data.bing_url || '';
+                            // 替换为 1080x1920 竖版
+                            mobileUrl = mobileUrl.replace(/_UHD\.jpg/g, '_1080x1920.jpg');
+                            mobileUrl = mobileUrl.replace(/_1920x1080\.jpg/g, '_1080x1920.jpg');
+                            // 如果替换后和原来一样，尝试直接添加
+                            if (mobileUrl === data.bing_url) {
+                                mobileUrl = data.bing_url.replace(/\.jpg/g, '_1080x1920.jpg');
+                            }
+                            slide.style.backgroundImage = `url('${mobileUrl}')`;
+                            console.log('📱 移动端使用竖版图片:', mobileUrl);
+                        }
+                    }
+                };
+                // 挂载到全局
+                window.updateMovieSlide = updateMovieSlide;
+            }
 
             // ===== 滚动指示器交互 =====
             const hint = document.querySelector('.scroll-hint');
@@ -503,7 +578,7 @@
                 actionsContainer.style.pointerEvents = 'auto';
             }
 
-            console.log('✨ 整屏切换已启用 · 标题在左上角，按钮在右上角');
+            console.log('✨ 整屏切换已启用 · 移动端自动使用 1080x1920 竖版图片');
         })();
     </script>
 </body>
