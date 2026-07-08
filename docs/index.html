@@ -593,7 +593,51 @@
                 return `https://cn.bing.com/search?q=${encodeURIComponent(cleanTitle)}&form=hpcapt&filters=HpDate:%22${dateParam}%22+mgzv3configlist:%22BingQA_Encyclopedia_Layout%22`;
             }
 
+            // ===== 加载今日壁纸 =====
+            async function loadToday() {
+                const container = document.getElementById('todayCard');
+                try {
+                    const resp = await fetch('zh.2026.json');
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const data = await resp.json();
+                    if (!Array.isArray(data) || data.length === 0) {
+                        throw new Error('数据为空');
+                    }
 
+                    const item = data[0];
+                    const imgUrl = get1080pUrl(item.bing_url || '');
+                    const title = formatTitle(item);
+                    const desc = item.description || '暂无详细介绍';
+
+                    let descHtml = '';
+                    if (desc) {
+                        const paragraphs = desc.split('\n')
+                            .map(p => p.trim())
+                            .filter(p => p !== '');
+                        descHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
+                    }
+
+                    const detailUrl = getDetailUrl(item.title || item.subtitle || '', item.date);
+
+                    container.innerHTML = `
+                        <img src="${imgUrl}" alt="${title}" loading="lazy" onerror="this.style.display='none'" />
+                        <div class="today-overlay">
+                            <div class="today-title">${title}</div>
+                            <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
+                            <div class="today-actions">
+                                <a href="${get4kUrl(item.bing_url || '')}" class="btn btn-primary" target="_blank">⬇️ 下载 4K</a>
+                                <a href="${get1080pUrl(item.bing_url || '')}" class="btn btn-secondary" target="_blank">⬇️ 下载1080P</a>
+                                <a href="${detailUrl}" class="btn btn-secondary" target="_blank">📖 光影回顾</a>
+                                <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
+                                <span class="today-scroll-hint"><span>⬇ 滚动 · 整屏切换</span></span>
+                            </div>
+                        </div>
+                    `;
+                } catch (e) {
+                    console.warn('今日壁纸加载失败:', e);
+                    container.innerHTML = `<div class="loading">⚠️ 加载失败，请刷新</div>`;
+                }
+            }
 
             // ===== 轮播功能 =====
             let allData = [];
