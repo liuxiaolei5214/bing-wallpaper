@@ -275,7 +275,7 @@
             transform: scale(1.04);
         }
 
-        /* ===== 底部滚动指示 ===== */
+        /* ===== 底部滚动指示 - 仅今日壁纸页显示 ===== */
         .scroll-hint {
             position: fixed;
             bottom: 1.8rem;
@@ -365,7 +365,7 @@
                 font-size: 0.65rem;
             }
 
-            /* ===== 4. 轮播页按钮：右上角，一行显示 ===== */
+            /* ===== 4. 轮播页按钮：右上角，使用和今日壁纸一样的样式 ===== */
             .movie-actions {
                 position: absolute;
                 top: 0.8rem;
@@ -392,7 +392,9 @@
                 white-space: nowrap;
                 letter-spacing: 0.2px;
                 border-radius: 30px;
-                flex-shrink: 0;
+                flex: 1 1 auto;
+                min-width: 0;
+                text-align: center;
             }
             .movie-actions .btn-primary {
                 font-size: 0.4rem;
@@ -449,7 +451,7 @@
 
             /* ===== 底部滚动提示 ===== */
             .scroll-hint {
-                bottom: 3.5rem;
+                bottom: 0.8rem;
                 font-size: 0.45rem;
                 padding: 0.2rem 0.8rem;
                 opacity: 0.4;
@@ -539,35 +541,42 @@
                 window.updateMovieSlide = updateMovieSlide;
             }
 
-            // ===== 滚动指示器交互 =====
+            // ===== 滚动指示器交互 - 轮播页隐藏 =====
             const hint = document.querySelector('.scroll-hint');
             const viewport = document.getElementById('viewport');
+            const carouselSection = document.getElementById('movieCarouselSection');
             let hintTimeout;
+
+            function updateHintVisibility() {
+                if (!hint || !carouselSection) return;
+                const rect = carouselSection.getBoundingClientRect();
+                const isCarouselVisible = rect.top < window.innerHeight * 0.5 && rect.bottom > 0;
+                // 轮播页可见时隐藏提示
+                if (isCarouselVisible) {
+                    hint.style.opacity = '0';
+                    hint.style.pointerEvents = 'none';
+                } else {
+                    hint.style.opacity = '0.6';
+                    hint.style.pointerEvents = 'none';
+                }
+            }
 
             if (hint && viewport) {
                 viewport.addEventListener('scroll', function() {
+                    // 滚动指示器淡出效果
                     hint.style.opacity = '0.15';
                     clearTimeout(hintTimeout);
                     hintTimeout = setTimeout(() => {
-                        const sections = document.querySelectorAll('.fullscreen-section');
-                        const lastSection = sections[sections.length - 1];
-                        if (lastSection) {
-                            const rect = lastSection.getBoundingClientRect();
-                            if (rect.top < window.innerHeight && rect.bottom > 0) {
-                                hint.style.opacity = '0.1';
-                            } else {
-                                hint.style.opacity = '0.6';
-                            }
-                        } else {
-                            hint.style.opacity = '0.6';
-                        }
-                    }, 1000);
+                        updateHintVisibility();
+                    }, 300);
                 });
 
-                setTimeout(() => {
-                    hint.style.opacity = '0.6';
-                }, 300);
+                // 初始检测
+                setTimeout(updateHintVisibility, 500);
             }
+
+            // 窗口大小变化时重新检测
+            window.addEventListener('resize', updateHintVisibility);
 
             // ===== 强制显示按钮容器 =====
             const actionsContainer = document.getElementById('movieActions');
@@ -578,7 +587,7 @@
                 actionsContainer.style.pointerEvents = 'auto';
             }
 
-            console.log('✨ 整屏切换已启用 · 移动端自动使用 1080x1920 竖版图片');
+            console.log('✨ 整屏切换已启用 · 轮播页自动隐藏滚动提示');
         })();
     </script>
 </body>
