@@ -256,6 +256,22 @@
             position: relative;
         }
 
+        /* ===== 轮播标题 - 带渐变遮层 ===== */
+        .movie-title-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            z-index: 12;
+            background: linear-gradient(to bottom, 
+                rgba(0, 0, 0, 0.8) 0%, 
+                rgba(0, 0, 0, 0.4) 40%,
+                transparent 100%
+            );
+            pointer-events: none;
+        }
+
         /* ===== 标题 - 独立在左上角 ===== */
         .movie-title-bar {
             position: absolute;
@@ -462,6 +478,9 @@
                 padding: 0.3rem 0.6rem;
                 bottom: 0.8rem;
             }
+            .movie-title-overlay {
+                height: 35%;
+            }
         }
 
         @media (max-width: 480px) {
@@ -484,6 +503,9 @@
             #todayCard .today-overlay .today-actions .today-scroll-hint {
                 font-size: 0.5rem;
             }
+            .movie-title-overlay {
+                height: 30%;
+            }
         }
     </style>
 </head>
@@ -503,6 +525,9 @@
         <section id="movieCarouselSection" class="fullscreen-section">
             <div class="carousel-movie">
                 <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
+                    <!-- ===== 渐变遮层（顶部） ===== -->
+                    <div class="movie-title-overlay"></div>
+                    
                     <div class="movie-title-bar">
                         <div class="movie-info">
                             <div class="movie-title" id="movieTitle"></div>
@@ -561,10 +586,8 @@
             function getDetailUrl(title, dateStr) {
                 if (!dateStr) return '#';
                 
-                // 去除标题中的日期后缀，如 " - 2026/07/07" 或 "- 2026/07/07"
                 let cleanTitle = title.replace(/\s*[-–]\s*\d{4}\/\d{2}\/\d{2}$/, '').trim();
                 
-                // 日期减1天
                 const parts = dateStr.split('-');
                 const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
                 d.setDate(d.getDate() - 1);
@@ -645,7 +668,6 @@
                 if (!item) return;
 
                 const imgUrl = get1080pUrl(item.bing_url || '');
-                // 轮播只显示副标题（title字段）
                 const title = item.title || '壁纸';
 
                 slide.style.backgroundImage = `url('${imgUrl}')`;
@@ -657,7 +679,6 @@
                 downloadBtn.href = hd4k;
                 viewBtn.href = hd1080;
 
-                // ===== 光影回顾链接：日期减1天，去除标题中的日期后缀 =====
                 const detailUrl = getDetailUrl(item.title || item.subtitle || '', item.date);
                 detailBtn.href = detailUrl;
 
