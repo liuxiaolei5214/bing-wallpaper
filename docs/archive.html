@@ -2,195 +2,140 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>壁纸归档 · 光影回顾</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>壁纸归档 · Bing 每日壁纸</title>
+    <meta name="description" content="必应壁纸历史归档，4K 高清下载" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
     <style>
-        /* ========== 全局重置 ========== */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #0a0a0a;
-            color: #e0e0e0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #0b0b0b;
+            color: #e8e8e8;
             min-height: 100vh;
-            padding: 20px;
+            overflow-x: hidden;
         }
 
-        /* ========== 头部 ========== */
-        header {
-            max-width: 1400px;
-            margin: 0 auto 30px;
+        /* ===== 顶部导航 ===== */
+        .archive-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 12px 20px;
+            background: rgba(11, 11, 11, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             display: flex;
-            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #2a2a2a;
         }
 
-        header h1 {
-            font-size: 2rem;
-            background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .archive-header .header-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e8e8e8;
+            letter-spacing: 1px;
         }
 
-        header .nav-link {
+        .archive-header .header-title span {
             color: #4d96ff;
+        }
+
+        /* ===== 返回首页按钮 - 右上角 ===== */
+        .btn-back-home {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
             text-decoration: none;
-            font-weight: 600;
-            padding: 8px 16px;
-            border: 1px solid #4d96ff;
-            border-radius: 8px;
-            transition: all 0.2s;
+            color: #f0ede8;
+            background: rgba(200, 200, 200, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            transition: all 0.25s;
+            white-space: nowrap;
         }
 
-        header .nav-link:hover {
-            background: #4d96ff;
-            color: #fff;
+        .btn-back-home:hover {
+            background: rgba(200, 200, 200, 0.2);
+            transform: scale(1.03);
         }
 
-        /* ========== 筛选器 ========== */
-        .filters {
-            max-width: 1400px;
-            margin: 0 auto 30px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            align-items: center;
-            background: #161616;
-            padding: 16px 20px;
-            border-radius: 12px;
-        }
-
-        .filters label {
-            color: #aaa;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .filters select {
-            background: #2a2a2a;
-            color: #e0e0e0;
-            border: 1px solid #3a3a3a;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            outline: none;
-            min-width: 120px;
-        }
-
-        .filters select:focus {
-            border-color: #4d96ff;
-        }
-
-        .filters .stats {
-            margin-left: auto;
-            color: #888;
-            font-size: 0.9rem;
-        }
-
-        .filters .stats span {
-            color: #e0e0e0;
-            font-weight: 600;
-        }
-
-        /* ========== 网格 ========== */
-        .grid {
+        /* ===== 壁纸网格 ===== */
+        .archive-grid {
+            padding: 80px 20px 40px;
             max-width: 1400px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 16px;
         }
 
-        .card {
-            background: #161616;
+        .archive-item {
+            position: relative;
             border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
             cursor: pointer;
-            position: relative;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-        }
-
-        .card img {
-            width: 100%;
             aspect-ratio: 16 / 9;
+            background: #1a1a1a;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .archive-item:hover {
+            border-color: #4d96ff;
+            transform: scale(1.03);
+            z-index: 2;
+        }
+
+        .archive-item img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             display: block;
-            background: #111;
         }
 
-        .card .info {
-            padding: 10px 14px 14px;
+        .archive-item .item-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 14px 10px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 100%);
+            pointer-events: none;
         }
 
-        .card .info .date {
-            font-size: 0.8rem;
-            color: #888;
+        .archive-item .item-overlay .item-title {
+            font-size: 0.7rem;
             font-weight: 500;
-        }
-
-        .card .info .title {
-            font-size: 0.85rem;
-            color: #e0e0e0;
-            font-weight: 600;
-            margin-top: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .card .info .btn-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .card .info .btn-group .download-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 14px;
             color: #fff;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 0.75rem;
-            font-weight: 600;
-            transition: background 0.2s;
-            border: none;
-            cursor: pointer;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3;
         }
 
-        .card .info .btn-group .download-btn svg {
-            flex-shrink: 0;
+        .archive-item .item-overlay .item-date {
+            font-size: 0.55rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 2px;
         }
 
-        .card .info .btn-group .btn-4k {
-            background: #4d96ff;
-        }
-        .card .info .btn-group .btn-4k:hover {
-            background: #3a7bd5;
-        }
-
-        .card .info .btn-group .btn-1080p {
-            background: #6c757d;
-        }
-        .card .info .btn-group .btn-1080p:hover {
-            background: #5a6268;
-        }
-
-        /* ========== 加载/空状态 ========== */
-        .loading,
-        .empty {
+        /* ===== 加载状态 ===== */
+        .loading {
             text-align: center;
             padding: 60px 0;
             color: #666;
@@ -215,267 +160,270 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ========== 模态框 ========== */
+        /* ================================================================
+                   模态框 - 图片整屏显示
+                   ================================================================ */
         .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            z-index: 999;
             display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            flex-direction: column;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.4s ease;
         }
 
-        .modal-overlay.open {
+        .modal-overlay.active {
             display: flex;
             opacity: 1;
         }
 
-        .modal-box {
-            background: #1a1a1a;
-            border-radius: 28px;
-            max-width: 1400px;
-            width: 100%;
-            max-height: 85vh;
-            overflow: hidden;
-            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
-            padding: 0;
-            position: relative;
-            transform: scale(0.95);
-            transition: transform 0.3s ease;
+        /* ===== 模态框 - 关闭按钮（右上角） ===== */
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            z-index: 1002;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
         }
 
-        .modal-overlay.open .modal-box {
-            transform: scale(1);
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
         }
 
-        .modal-image {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background: #0b0b0b;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .modal-image img {
+        /* ===== 模态框 - 图片容器（整屏） ===== */
+        .modal-image-wrapper {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .modal-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             display: block;
         }
 
-        .modal-image::after {
-            content: '';
+        /* ===== 模态框 - 底部信息区（支持滑动） ===== */
+        .modal-info {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 65%;
+            max-height: 45vh;
+            padding: 20px 24px 24px;
             background: linear-gradient(to top, 
-                rgba(0, 0, 0, 0.92) 0%, 
-                rgba(0, 0, 0, 0.6) 40%,
-                rgba(0, 0, 0, 0.2) 70%,
+                rgba(0, 0, 0, 0.95) 0%, 
+                rgba(0, 0, 0, 0.7) 50%,
                 transparent 100%
             );
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .modal-content {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 20px 32px 28px;
-            z-index: 2;
-            max-height: 60%;
             overflow-y: auto;
-            scrollbar-width: none;
+            scrollbar-width: thin;
+            scrollbar-color: #4d96ff transparent;
+            pointer-events: auto;
+            z-index: 1001;
         }
 
-        .modal-content::-webkit-scrollbar {
-            width: 0px;
+        .modal-info::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .modal-info::-webkit-scrollbar-track {
             background: transparent;
         }
 
-        .modal-title {
-            font-size: 1.6rem;
+        .modal-info::-webkit-scrollbar-thumb {
+            background: #4d96ff;
+            border-radius: 4px;
+        }
+
+        /* ===== 模态框 - 标题（调小） ===== */
+        .modal-info .modal-title {
+            font-size: 1.2rem;
             font-weight: 600;
-            margin-bottom: 4px;
             color: #fff;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+            margin-bottom: 6px;
+            line-height: 1.4;
         }
 
-        .modal-subtitle {
-            display: none !important;
+        .modal-info .modal-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 10px;
         }
 
-        .modal-desc {
-            font-size: 0.95rem;
+        /* ===== 模态框 - 描述文字 ===== */
+        .modal-info .modal-desc {
+            font-size: 0.85rem;
             line-height: 1.8;
-            opacity: 0.92;
-            white-space: normal;
-            word-break: break-word;
-            color: #f0f0f0;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+            color: rgba(255, 255, 255, 0.85);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .modal-desc p {
+        .modal-info .modal-desc p {
             text-indent: 2em;
             margin: 0;
             padding: 0;
             line-height: 1.8;
         }
 
-        .modal-desc p + p {
+        .modal-info .modal-desc p + p {
             margin-top: 0;
         }
 
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #fff;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            font-size: 1.6rem;
-            cursor: pointer;
-            transition: 0.2s;
+        /* ===== 模态框 - 操作按钮 ===== */
+        .modal-info .modal-actions {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            line-height: 1;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
 
-        .modal-close:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.05);
+        .modal-info .modal-actions .btn {
+            display: inline-block;
+            padding: 5px 16px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            color: #f0ede8;
+            background: rgba(200, 200, 200, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            transition: all 0.25s;
+            white-space: nowrap;
         }
 
-        /* ========== 页脚 ========== */
-        footer {
-            max-width: 1400px;
-            margin: 40px auto 0;
-            text-align: center;
-            padding: 20px 0 10px;
-            border-top: 1px solid #1a1a1a;
-            color: #555;
-            font-size: 0.85rem;
+        .modal-info .modal-actions .btn-primary {
+            background: rgba(77, 150, 255, 0.2);
+            border-color: rgba(77, 150, 255, 0.3);
         }
 
-        /* ========== 响应式 ========== */
+        .modal-info .modal-actions .btn-primary:hover {
+            background: rgba(77, 150, 255, 0.35);
+            transform: scale(1.03);
+        }
+
+        .modal-info .modal-actions .btn-secondary:hover {
+            background: rgba(200, 200, 200, 0.2);
+            transform: scale(1.03);
+        }
+
+        /* ================================================================
+                   响应式
+                   ================================================================ */
         @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
+            .archive-header {
+                padding: 10px 14px;
             }
-            header h1 {
-                font-size: 1.5rem;
+            .archive-header .header-title {
+                font-size: 0.95rem;
             }
-            .filters {
-                flex-direction: column;
-                align-items: stretch;
+            .btn-back-home {
+                font-size: 0.65rem;
+                padding: 5px 14px;
             }
-            .filters .stats {
-                margin-left: 0;
-                text-align: center;
+            .archive-grid {
+                padding: 70px 12px 30px;
+                gap: 10px;
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             }
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-                gap: 12px;
+            .archive-item .item-overlay .item-title {
+                font-size: 0.6rem;
             }
-            .modal-box {
-                max-width: 100%;
-                max-height: 95vh;
-                margin: 10px;
-                border-radius: 20px;
+            .archive-item .item-overlay .item-date {
+                font-size: 0.5rem;
             }
-            .modal-image {
-                aspect-ratio: 16 / 9;
+
+            /* 模态框移动端 */
+            .modal-info {
+                max-height: 40vh;
+                padding: 16px 18px 18px;
             }
-            .modal-content {
-                padding: 14px 20px 18px;
-                max-height: 55%;
+            .modal-info .modal-title {
+                font-size: 1rem;
             }
-            .modal-title {
-                font-size: 1.2rem;
+            .modal-info .modal-subtitle {
+                font-size: 0.75rem;
             }
-            .modal-desc {
-                font-size: 0.85rem;
+            .modal-info .modal-desc {
+                font-size: 0.75rem;
                 line-height: 1.7;
             }
-            .modal-image::after {
-                height: 65%;
+            .modal-info .modal-actions .btn {
+                font-size: 0.6rem;
+                padding: 4px 12px;
             }
             .modal-close {
-                top: 10px;
-                right: 10px;
-                width: 36px;
-                height: 36px;
+                top: 12px;
+                right: 14px;
+                width: 34px;
+                height: 34px;
                 font-size: 1.2rem;
             }
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 10px;
+            .archive-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 8px;
+                padding: 60px 8px 20px;
             }
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                gap: 10px;
+            .archive-item .item-overlay {
+                padding: 8px 10px 6px;
             }
-            .card .info {
-                padding: 6px 10px 10px;
+            .archive-item .item-overlay .item-title {
+                font-size: 0.5rem;
+                -webkit-line-clamp: 1;
             }
-            .card .info .date {
+            .archive-item .item-overlay .item-date {
+                font-size: 0.45rem;
+            }
+            .modal-info {
+                max-height: 35vh;
+                padding: 12px 14px 14px;
+            }
+            .modal-info .modal-title {
+                font-size: 0.85rem;
+            }
+            .modal-info .modal-desc {
                 font-size: 0.7rem;
-            }
-            .card .info .title {
-                font-size: 0.75rem;
-            }
-            .card .info .btn-group .download-btn {
-                font-size: 0.65rem;
-                padding: 3px 10px;
-            }
-            .modal-box {
-                border-radius: 16px;
-                margin: 8px;
-                max-height: 98vh;
-            }
-            .modal-image {
-                aspect-ratio: 16 / 10;
-            }
-            .modal-content {
-                padding: 10px 14px 14px;
-                max-height: 50%;
-            }
-            .modal-title {
-                font-size: 1rem;
-            }
-            .modal-desc {
-                font-size: 0.8rem;
                 line-height: 1.6;
             }
-            .modal-image::after {
-                height: 70%;
+            .modal-info .modal-actions .btn {
+                font-size: 0.55rem;
+                padding: 3px 10px;
             }
             .modal-close {
                 top: 8px;
-                right: 8px;
-                width: 32px;
-                height: 32px;
+                right: 10px;
+                width: 30px;
+                height: 30px;
                 font-size: 1rem;
             }
         }
@@ -483,395 +431,246 @@
 </head>
 <body>
 
-    <!-- ===== 头部 ===== -->
-    <header>
-        <h1>📚 壁纸归档</h1>
-        <a href="/" class="nav-link">🏠 返回首页</a>
+    <!-- ===== 顶部导航 ===== -->
+    <header class="archive-header">
+        <div class="header-title">📚 壁纸<span>归档</span></div>
+        <a href="/" class="btn-back-home">🏠 返回首页</a>
     </header>
 
-    <!-- ===== 筛选器 ===== -->
-    <div class="filters">
-        <label for="yearFilter">📅 年份</label>
-        <select id="yearFilter"></select>
-        <label for="monthFilter">📆 月份</label>
-        <select id="monthFilter">
-            <option value="all">全部月份</option>
-            <option value="01">1 月</option>
-            <option value="02">2 月</option>
-            <option value="03">3 月</option>
-            <option value="04">4 月</option>
-            <option value="05">5 月</option>
-            <option value="06">6 月</option>
-            <option value="07">7 月</option>
-            <option value="08">8 月</option>
-            <option value="09">9 月</option>
-            <option value="10">10 月</option>
-            <option value="11">11 月</option>
-            <option value="12">12 月</option>
-        </select>
-        <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
+    <!-- ===== 壁纸网格 ===== -->
+    <div class="archive-grid" id="archiveGrid">
+        <div class="loading">加载壁纸中...</div>
     </div>
 
-    <!-- ===== 网格 ===== -->
-    <div class="grid" id="grid">
-        <div class="loading">加载壁纸数据中...</div>
-    </div>
-
-    <!-- ===== 页脚 ===== -->
-    <footer>
-        <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
-    </footer>
-
-    <!-- ===== 模态框 ===== -->
+    <!-- ===== 模态框（图片整屏显示） ===== -->
     <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-box">
-            <button class="modal-close" id="modalClose">&times;</button>
-            <div class="modal-image">
-                <img id="modalImg" src="" alt="壁纸大图" />
-            </div>
-            <div class="modal-content">
-                <div class="modal-title" id="modalTitle"></div>
-                <div class="modal-subtitle" id="modalSubtitle"></div>
-                <div class="modal-desc" id="modalDesc"></div>
+        <button class="modal-close" id="modalClose">✕</button>
+        <div class="modal-image-wrapper" id="modalImageWrapper">
+            <img src="" alt="壁纸" id="modalImage" />
+        </div>
+        <div class="modal-info" id="modalInfo">
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-subtitle" id="modalSubtitle"></div>
+            <div class="modal-desc" id="modalDesc"></div>
+            <div class="modal-actions" id="modalActions">
+                <a href="#" class="btn btn-primary" id="modalDownload4k" target="_blank">⬇️ 下载 4K</a>
+                <a href="#" class="btn btn-secondary" id="modalDownload1080" target="_blank">⬇️ 下载 1080P</a>
+                <a href="#" class="btn btn-secondary" id="modalDetailBtn" target="_blank">📖 光影回顾</a>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- JavaScript -->
-    <!-- ============================================================ -->
     <script>
-        // ============ 工具函数 ============
+        (function() {
+            "use strict";
 
-        function getBeijingTime() {
-            const now = new Date();
-            const beijingStr = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
-            return new Date(beijingStr);
-        }
-
-        function getCurrentYear() {
-            return String(getBeijingTime().getFullYear());
-        }
-
-        function getCurrentMonth() {
-            return String(getBeijingTime().getMonth() + 1).padStart(2, '0');
-        }
-
-        function getYearFromDate(dateStr) {
-            if (dateStr && dateStr.length >= 4) {
-                return dateStr.substring(0, 4);
-            }
-            return '未知';
-        }
-
-        function getMonthFromDate(dateStr) {
-            if (dateStr && dateStr.length >= 7) {
-                return dateStr.substring(5, 7);
-            }
-            return '未知';
-        }
-
-        function get4kUrl(url) {
-            if (!url) return '';
-            if (url.includes('_UHD.jpg')) {
-                return url;
-            }
-            return url.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
-        }
-
-        function get1080pUrl(url) {
-            if (!url) return '';
-            let result = url;
-            result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
-            result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
-            result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
-            if (result === url) {
-                result = url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
-            }
-            return result;
-        }
-
-        // ============ 标题格式化函数 ============
-        function formatTitle(item) {
-            // subtitle 是主标题，title 是副标题
-            const mainTitle = item.subtitle || '';
-            const subTitle = item.title || '';
-
-            // 如果主标题和副标题都存在，用 | 连接
-            if (mainTitle && subTitle && mainTitle !== subTitle) {
-                return `${mainTitle} | ${subTitle}`;
-            }
-            
-            // 如果只有主标题
-            if (mainTitle) {
-                return mainTitle;
-            }
-            
-            // 如果只有副标题
-            if (subTitle) {
-                return subTitle;
-            }
-            
-            return '壁纸';
-        }
-
-        const DOWNLOAD_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
-
-        // ============ 数据加载 ============
-
-        async function loadYearData(year) {
-            try {
-                const resp = await fetch(`zh.${year}.json`);
-                if (!resp.ok) {
-                    console.warn(`⚠️ ${year} 年文件不存在 (HTTP ${resp.status})`);
-                    return [];
+            // ===== 工具函数 =====
+            function get1080pUrl(url) {
+                if (!url) return '';
+                let result = url;
+                result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+                result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
+                result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+                if (result === url) {
+                    result = url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
                 }
-                const data = await resp.json();
-                return Array.isArray(data) ? data : [];
-            } catch (e) {
-                console.warn(`加载 ${year} 数据失败:`, e.message);
-                return [];
+                return result;
             }
-        }
 
-        async function loadAllData() {
-            const currentYear = parseInt(getCurrentYear());
-            
-            console.log(`📅 尝试加载 ${currentYear} 年数据...`);
-            
-            const data = await loadYearData(currentYear);
-            
-            if (data.length === 0) {
-                console.warn(`⚠️ ${currentYear} 年暂无数据，尝试加载所有年份...`);
-                const allData = [];
-                for (let y = 2020; y <= currentYear; y++) {
-                    const yearData = await loadYearData(y);
-                    if (yearData.length > 0) {
-                        allData.push(...yearData);
+            function get4kUrl(url) {
+                if (!url) return '';
+                if (url.includes('_UHD.jpg')) {
+                    return url;
+                }
+                return url.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+            }
+
+            function formatTitle(item) {
+                const mainTitle = item.subtitle || '';
+                const subTitle = item.title || '';
+                if (mainTitle && subTitle && mainTitle !== subTitle) {
+                    return `${mainTitle} | ${subTitle}`;
+                }
+                return mainTitle || subTitle || '壁纸';
+            }
+
+            function getDetailUrl(title, dateStr) {
+                if (!dateStr) return '#';
+                let cleanTitle = title.replace(/\s*[-–]\s*\d{4}\/\d{2}\/\d{2}$/, '').trim();
+                const parts = dateStr.split('-');
+                const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                d.setDate(d.getDate() - 1);
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const dateParam = `${y}${m}${day}_1600`;
+                return `https://cn.bing.com/search?q=${encodeURIComponent(cleanTitle)}&form=hpcapt&filters=HpDate:%22${dateParam}%22+mgzv3configlist:%22BingQA_Encyclopedia_Layout%22`;
+            }
+
+            // ===== 加载壁纸列表 =====
+            const grid = document.getElementById('archiveGrid');
+            let allData = [];
+
+            async function loadArchive() {
+                try {
+                    const resp = await fetch('zh.2026.json');
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const data = await resp.json();
+                    if (!Array.isArray(data) || data.length === 0) {
+                        throw new Error('数据为空');
                     }
+                    allData = data;
+                    renderGrid(allData);
+                } catch (e) {
+                    console.warn('归档加载失败:', e);
+                    grid.innerHTML = `<div class="loading" style="color:#ff6b6b;">⚠️ 加载失败，请刷新</div>`;
                 }
-                if (allData.length > 0) {
-                    console.log(`✅ 加载所有年份成功，共 ${allData.length} 条`);
-                    allData.sort((a, b) => {
-                        const da = a.date || '';
-                        const db = b.date || '';
-                        return db.localeCompare(da);
-                    });
-                    return allData;
-                }
-                return [];
-            }
-            
-            console.log(`✅ 加载 ${currentYear} 年成功，共 ${data.length} 条`);
-            
-            data.sort((a, b) => {
-                const da = a.date || '';
-                const db = b.date || '';
-                return db.localeCompare(da);
-            });
-
-            return data;
-        }
-
-        // ============ 筛选逻辑 ============
-
-        function filterImages(images, year, month) {
-            if (!images || images.length === 0) return [];
-            return images.filter(img => {
-                const y = getYearFromDate(img.date);
-                const m = getMonthFromDate(img.date);
-                if (year !== 'all' && y !== year) return false;
-                if (month !== 'all' && m !== month) return false;
-                return true;
-            });
-        }
-
-        function populateFilters(images) {
-            const yearSet = new Set();
-            images.forEach(img => {
-                const y = getYearFromDate(img.date);
-                if (y !== '未知') yearSet.add(y);
-            });
-
-            const years = Array.from(yearSet).sort().reverse();
-            const yearSelect = document.getElementById('yearFilter');
-
-            yearSelect.innerHTML = '<option value="all">全部年份</option>';
-            years.forEach(y => {
-                const opt = document.createElement('option');
-                opt.value = y;
-                opt.textContent = y + ' 年';
-                yearSelect.appendChild(opt);
-            });
-
-            const currentYear = getCurrentYear();
-            if (years.includes(currentYear)) {
-                yearSelect.value = currentYear;
-            }
-        }
-
-        // ============ 模态框 ==========
-
-        function openModal(item) {
-            console.log('📖 打开弹窗:', item);
-
-            const overlay = document.getElementById('modalOverlay');
-            if (!overlay) {
-                console.error('❌ 模态框元素不存在');
-                return;
             }
 
-            // 使用格式化标题
-            const displayTitle = formatTitle(item);
-            document.getElementById('modalTitle').textContent = displayTitle;
-
-            const img = document.getElementById('modalImg');
-            const imgUrl = get1080pUrl(item.bing_url || '');
-            img.src = imgUrl;
-            img.alt = displayTitle;
-
-            document.getElementById('modalSubtitle').style.display = 'none';
-
-            let desc = item.description || '暂无详细介绍';
-            desc = desc.replace(/\r\n/g, '\n');
-            desc = desc.replace(/\r/g, '\n');
-            desc = desc.replace(/<br\s*\/?>/gi, '\n');
-
-            const paragraphs = desc.split('\n')
-                .map(p => p.trim())
-                .filter(p => p !== '');
-
-            const descHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
-            document.getElementById('modalDesc').innerHTML = descHtml;
-
-            overlay.classList.add('open');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal() {
-            const overlay = document.getElementById('modalOverlay');
-            if (overlay) {
-                overlay.classList.remove('open');
-                document.body.style.overflow = '';
-            }
-        }
-
-        document.getElementById('modalClose').addEventListener('click', closeModal);
-        document.getElementById('modalOverlay').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeModal();
-        });
-
-        // ============ 渲染网格 ============
-
-        function renderGrid(images) {
-            const grid = document.getElementById('grid');
-            const totalCount = document.getElementById('totalCount');
-
-            if (!images || images.length === 0) {
-                grid.innerHTML = '<div class="empty">😅 没有找到匹配的壁纸</div>';
-                totalCount.textContent = '0';
-                return;
-            }
-
-            totalCount.textContent = images.length;
-
-            grid.innerHTML = images.map(img => {
-                const url = img.bing_url || '';
-                const dateStr = img.date || '';
-
-                // 使用格式化标题
-                const displayTitle = formatTitle(img);
-
-                const displayUrl = get1080pUrl(url);
-                const hd4kUrl = get4kUrl(url);
-                const hd1080Url = get1080pUrl(url);
-
-                const escapedData = encodeURIComponent(JSON.stringify(img));
-
-                return `
-                    <div class="card" data-item="${escapedData}">
-                        <img src="${displayUrl}" alt="${displayTitle}" loading="lazy" onerror="this.style.display='none'" />
-                        <div class="info">
-                            <div class="date">📅 ${dateStr}</div>
-                            <div class="title">${displayTitle}</div>
-                            <div class="btn-group">
-                                <a href="${hd4kUrl}" class="download-btn btn-4k" target="_blank" onclick="event.stopPropagation();">
-                                    ${DOWNLOAD_SVG} 4K
-                                </a>
-                                <a href="${hd1080Url}" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">
-                                    ${DOWNLOAD_SVG} 1080P
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            document.querySelectorAll('.card').forEach(el => {
-                el.addEventListener('click', function(e) {
-                    if (e.target.closest('a')) return;
-                    const encodedData = this.dataset.item;
-                    if (encodedData) {
-                        try {
-                            const jsonStr = decodeURIComponent(encodedData);
-                            const item = JSON.parse(jsonStr);
-                            openModal(item);
-                        } catch (e) {
-                            console.warn('解析数据失败:', e);
-                        }
-                    }
-                });
-            });
-        }
-
-        // ============ 主函数 ============
-
-        async function main() {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
-
-            try {
-                let allImages = await loadAllData();
-
-                if (!allImages || allImages.length === 0) {
-                    grid.innerHTML = '<div class="empty">😅 暂无壁纸数据，等待自动归档...</div>';
+            function renderGrid(data) {
+                if (!data || data.length === 0) {
+                    grid.innerHTML = `<div class="loading">暂无壁纸</div>`;
                     return;
                 }
 
-                console.log(`📊 总共加载 ${allImages.length} 张壁纸`);
+                grid.innerHTML = data.map((item, index) => {
+                    const imgUrl = get1080pUrl(item.bing_url || '');
+                    const title = formatTitle(item);
+                    const date = item.date || '';
+                    return `
+                        <div class="archive-item" data-index="${index}">
+                            <img src="${imgUrl}" alt="${title}" loading="lazy" />
+                            <div class="item-overlay">
+                                <div class="item-title">${title}</div>
+                                <div class="item-date">${date}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
 
-                populateFilters(allImages);
-
-                const yearFilter = document.getElementById('yearFilter');
-                const monthFilter = document.getElementById('monthFilter');
-
-                const currentMonth = getCurrentMonth();
-                monthFilter.value = currentMonth;
-
-                const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
-                renderGrid(filtered);
-
-                yearFilter.addEventListener('change', () => {
-                    const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
-                    renderGrid(filtered);
+                // ===== 点击打开模态框 =====
+                document.querySelectorAll('.archive-item').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.index);
+                        openModal(index);
+                    });
                 });
-
-                monthFilter.addEventListener('change', () => {
-                    const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
-                    renderGrid(filtered);
-                });
-
-            } catch (error) {
-                console.error('加载失败:', error);
-                grid.innerHTML = `<div class="empty">❌ 加载失败：${error.message || '未知错误'}</div>`;
             }
-        }
 
-        document.addEventListener('DOMContentLoaded', main);
+            // ===== 模态框 =====
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalSubtitle = document.getElementById('modalSubtitle');
+            const modalDesc = document.getElementById('modalDesc');
+            const modalDownload4k = document.getElementById('modalDownload4k');
+            const modalDownload1080 = document.getElementById('modalDownload1080');
+            const modalDetailBtn = document.getElementById('modalDetailBtn');
+            const modalClose = document.getElementById('modalClose');
+
+            let currentModalIndex = 0;
+
+            function openModal(index) {
+                const item = allData[index];
+                if (!item) return;
+                currentModalIndex = index;
+
+                const imgUrl = get1080pUrl(item.bing_url || '');
+                const title = formatTitle(item);
+                const desc = item.description || '暂无详细介绍';
+                const date = item.date || '';
+
+                // 图片整屏显示
+                modalImage.src = imgUrl;
+                modalImage.alt = title;
+
+                // 标题（调小）
+                modalTitle.textContent = title;
+                modalSubtitle.textContent = date;
+
+                // 描述（支持滑动）
+                let descHtml = '';
+                if (desc) {
+                    const paragraphs = desc.split('\n')
+                        .map(p => p.trim())
+                        .filter(p => p !== '');
+                    descHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
+                }
+                modalDesc.innerHTML = descHtml || '暂无详细介绍';
+
+                // 按钮
+                modalDownload4k.href = get4kUrl(item.bing_url || '');
+                modalDownload1080.href = get1080pUrl(item.bing_url || '');
+                modalDetailBtn.href = getDetailUrl(item.title || item.subtitle || '', item.date);
+
+                // 显示模态框
+                modalOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+
+                // 重置滚动位置
+                const infoEl = document.getElementById('modalInfo');
+                if (infoEl) infoEl.scrollTop = 0;
+            }
+
+            function closeModal() {
+                modalOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            // ===== 模态框事件 =====
+            modalClose.addEventListener('click', closeModal);
+
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+                // 左右键切换
+                if (modalOverlay.classList.contains('active')) {
+                    if (e.key === 'ArrowLeft') {
+                        const prev = currentModalIndex > 0 ? currentModalIndex - 1 : allData.length - 1;
+                        openModal(prev);
+                        e.preventDefault();
+                    } else if (e.key === 'ArrowRight') {
+                        const next = currentModalIndex < allData.length - 1 ? currentModalIndex + 1 : 0;
+                        openModal(next);
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            // ===== 触摸滑动切换 =====
+            let touchStartX_modal = 0;
+            let touchEndX_modal = 0;
+
+            modalOverlay.addEventListener('touchstart', function(e) {
+                touchStartX_modal = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            modalOverlay.addEventListener('touchend', function(e) {
+                touchEndX_modal = e.changedTouches[0].screenX;
+                const diff = touchStartX_modal - touchEndX_modal;
+                if (Math.abs(diff) > 60) {
+                    if (diff > 0) {
+                        const next = currentModalIndex < allData.length - 1 ? currentModalIndex + 1 : 0;
+                        openModal(next);
+                    } else {
+                        const prev = currentModalIndex > 0 ? currentModalIndex - 1 : allData.length - 1;
+                        openModal(prev);
+                    }
+                }
+            }, { passive: true });
+
+            // ===== 初始化 =====
+            loadArchive();
+
+            console.log('📚 壁纸归档已加载');
+        })();
     </script>
-
 </body>
 </html>
