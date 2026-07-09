@@ -416,90 +416,268 @@
             transform: scale(1.04);
         }
 
-        /* ===== 响应式 ===== */
-        @media (max-width: 640px) {
-            #todayCard .today-overlay {
-                padding: 16px 18px 14px;
-                min-height: 35%;
+        /* ================================================================
+                   移动端样式 (max-width: 768px)
+                   ================================================================ */
+        @media (max-width: 768px) {
+            /* ===== 1. 图片竖版 1080x1920 ===== */
+            #todayCard img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                object-position: center;
             }
-            #todayCard .today-overlay .today-title {
-                font-size: 1.2rem;
+            .movie-slide {
+                background-size: cover !important;
+                background-position: center !important;
             }
-            #todayCard .today-overlay .today-desc {
-                font-size: 0.82rem;
-                line-height: 1.7;
-                max-height: 30vh;
-            }
-            #todayCard .today-overlay .today-actions .btn {
-                font-size: 0.6rem;
-                padding: 4px 12px;
-            }
-            #todayCard .today-overlay .today-actions .today-scroll-hint {
-                font-size: 0.55rem;
-            }
-            .movie-title-bar {
-                top: 0.6rem;
-                left: 1.2rem;
-            }
-            .movie-actions {
-                top: 0.6rem;
-                right: 1.2rem;
-                padding: 0.4rem 0.8rem;
-                gap: 0.3rem;
-                border-radius: 40px;
-            }
-            .btn {
-                font-size: 0.55rem;
-                padding: 0.2rem 0.6rem;
-            }
-            .movie-btn {
-                width: 2.6rem;
-                height: 2.6rem;
-                font-size: 1.8rem;
-            }
-            .movie-btn.prev {
-                left: 0.4rem;
-            }
-            .movie-btn.next {
-                right: 0.4rem;
-            }
-            .movie-thumbnails .thumb-item {
-                width: 2.4rem;
-                height: 1.6rem;
-            }
-            .movie-thumbnails {
-                gap: 0.3rem;
-                padding: 0.3rem 0.6rem;
-                bottom: 0.8rem;
-            }
-            .movie-title-overlay {
-                height: 35%;
-            }
-        }
 
-        @media (max-width: 480px) {
+            /* ===== 2. 今日壁纸按钮移到顶部，填充整行 ===== */
             #todayCard .today-overlay {
-                padding: 12px 14px 12px;
-                min-height: 30%;
+                top: 0;
+                bottom: auto;
+                min-height: auto;
+                padding: 14px 16px 12px;
+                background: linear-gradient(to bottom, 
+                    rgba(0, 0, 0, 0.85) 0%, 
+                    rgba(0, 0, 0, 0.4) 60%,
+                    transparent 100%
+                );
+                justify-content: flex-start;
             }
             #todayCard .today-overlay .today-title {
                 font-size: 1rem;
+                margin-bottom: 2px;
+                display: none;
             }
             #todayCard .today-overlay .today-desc {
-                font-size: 0.75rem;
-                line-height: 1.6;
-                max-height: 25vh;
+                display: none;
+            }
+            #todayCard .today-overlay .today-actions {
+                flex-wrap: nowrap;
+                gap: 4px;
+                margin-top: 0;
+                width: 100%;
             }
             #todayCard .today-overlay .today-actions .btn {
                 font-size: 0.5rem;
-                padding: 3px 10px;
+                padding: 4px 6px;
+                flex: 1 1 0;
+                min-width: 0;
+                text-align: center;
+                white-space: nowrap;
+                letter-spacing: 0.3px;
+                border-radius: 30px;
             }
             #todayCard .today-overlay .today-actions .today-scroll-hint {
-                font-size: 0.5rem;
+                position: relative;
+                left: auto;
+                transform: none;
+                font-size: 0.45rem;
+                color: rgba(255, 255, 255, 0.35);
+                flex: 1 1 0;
+                text-align: center;
+                min-width: 0;
             }
+
+            /* ===== 3. 滚动提示只在今日壁纸页底部显示 ===== */
+            .scroll-hint-mobile {
+                display: block !important;
+            }
+
+            /* ===== 4. 轮播页按钮移到顶部，填充整行 ===== */
+            .movie-actions {
+                top: 0;
+                right: 0;
+                left: 0;
+                bottom: auto;
+                padding: 8px 10px;
+                gap: 4px;
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border-radius: 0;
+                border: none;
+                box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+                flex-wrap: nowrap;
+                z-index: 25;
+                justify-content: center;
+            }
+            .movie-actions .btn {
+                font-size: 0.45rem;
+                padding: 4px 6px;
+                flex: 1 1 0;
+                min-width: 0;
+                text-align: center;
+                white-space: nowrap;
+                letter-spacing: 0.2px;
+                border-radius: 30px;
+                background: rgba(200, 200, 200, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            .movie-actions .btn-primary {
+                background: rgba(220, 210, 180, 0.15);
+                border-color: rgba(240, 230, 200, 0.15);
+            }
+
+            /* ===== 5. 缩略图底部一行显示 ===== */
+            .movie-thumbnails {
+                bottom: 0;
+                left: 0;
+                right: 0;
+                transform: none;
+                border-radius: 0;
+                padding: 6px 8px;
+                gap: 4px;
+                max-width: 100%;
+                width: 100%;
+                justify-content: flex-start;
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border: none;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            .movie-thumbnails::-webkit-scrollbar {
+                display: none;
+            }
+            .movie-thumbnails .thumb-item {
+                width: 2.8rem;
+                height: 1.6rem;
+                flex-shrink: 0;
+                border-radius: 4px;
+                min-width: 2.4rem;
+            }
+
+            /* ===== 6. 轮播标题移到缩略图上方 ===== */
+            .movie-title-bar {
+                top: auto;
+                bottom: 4.2rem;
+                left: 0;
+                right: 0;
+                padding: 0 12px;
+                z-index: 15;
+                pointer-events: none;
+            }
+            .movie-title-bar .movie-info {
+                max-width: 100%;
+                text-shadow: 0 2px 20px rgba(0, 0, 0, 0.95);
+            }
+            .movie-title-bar .movie-title {
+                font-size: 0.85rem !important;
+                font-weight: 500;
+                letter-spacing: 1px;
+                line-height: 1.3;
+                color: #fff;
+                text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+            }
+
+            /* ===== 轮播顶部遮层 ===== */
             .movie-title-overlay {
-                height: 30%;
+                height: 50%;
+                background: linear-gradient(to bottom, 
+                    rgba(0, 0, 0, 0.7) 0%, 
+                    rgba(0, 0, 0, 0.3) 30%,
+                    transparent 60%,
+                    rgba(0, 0, 0, 0.2) 80%,
+                    rgba(0, 0, 0, 0.6) 100%
+                );
+                z-index: 11;
+                pointer-events: none;
             }
+
+            /* 底部额外遮层 */
+            .movie-slide::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 35%;
+                z-index: 8;
+                background: linear-gradient(to top, 
+                    rgba(0, 0, 0, 0.7) 0%, 
+                    rgba(0, 0, 0, 0.2) 60%,
+                    transparent 100%
+                );
+                pointer-events: none;
+            }
+
+            /* ===== 轮播控制按钮 ===== */
+            .movie-btn {
+                width: 2rem;
+                height: 2rem;
+                font-size: 1.2rem;
+                background: rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(4px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .movie-btn.prev {
+                left: 0.3rem;
+            }
+            .movie-btn.next {
+                right: 0.3rem;
+            }
+        }
+
+        /* ===== 小屏手机 (max-width: 480px) 微调 ===== */
+        @media (max-width: 480px) {
+            #todayCard .today-overlay .today-actions .btn {
+                font-size: 0.4rem;
+                padding: 3px 4px;
+            }
+            #todayCard .today-overlay .today-actions .today-scroll-hint {
+                font-size: 0.4rem;
+            }
+            .movie-actions .btn {
+                font-size: 0.4rem;
+                padding: 3px 4px;
+            }
+            .movie-title-bar .movie-title {
+                font-size: 0.75rem !important;
+            }
+            .movie-thumbnails .thumb-item {
+                width: 2.2rem;
+                height: 1.3rem;
+                min-width: 1.8rem;
+            }
+        }
+
+        /* ================================================================
+                   电脑端样式 (min-width: 769px)
+                   ================================================================ */
+        @media (min-width: 769px) {
+            /* ===== 轮播按钮样式和今日壁纸一致 ===== */
+            .movie-actions .btn {
+                font-size: 0.75rem;
+                padding: 0.4rem 1.2rem;
+                border-radius: 40px;
+                background: rgba(200, 200, 200, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(4px);
+                color: #f0ede8;
+            }
+            .movie-actions .btn-primary {
+                background: rgba(220, 210, 180, 0.15);
+                border-color: rgba(240, 230, 200, 0.2);
+            }
+            .movie-actions .btn-primary:hover {
+                background: rgba(220, 210, 180, 0.3);
+                transform: scale(1.03);
+            }
+            .movie-actions .btn-secondary:hover {
+                background: rgba(200, 200, 200, 0.15);
+                transform: scale(1.02);
+            }
+            .movie-actions {
+                gap: 0.6rem;
+            }
+
+            /* ===== 轮播不显示当天 ===== */
+            /* 由 JS 控制 */
         }
     </style>
 </head>
@@ -546,6 +724,9 @@
         (function() {
             "use strict";
 
+            // ===== 检测移动端 =====
+            const isMobile = window.innerWidth <= 768;
+
             // ===== 工具函数 =====
             function get1080pUrl(url) {
                 if (!url) return '';
@@ -555,6 +736,17 @@
                 result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
                 if (result === url) {
                     result = url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+                }
+                return result;
+            }
+
+            function getMobileUrl(url) {
+                if (!url) return '';
+                let result = url;
+                result = result.replace(/_UHD\.jpg/g, '_1080x1920.jpg');
+                result = result.replace(/_1920x1080\.jpg/g, '_1080x1920.jpg');
+                if (result === url) {
+                    result = url.replace(/\.jpg/g, '_1080x1920.jpg');
                 }
                 return result;
             }
@@ -576,12 +768,10 @@
                 return mainTitle || subTitle || '壁纸';
             }
 
-            // ===== 生成光影回顾链接（日期减1天，去除标题中的日期后缀） =====
+            // ===== 生成光影回顾链接（日期减1天） =====
             function getDetailUrl(title, dateStr) {
                 if (!dateStr) return '#';
-                
                 let cleanTitle = title.replace(/\s*[-–]\s*\d{4}\/\d{2}\/\d{2}$/, '').trim();
-                
                 const parts = dateStr.split('-');
                 const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
                 d.setDate(d.getDate() - 1);
@@ -589,8 +779,16 @@
                 const m = String(d.getMonth() + 1).padStart(2, '0');
                 const day = String(d.getDate()).padStart(2, '0');
                 const dateParam = `${y}${m}${day}_1600`;
-                
                 return `https://cn.bing.com/search?q=${encodeURIComponent(cleanTitle)}&form=hpcapt&filters=HpDate:%22${dateParam}%22+mgzv3configlist:%22BingQA_Encyclopedia_Layout%22`;
+            }
+
+            // ===== 获取今日日期字符串 =====
+            function getTodayStr() {
+                const now = new Date();
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
             }
 
             // ===== 加载今日壁纸 =====
@@ -605,7 +803,7 @@
                     }
 
                     const item = data[0];
-                    const imgUrl = get1080pUrl(item.bing_url || '');
+                    const imgUrl = isMobile ? getMobileUrl(item.bing_url || '') : get1080pUrl(item.bing_url || '');
                     const title = formatTitle(item);
                     const desc = item.description || '暂无详细介绍';
 
@@ -625,8 +823,8 @@
                             <div class="today-title">${title}</div>
                             <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
                             <div class="today-actions">
-                                <a href="${get4kUrl(item.bing_url || '')}" class="btn btn-primary" target="_blank">⬇️ 下载 4K</a>
-                                <a href="${get1080pUrl(item.bing_url || '')}" class="btn btn-secondary" target="_blank">⬇️ 下载1080P</a>
+                                <a href="${get4kUrl(item.bing_url || '')}" class="btn btn-primary" target="_blank">⬇️ 4K</a>
+                                <a href="${isMobile ? getMobileUrl(item.bing_url || '') : get1080pUrl(item.bing_url || '')}" class="btn btn-secondary" target="_blank">⬇️ 1080P</a>
                                 <a href="${detailUrl}" class="btn btn-secondary" target="_blank">📖 光影回顾</a>
                                 <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
                                 <span class="today-scroll-hint"><span>⬇ 滚动 · 整屏切换</span></span>
@@ -661,15 +859,15 @@
                 const item = allData[index];
                 if (!item) return;
 
-                const imgUrl = get1080pUrl(item.bing_url || '');
-                const title = item.title || '壁纸';
+                const imgUrl = isMobile ? getMobileUrl(item.bing_url || '') : get1080pUrl(item.bing_url || '');
+                const title = item.subtitle || item.title || '壁纸';
 
                 slide.style.backgroundImage = `url('${imgUrl}')`;
                 titleEl.textContent = title;
                 dateEl.textContent = '';
 
                 const hd4k = get4kUrl(item.bing_url || '');
-                const hd1080 = get1080pUrl(item.bing_url || '');
+                const hd1080 = isMobile ? getMobileUrl(item.bing_url || '') : get1080pUrl(item.bing_url || '');
                 downloadBtn.href = hd4k;
                 viewBtn.href = hd1080;
 
@@ -725,21 +923,41 @@
                     if (!Array.isArray(data) || data.length === 0) {
                         throw new Error('数据为空');
                     }
-                    allData = data.slice(0, MAX_SLIDES);
+
+                    // ===== 电脑端：过滤掉今天的数据 =====
+                    let filteredData = data;
+                    if (!isMobile) {
+                        const todayStr = getTodayStr();
+                        filteredData = data.filter(item => {
+                            const date = item.date ? item.date.trim() : '';
+                            return date !== todayStr;
+                        });
+                        if (filteredData.length === 0) {
+                            filteredData = data.slice(1); // 如果没有昨天的，取第二条
+                        }
+                    }
+
+                    allData = filteredData.slice(0, MAX_SLIDES);
                     currentIndex = 0;
 
                     thumbnails.innerHTML = '';
                     allData.forEach((item, idx) => {
                         const thumb = document.createElement('div');
                         thumb.className = 'thumb-item' + (idx === 0 ? ' active' : '');
-                        thumb.style.backgroundImage = `url('${get1080pUrl(item.bing_url || '')}')`;
+                        const thumbUrl = isMobile ? getMobileUrl(item.bing_url || '') : get1080pUrl(item.bing_url || '');
+                        thumb.style.backgroundImage = `url('${thumbUrl}')`;
                         thumb.title = item.title || '壁纸';
                         thumb.addEventListener('click', () => goToSlide(idx));
                         thumbnails.appendChild(thumb);
                     });
 
-                    updateSlide(0);
-                    resetAutoPlay();
+                    if (allData.length > 0) {
+                        updateSlide(0);
+                        resetAutoPlay();
+                    } else {
+                        slide.style.backgroundImage = '';
+                        titleEl.textContent = '暂无壁纸';
+                    }
                 } catch (e) {
                     console.warn('轮播加载失败:', e);
                     slide.style.backgroundImage = '';
@@ -764,24 +982,47 @@
 
             let touchStartX = 0;
             let touchEndX = 0;
-            slide.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-            }, { passive: true });
-            slide.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                const diff = touchStartX - touchEndX;
-                if (Math.abs(diff) > 50) {
-                    if (diff > 0) { nextSlide();
-                        resetAutoPlay(); } else { prevSlide();
-                        resetAutoPlay(); }
+            const carouselEl = document.querySelector('.carousel-movie');
+            if (carouselEl) {
+                carouselEl.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                }, { passive: true });
+                carouselEl.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    const diff = touchStartX - touchEndX;
+                    if (Math.abs(diff) > 50) {
+                        if (diff > 0) { nextSlide();
+                            resetAutoPlay(); } else { prevSlide();
+                            resetAutoPlay(); }
+                    }
+                }, { passive: true });
+            }
+
+            // ===== 滚动提示控制（仅今日壁纸页显示） =====
+            const viewport = document.getElementById('viewport');
+            const carouselSection = document.getElementById('movieCarouselSection');
+
+            function updateScrollHint() {
+                if (!carouselSection) return;
+                const rect = carouselSection.getBoundingClientRect();
+                const isCarouselVisible = rect.top < window.innerHeight * 0.5 && rect.bottom > 0;
+                const hintEl = document.querySelector('.today-scroll-hint');
+                if (hintEl) {
+                    hintEl.style.display = isCarouselVisible ? 'none' : 'inline-block';
                 }
-            }, { passive: true });
+            }
+
+            if (viewport) {
+                viewport.addEventListener('scroll', updateScrollHint);
+                viewport.addEventListener('resize', updateScrollHint);
+                setTimeout(updateScrollHint, 500);
+            }
 
             // ===== 初始化 =====
             loadToday();
             loadCarousel();
 
-            console.log('✨ 整屏切换已启用');
+            console.log('✨ 整屏切换已启用' + (isMobile ? ' · 移动端模式' : ' · 电脑端模式'));
         })();
     </script>
 </body>
