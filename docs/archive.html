@@ -345,46 +345,6 @@
             margin-top: 0;
         }
 
-        .modal-info .modal-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .modal-info .modal-actions .btn {
-            display: inline-block;
-            padding: 5px 16px;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            text-decoration: none;
-            color: #f0ede8;
-            background: rgba(200, 200, 200, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(4px);
-            transition: all 0.25s;
-            white-space: nowrap;
-        }
-
-        .modal-info .modal-actions .btn-primary {
-            background: rgba(77, 150, 255, 0.2);
-            border-color: rgba(77, 150, 255, 0.3);
-        }
-
-        .modal-info .modal-actions .btn-primary:hover {
-            background: rgba(77, 150, 255, 0.35);
-            transform: scale(1.03);
-        }
-
-        .modal-info .modal-actions .btn-secondary:hover {
-            background: rgba(200, 200, 200, 0.2);
-            transform: scale(1.03);
-        }
-
         /* ================================================================
                    响应式
                    ================================================================ */
@@ -432,10 +392,6 @@
                 font-size: 0.75rem;
                 line-height: 1.7;
             }
-            .modal-info .modal-actions .btn {
-                font-size: 0.6rem;
-                padding: 4px 12px;
-            }
             .modal-close {
                 top: 12px;
                 right: 14px;
@@ -472,10 +428,6 @@
                 font-size: 0.7rem;
                 line-height: 1.6;
             }
-            .modal-info .modal-actions .btn {
-                font-size: 0.55rem;
-                padding: 3px 10px;
-            }
             .modal-close {
                 top: 8px;
                 right: 10px;
@@ -510,11 +462,16 @@
         <div class="loading">加载壁纸中...</div>
     </div>
 
-    <!-- ===== 模态框 ===== -->
+    <!-- ===== 模态框（无按钮，无滑动切换） ===== -->
     <div class="modal-overlay" id="modalOverlay">
         <button class="modal-close" id="modalClose">✕</button>
         <div class="modal-image-wrapper" id="modalImageWrapper">
             <img src="" alt="壁纸" id="modalImage" />
+        </div>
+        <div class="modal-info" id="modalInfo">
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-subtitle" id="modalSubtitle"></div>
+            <div class="modal-desc" id="modalDesc"></div>
         </div>
     </div>
 
@@ -549,14 +506,6 @@
                 return result;
             }
 
-            function get4kUrl(url) {
-                if (!url) return '';
-                if (url.includes('_UHD.jpg')) {
-                    return url;
-                }
-                return url.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
-            }
-
             function formatTitle(item) {
                 const mainTitle = item.subtitle || '';
                 const subTitle = item.title || '';
@@ -566,29 +515,6 @@
                 return mainTitle || subTitle || '壁纸';
             }
 
-            function getDetailUrl(title, dateStr) {
-                if (!dateStr) return '#';
-                let cleanTitle = title.replace(/\s*[-–]\s*\d{4}\/\d{2}\/\d{2}$/, '').trim();
-                const parts = dateStr.split('-');
-                const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-                d.setDate(d.getDate() - 1);
-                const y = d.getFullYear();
-                const m = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                const dateParam = `${y}${m}${day}_1600`;
-                return `https://cn.bing.com/search?q=${encodeURIComponent(cleanTitle)}&form=hpcapt&filters=HpDate:%22${dateParam}%22+mgzv3configlist:%22BingQA_Encyclopedia_Layout%22`;
-            }
-
-            // ===== 获取当前年月 =====
-            function getCurrentYearMonth() {
-                const now = new Date();
-                return {
-                    year: now.getFullYear(),
-                    month: String(now.getMonth() + 1).padStart(2, '0')
-                };
-            }
-
-            // ===== 解析日期 =====
             function parseDate(dateStr) {
                 if (!dateStr) return null;
                 const parts = dateStr.split('-');
@@ -600,11 +526,19 @@
                 };
             }
 
+            // ===== 获取当前年月 =====
+            function getCurrentYearMonth() {
+                const now = new Date();
+                return {
+                    year: now.getFullYear(),
+                    month: String(now.getMonth() + 1).padStart(2, '0')
+                };
+            }
+
             // ===== 全局变量 =====
             const grid = document.getElementById('archiveGrid');
             let allData = [];
             let filteredData = [];
-            let currentModalIndex = 0;
 
             const yearFilter = document.getElementById('yearFilter');
             const monthFilter = document.getElementById('monthFilter');
@@ -640,7 +574,6 @@
                     }
                 });
 
-                // 年份
                 yearFilter.innerHTML = '<option value="all">全部年份</option>';
                 const sortedYears = Array.from(years).sort((a, b) => b - a);
                 sortedYears.forEach(year => {
@@ -650,7 +583,6 @@
                     yearFilter.appendChild(option);
                 });
 
-                // 月份
                 monthFilter.innerHTML = '<option value="all">全部月份</option>';
                 for (let m = 1; m <= 12; m++) {
                     const option = document.createElement('option');
@@ -659,7 +591,6 @@
                     monthFilter.appendChild(option);
                 }
 
-                // 默认选中当前月份
                 const current = getCurrentYearMonth();
                 if (yearFilter.querySelector(`option[value="${current.year}"]`)) {
                     yearFilter.value = current.year;
@@ -730,23 +661,18 @@
             yearFilter.addEventListener('change', applyFilters);
             monthFilter.addEventListener('change', applyFilters);
 
-            // ===== 模态框 =====
+            // ===== 模态框（无按钮，无滑动切换） =====
             const modalOverlay = document.getElementById('modalOverlay');
             const modalImage = document.getElementById('modalImage');
             const modalTitle = document.getElementById('modalTitle');
             const modalSubtitle = document.getElementById('modalSubtitle');
             const modalDesc = document.getElementById('modalDesc');
-            const modalDownload4k = document.getElementById('modalDownload4k');
-            const modalDownload1080 = document.getElementById('modalDownload1080');
-            const modalDetailBtn = document.getElementById('modalDetailBtn');
             const modalClose = document.getElementById('modalClose');
 
             function openModal(index) {
                 const item = filteredData[index];
                 if (!item) return;
-                currentModalIndex = index;
 
-                // 移动端使用 1080x1920，电脑端使用 1080P
                 const imgUrl = isMobile ? getMobileUrl(item.bing_url || '') : get1080pUrl(item.bing_url || '');
                 const title = formatTitle(item);
                 const desc = item.description || '暂无详细介绍';
@@ -766,10 +692,6 @@
                     descHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
                 }
                 modalDesc.innerHTML = descHtml || '暂无详细介绍';
-
-                modalDownload4k.href = get4kUrl(item.bing_url || '');
-                modalDownload1080.href = isMobile ? getMobileUrl(item.bing_url || '') : get1080pUrl(item.bing_url || '');
-                modalDetailBtn.href = getDetailUrl(item.title || item.subtitle || '', item.date);
 
                 modalOverlay.classList.add('active');
                 document.body.style.overflow = 'hidden';
@@ -795,39 +717,7 @@
                 if (e.key === 'Escape') {
                     closeModal();
                 }
-                if (modalOverlay.classList.contains('active')) {
-                    if (e.key === 'ArrowLeft') {
-                        const prev = currentModalIndex > 0 ? currentModalIndex - 1 : filteredData.length - 1;
-                        openModal(prev);
-                        e.preventDefault();
-                    } else if (e.key === 'ArrowRight') {
-                        const next = currentModalIndex < filteredData.length - 1 ? currentModalIndex + 1 : 0;
-                        openModal(next);
-                        e.preventDefault();
-                    }
-                }
             });
-
-            let touchStartX_modal = 0;
-            let touchEndX_modal = 0;
-
-            modalOverlay.addEventListener('touchstart', function(e) {
-                touchStartX_modal = e.changedTouches[0].screenX;
-            }, { passive: true });
-
-            modalOverlay.addEventListener('touchend', function(e) {
-                touchEndX_modal = e.changedTouches[0].screenX;
-                const diff = touchStartX_modal - touchEndX_modal;
-                if (Math.abs(diff) > 60) {
-                    if (diff > 0) {
-                        const next = currentModalIndex < filteredData.length - 1 ? currentModalIndex + 1 : 0;
-                        openModal(next);
-                    } else {
-                        const prev = currentModalIndex > 0 ? currentModalIndex - 1 : filteredData.length - 1;
-                        openModal(prev);
-                    }
-                }
-            }, { passive: true });
 
             // ===== 初始化 =====
             loadArchive();
