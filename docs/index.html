@@ -161,7 +161,8 @@
         }
 
         #todayCard .today-overlay .today-actions .btn {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
             padding: 6px 18px;
             border-radius: 40px;
             font-size: 0.78rem;
@@ -174,6 +175,11 @@
             backdrop-filter: blur(4px);
             transition: all 0.25s;
             white-space: nowrap;
+        }
+
+        #todayCard .today-overlay .today-actions .btn svg {
+            flex-shrink: 0;
+            margin-right: 4px;
         }
 
         #todayCard .today-overlay .today-actions .btn-primary {
@@ -311,8 +317,9 @@
             z-index: 20;
         }
 
-        .btn {
-            display: inline-block;
+        .movie-actions .btn {
+            display: inline-flex;
+            align-items: center;
             padding: 0.4rem 1.2rem;
             border-radius: 40px;
             font-size: 0.75rem;
@@ -326,15 +333,21 @@
             transition: all 0.25s;
             white-space: nowrap;
         }
-        .btn-primary {
+
+        .movie-actions .btn svg {
+            flex-shrink: 0;
+            margin-right: 4px;
+        }
+
+        .movie-actions .btn-primary {
             background: rgba(220, 210, 180, 0.15);
             border-color: rgba(240, 230, 200, 0.2);
         }
-        .btn-primary:hover {
+        .movie-actions .btn-primary:hover {
             background: rgba(220, 210, 180, 0.3);
             transform: scale(1.03);
         }
-        .btn-secondary:hover {
+        .movie-actions .btn-secondary:hover {
             background: rgba(200, 200, 200, 0.15);
             transform: scale(1.02);
         }
@@ -348,8 +361,6 @@
             backdrop-filter: blur(6px);
             border: 1px solid rgba(200, 200, 200, 0.1);
             color: #e0ddd0;
-            font-size: 2.2rem;
-            font-weight: 200;
             width: 3.4rem;
             height: 3.4rem;
             border-radius: 60px;
@@ -360,12 +371,21 @@
             transition: all 0.25s;
             z-index: 10;
             opacity: 0.7;
-            line-height: 1;
+            padding: 0;
         }
         .movie-btn:hover {
             background: rgba(30, 40, 48, 0.7);
             opacity: 1;
             transform: translateY(-50%) scale(1.05);
+        }
+        .movie-btn svg {
+            width: 1.8rem;
+            height: 1.8rem;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
         .movie-btn.prev {
             left: 1.2rem;
@@ -448,14 +468,17 @@
                 gap: 0.3rem;
                 border-radius: 40px;
             }
-            .btn {
+            .movie-actions .btn {
                 font-size: 0.55rem;
                 padding: 0.2rem 0.6rem;
             }
             .movie-btn {
                 width: 2.6rem;
                 height: 2.6rem;
-                font-size: 1.8rem;
+            }
+            .movie-btn svg {
+                width: 1.4rem;
+                height: 1.4rem;
             }
             .movie-btn.prev {
                 left: 0.4rem;
@@ -535,8 +558,12 @@
                         <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
                     </div>
                     <div class="movie-thumbnails" id="movieThumbnails"></div>
-                    <button class="movie-btn prev" id="moviePrev">‹</button>
-                    <button class="movie-btn next" id="movieNext">›</button>
+                    <button class="movie-btn prev" id="moviePrev">
+                        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <button class="movie-btn next" id="movieNext">
+                        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
                 </div>
             </div>
         </section>
@@ -545,6 +572,13 @@
     <script>
         (function() {
             "use strict";
+
+            // ===== SVG 图标 =====
+            const ICONS = {
+                download: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+                book: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+                archive: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`,
+            };
 
             // ===== 工具函数 =====
             function get1080pUrl(url) {
@@ -652,10 +686,10 @@
                             <div class="today-title">${title}</div>
                             <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
                             <div class="today-actions">
-                                <a href="${get4kUrl(item.bing_url || '')}" class="btn btn-primary" target="_blank">⬇️ 下载 4K</a>
-                                <a href="${get1080pUrl(item.bing_url || '')}" class="btn btn-secondary" target="_blank">⬇️ 下载1080P</a>
-                                <a href="${detailUrl}" class="btn btn-secondary" target="_blank">📖 光影回顾</a>
-                                <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
+                                <a href="${get4kUrl(item.bing_url || '')}" class="btn btn-primary" target="_blank">${ICONS.download} 4K</a>
+                                <a href="${get1080pUrl(item.bing_url || '')}" class="btn btn-secondary" target="_blank">${ICONS.download} 1080P</a>
+                                <a href="${detailUrl}" class="btn btn-secondary" target="_blank">${ICONS.book} 光影回顾</a>
+                                <a href="/archive.html" class="btn btn-secondary">${ICONS.archive} 壁纸归档</a>
                                 <span class="today-scroll-hint"><span>⬇ 滚动 · 整屏切换</span></span>
                             </div>
                         </div>
@@ -697,10 +731,13 @@
 
                 const hd4k = get4kUrl(item.bing_url || '');
                 const hd1080 = get1080pUrl(item.bing_url || '');
+                downloadBtn.innerHTML = `${ICONS.download} 4K`;
                 downloadBtn.href = hd4k;
+                viewBtn.innerHTML = `${ICONS.download} 1080P`;
                 viewBtn.href = hd1080;
 
                 const detailUrl = getDetailUrl(item.title || item.subtitle || '', item.date);
+                detailBtn.innerHTML = `${ICONS.book} 光影回顾`;
                 detailBtn.href = detailUrl;
 
                 document.querySelectorAll('.thumb-item').forEach((el, i) => {
