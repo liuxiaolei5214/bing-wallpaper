@@ -593,6 +593,15 @@
                 return `https://cn.bing.com/search?q=${encodeURIComponent(cleanTitle)}&form=hpcapt&filters=HpDate:%22${dateParam}%22+mgzv3configlist:%22BingQA_Encyclopedia_Layout%22`;
             }
 
+            // ===== 获取今日日期字符串 =====
+            function getTodayStr() {
+                const now = new Date();
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+
             // ===== 加载今日壁纸 =====
             async function loadToday() {
                 const container = document.getElementById('todayCard');
@@ -604,7 +613,25 @@
                         throw new Error('数据为空');
                     }
 
-                    const item = data[0];
+                    // 按日期降序排列
+                    data.sort((a, b) => {
+                        const da = a.date || '';
+                        const db = b.date || '';
+                        return db.localeCompare(da);
+                    });
+
+                    // 查找今天的数据
+                    const todayStr = getTodayStr();
+                    let item = data.find(item => item.date === todayStr);
+                    
+                    // 如果没找到今天，取第一条（最新）
+                    if (!item) {
+                        item = data[0];
+                        console.log(`⚠️ 未找到 ${todayStr} 的数据，使用最新: ${item.date}`);
+                    } else {
+                        console.log(`✅ 找到今日壁纸: ${item.date}`);
+                    }
+
                     const imgUrl = get1080pUrl(item.bing_url || '');
                     const title = formatTitle(item);
                     const desc = item.description || '暂无详细介绍';
@@ -725,8 +752,28 @@
                     if (!Array.isArray(data) || data.length === 0) {
                         throw new Error('数据为空');
                     }
-                    allData = data.slice(0, MAX_SLIDES);
-                    currentIndex = allData.length > 1 ? 1 : 0;
+
+                    // ===== 1. 按日期降序排列 =====
+                    data.sort((a, b) => {
+                        const da = a.date || '';
+                        const db = b.date || '';
+                        return db.localeCompare(da);
+                    });
+
+                    // ===== 2. 过滤掉今天的数据 =====
+                    const todayStr = getTodayStr();
+                    const filteredData = data.filter(item => {
+                        const date = item.date ? item.date.trim() : '';
+                        return date !== todayStr;
+                    });
+
+                    // ===== 3. 取前14条 =====
+                    allData = filteredData.slice(0, MAX_SLIDES);
+
+                    // ===== 4. 默认显示第一条（昨天） =====
+                    currentIndex = 0;
+
+                    console.log(`📅 轮播数据: ${allData.length} 条，从 ${allData[0]?.date} 开始`);
 
                     thumbnails.innerHTML = '';
                     allData.forEach((item, idx) => {
@@ -738,8 +785,10 @@
                         thumbnails.appendChild(thumb);
                     });
 
+                    // ===== 5. 更新到索引0（昨天） =====
                     updateSlide(0);
                     resetAutoPlay();
+
                 } catch (e) {
                     console.warn('轮播加载失败:', e);
                     slide.style.backgroundImage = '';
