@@ -686,7 +686,7 @@
                             <div class="today-title">${title}</div>
                             <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
                             <div class="today-actions">
-                                <a href="${get4kUrl(item.bing_url || '')}" class="btn btn-primary" target="_blank">${ICONS.download} 4K</a>
+                                <a href="${get4kUrl(item.bing_url || '')}" class="btn btn-primary" target="_blank">${ICONS.download} UHD/4K</a>
                                 <a href="${get1080pUrl(item.bing_url || '')}" class="btn btn-secondary" target="_blank">${ICONS.download} 1080P</a>
                                 <a href="${detailUrl}" class="btn btn-secondary" target="_blank">${ICONS.book} 光影回顾</a>
                                 <a href="/archive.html" class="btn btn-secondary">${ICONS.archive} 壁纸归档</a>
@@ -731,7 +731,7 @@
 
                 const hd4k = get4kUrl(item.bing_url || '');
                 const hd1080 = get1080pUrl(item.bing_url || '');
-                downloadBtn.innerHTML = `${ICONS.download} 4K`;
+                downloadBtn.innerHTML = `${ICONS.download} UHD/4K`;
                 downloadBtn.href = hd4k;
                 document.getElementById('archiveBtn').innerHTML = `${ICONS.archive} 壁纸归档`;
                 viewBtn.innerHTML = `${ICONS.download} 1080P`;
