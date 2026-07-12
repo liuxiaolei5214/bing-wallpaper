@@ -278,18 +278,36 @@ jobs:
 
       - name: Generate index file
         run: |
-          echo '{"years": []}' > docs/index.json
-          for year in $(seq 2020 $(date +'%Y')); do
-            if [ -f "docs/zh.${year}.json" ]; then
-              count=$(jq 'length' "docs/zh.${year}.json")
-              jq --arg y "$year" --argjson c "$count" '.years += [{"year": $y, "count": $c}]' docs/index.json > docs/index_temp.json
-              mv docs/index_temp.json docs/index.json
-            fi
-          done
-          jq '.years |= sort_by(.year | tonumber) | reverse' docs/index.json > docs/index_temp.json
-          mv docs/index_temp.json docs/index.json
-          echo "✅ 生成索引文件，共 $(jq '.years | length' docs/index.json) 个年份"
-          cat docs/index.json
+          python3 << 'EOF'
+          import json
+          import os
+          from datetime import datetime
+
+          current_year = datetime.now().year
+          index = {"years": []}
+
+          for year in range(2020, current_year + 1):
+              filename = f"docs/zh.{year}.json"
+              if os.path.exists(filename):
+                  try:
+                      with open(filename, 'r', encoding='utf-8') as f:
+                          data = json.load(f)
+                          count = len(data) if isinstance(data, list) else 0
+                          if count > 0:
+                              index["years"].append({"year": str(year), "count": count})
+                              print(f"✅ 发现 {year} 年数据，共 {count} 条")
+                  except Exception as e:
+                      print(f"⚠️ 读取 {year} 年数据失败: {e}")
+
+          # 按年份降序排序
+          index["years"].sort(key=lambda x: int(x["year"]), reverse=True)
+
+          with open('docs/index.json', 'w', encoding='utf-8') as f:
+              json.dump(index, f, ensure_ascii=False, indent=2)
+
+          print(f"✅ 生成索引文件，共 {len(index['years'])} 个年份")
+          print(json.dumps(index, ensure_ascii=False, indent=2))
+          EOF
 
       - name: Touch index.html to refresh cache
         run: |
