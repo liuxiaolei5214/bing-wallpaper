@@ -276,6 +276,20 @@ jobs:
           mv docs/history_temp.json docs/history.json
           echo "✅ 合并所有年份，共 $(jq 'length' docs/history.json) 张壁纸"
 
+      - name: Generate index file
+        run: |
+          echo '{"years": []}' > docs/index.json
+          for year in $(seq 2020 $(date +'%Y')); do
+            if [ -f "docs/zh.${year}.json" ]; then
+              count=$(jq 'length' "docs/zh.${year}.json")
+              jq --arg year "$year" --arg count "$count" '.years += [{"year": $year, "count": $count|tonumber}]' docs/index.json > docs/index_temp.json
+              mv docs/index_temp.json docs/index.json
+            fi
+          done
+          jq '.years |= sort_by(.year) | reverse' docs/index.json > docs/index_temp.json
+          mv docs/index_temp.json docs/index.json
+          echo "✅ 生成索引文件，共 $(jq '.years | length' docs/index.json) 个年份"
+
       - name: Touch index.html to refresh cache
         run: |
           touch docs/index.html
@@ -289,7 +303,7 @@ jobs:
           git config --local user.name "liuxiaolei5214"
           git config --local --unset http.https://github.com/.extraheader || true
           git remote set-url origin https://x-access-token:${TOKEN}@github.com/liuxiaolei5214/bing-wallpaper.git
-          git add docs/zh.*.json docs/history.json docs/index.html docs/cache.log
+          git add docs/zh.*.json docs/history.json docs/index.json docs/index.html docs/cache.log
           if git diff --cached --quiet; then
             echo "No changes to commit, skipping push."
           else
