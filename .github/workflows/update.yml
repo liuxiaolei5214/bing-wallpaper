@@ -2,7 +2,7 @@ name: Daily Update
 
 on:
   schedule:
-    - cron: '30 16 * * *'
+    - cron: '5 16 * * *'
   workflow_dispatch:
 
 jobs:
@@ -67,22 +67,23 @@ jobs:
                       raw_title = title_match.group(1)
                       raw_title = raw_title.replace('&nbsp;', ' ')
                       raw_title = re.sub(r'\s+', ' ', raw_title).strip()
+                      
+                      # 移除版权信息 (© xxx)
                       display_title = re.sub(r'\s*\(©[^)]*\)\s*', '', raw_title)
                       
                       parts = display_title.split(' | ')
                       if len(parts) >= 2:
                           subtitle = parts[0].strip()
                           second_part = parts[1].strip()
-                          if ' - ' in second_part:
-                              clean_title = second_part.split(' - ')[0].strip()
-                          else:
-                              clean_title = second_part
+                          # 直接使用 second_part，它包含 "标题 - 日期" 格式
+                          clean_title = second_part
                       else:
                           clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
                           clean_title = re.sub(r'\s*,\s*$', '', clean_title)
                           subtitle = clean_title
                       
-                      print(f"✅ 提取到展示名称: {display_title}")
+                      print(f"✅ 提取到标题: {clean_title}")
+                      print(f"✅ 提取到副标题: {subtitle}")
 
                   sub_match = re.search(r'<span[^>]*class="sub"[^>]*>([\s\S]*?)</span>', html)
                   if sub_match:
@@ -140,8 +141,14 @@ jobs:
                                   print(f"✅ 从 dailybing.cn 提取成功，共 {len(clean_parts)} 段描述")
 
                       if not clean_title:
-                          clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
-                          clean_title = re.sub(r'\s*,\s*$', '', clean_title)
+                          # 从 copyright_text 构建标题，格式: "标题 - 日期"
+                          base_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
+                          base_title = re.sub(r'\s*,\s*$', '', base_title)
+                          # 检查是否已经有日期格式
+                          if ' - ' not in base_title:
+                              clean_title = f"{base_title} - {date_str}"
+                          else:
+                              clean_title = base_title
 
               except Exception as e:
                   print(f"⚠️ dailybing.cn 提取失败: {e}")
@@ -152,16 +159,18 @@ jobs:
               print(f"⚠️ 使用 copyright 作为备用描述")
 
           if not clean_title:
-              clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
-              clean_title = re.sub(r'\s*,\s*$', '', clean_title)
+              # 从 copyright_text 构建标题，格式: "标题 - 日期"
+              base_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
+              base_title = re.sub(r'\s*,\s*$', '', base_title)
+              clean_title = f"{base_title} - {date_str}"
 
           if not subtitle:
-              subtitle = clean_title
+              subtitle = clean_title.split(' - ')[0].strip() if ' - ' in clean_title else clean_title
 
           bing_url = f"https://bing.com{urlbase}_UHD.jpg" if urlbase else ''
 
           result = {
-              "title": clean_title,
+              "title": clean_title,  # 格式: "标题 - 日期"，- 前后各有一个空格
               "subtitle": subtitle,
               "description": description,
               "date": date_str,
@@ -223,6 +232,7 @@ jobs:
           print(f"🔍 验证: 文件中现在有 {len(verify_data)} 条数据")
           if verify_data:
               print(f"📄 验证: 第一条数据日期为 {verify_data[0].get('date')}")
+              print(f"📄 验证: 第一条数据标题为 {verify_data[0].get('title')}")
           EOF
 
       - name: Generate combined history.json
