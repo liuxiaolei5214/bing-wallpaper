@@ -282,13 +282,14 @@ jobs:
           for year in $(seq 2020 $(date +'%Y')); do
             if [ -f "docs/zh.${year}.json" ]; then
               count=$(jq 'length' "docs/zh.${year}.json")
-              jq --arg year "$year" --arg count "$count" '.years += [{"year": $year, "count": $count|tonumber}]' docs/index.json > docs/index_temp.json
+              jq --arg y "$year" --argjson c "$count" '.years += [{"year": $y, "count": $c}]' docs/index.json > docs/index_temp.json
               mv docs/index_temp.json docs/index.json
             fi
           done
-          jq '.years |= sort_by(.year) | reverse' docs/index.json > docs/index_temp.json
+          jq '.years |= sort_by(.year | tonumber) | reverse' docs/index.json > docs/index_temp.json
           mv docs/index_temp.json docs/index.json
           echo "✅ 生成索引文件，共 $(jq '.years | length' docs/index.json) 个年份"
+          cat docs/index.json
 
       - name: Touch index.html to refresh cache
         run: |
