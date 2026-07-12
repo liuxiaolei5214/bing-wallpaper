@@ -827,48 +827,105 @@
             });
         }
 
-        // ============ 主函数 ============
+    // ============ 主函数 ============
 
-        async function main() {
-            const grid = document.getElementById('grid');
-            grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
+    async function main() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
 
-            try {
-                let allImages = await loadAllData();
+        try {
+            // 1. 扫描所有可用年份（同时缓存数据）
+            allAvailableYears = await scanAvailableYears();
 
-                if (!allImages || allImages.length === 0) {
-                    grid.innerHTML = '<div class="empty">😅 暂无壁纸数据，等待自动归档...</div>';
-                    return;
-                }
-
-                console.log(`📊 总共加载 ${allImages.length} 张壁纸`);
-
-                populateFilters(allImages);
-
-                const yearFilter = document.getElementById('yearFilter');
-                const monthFilter = document.getElementById('monthFilter');
-
-                const currentMonth = getCurrentMonth();
-                monthFilter.value = currentMonth;
-
-                const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
-                renderGrid(filtered);
-
-                yearFilter.addEventListener('change', () => {
-                    const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
-                    renderGrid(filtered);
-                });
-
-                monthFilter.addEventListener('change', () => {
-                    const filtered = filterImages(allImages, yearFilter.value, monthFilter.value);
-                    renderGrid(filtered);
-                });
-
-            } catch (error) {
-                console.error('加载失败:', error);
-                grid.innerHTML = `<div class="empty">❌ 加载失败：${error.message || '未知错误'}</div>`;
+            if (allAvailableYears.length === 0) {
+                grid.innerHTML = '<div class="empty">😅 暂无壁纸数据，等待自动归档...</div>';
+                return;
             }
+
+            // 2. 填充年份下拉框
+            const yearSelect = document.getElementById('yearFilter');
+            yearSelect.innerHTML = '<option value="all">全部年份</option>';
+            allAvailableYears.forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y + ' 年';
+                yearSelect.appendChild(opt);
+            });
+
+            // 3. 设置默认年份为当前年份
+            const currentYear = getCurrentYear();
+            if (allAvailableYears.includes(currentYear)) {
+                yearSelect.value = currentYear;
+            } else {
+                // 如果当前年份没有数据，选最新的可用年份
+                yearSelect.value = allAvailableYears[0];
+            }
+
+            // 4. 设置默认月份为当前月份
+            const currentMonth = getCurrentMonth();
+            document.getElementById('monthFilter').value = currentMonth;
+
+            // 5. 加载默认年份的数据（从缓存中取）
+            await loadYearAndRender(yearSelect.value, currentMonth);
+
+            // 6. 监听年份切换
+            yearSelect.addEventListener('change', async () => {
+                const year = yearSelect.value;
+                const month = document.getElementById('monthFilter').value;
+                
+                if (year === 'all') {
+                    // 全部年份：加载所有年份数据并合并
+                    grid.innerHTML = '<div class="loading">加载所有年份数据...</div>';
+                    let allData = [];
+                    for (const y of allAvailableYears) {
+                        const data = loadedData[y] || await loadYearData(y);
+                        if (data && data.length > 0) {
+                            allData = allData.concat(data);
+                        }
+                    }
+                    allData.sort((a, b) => {
+                        const da = a.date || '';
+                        const db = b.date || '';
+                        return db.localeCompare(da);
+                    });
+                    const filtered = filterImages(allData, 'all', month);
+                    renderGrid(filtered);
+                } else {
+                    await loadYearAndRender(year, month);
+                }
+            });
+
+            // 7. 监听月份切换
+            document.getElementById('monthFilter').addEventListener('change', async () => {
+                const year = yearSelect.value;
+                const month = document.getElementById('monthFilter').value;
+                
+                if (year === 'all') {
+                    // 全部年份 + 月份筛选
+                    let allData = [];
+                    for (const y of allAvailableYears) {
+                        const data = loadedData[y] || await loadYearData(y);
+                        if (data && data.length > 0) {
+                            allData = allData.concat(data);
+                        }
+                    }
+                    allData.sort((a, b) => {
+                        const da = a.date || '';
+                        const db = b.date || '';
+                        return db.localeCompare(da);
+                    });
+                    const filtered = filterImages(allData, 'all', month);
+                    renderGrid(filtered);
+                } else {
+                    await loadYearAndRender(year, month);
+                }
+            });
+
+        } catch (error) {
+            console.error('加载失败:', error);
+            grid.innerHTML = `<div class="empty">❌ 加载失败：${error.message || '未知错误'}</div>`;
         }
+    }
 
         document.addEventListener('DOMContentLoaded', main);
     </script>
