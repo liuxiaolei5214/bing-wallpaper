@@ -552,10 +552,10 @@
                         </div>
                     </div>
                     <div class="movie-actions" id="movieActions">
-                        <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank">⬇️ 下载 4K</a>
-                        <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank">⬇️ 下载1080P</a>
-                        <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank">📖 光影回顾</a>
-                        <a href="/archive.html" class="btn btn-secondary">📚 壁纸归档</a>
+                        <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank"></a>
+                        <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank"></a>
+                        <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank"></a>
+                        <a href="/archive.html" class="btn btn-secondary" id="archiveBtn"></a>
                     </div>
                     <div class="movie-thumbnails" id="movieThumbnails"></div>
                     <button class="movie-btn prev" id="moviePrev">
@@ -733,6 +733,7 @@
                 const hd1080 = get1080pUrl(item.bing_url || '');
                 downloadBtn.innerHTML = `${ICONS.download} 4K`;
                 downloadBtn.href = hd4k;
+                document.getElementById('archiveBtn').innerHTML = `${ICONS.archive} 壁纸归档`;
                 viewBtn.innerHTML = `${ICONS.download} 1080P`;
                 viewBtn.href = hd1080;
 
