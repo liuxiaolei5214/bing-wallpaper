@@ -492,7 +492,9 @@
     <!-- ===== 筛选器 ===== -->
     <div class="filters">
         <label for="yearFilter">📅 年份</label>
-        <select id="yearFilter"></select>
+        <select id="yearFilter">
+            <option value="all">全部年份</option>
+        </select>
         <label for="monthFilter">📆 月份</label>
         <select id="monthFilter">
             <option value="all">全部月份</option>
@@ -542,7 +544,7 @@
     <!-- ============================================================ -->
     <script>
         // ============================================================
-        // 1. 工具函数（最先定义）
+        // 1. 工具函数
         // ============================================================
 
         function getBeijingTime() {
@@ -615,11 +617,37 @@
         const DOWNLOAD_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
 
         // ============================================================
-        // 2. 数据加载函数
+        // 2. 数据加载（使用索引文件）
         // ============================================================
 
         let loadedData = {};
         let allAvailableYears = [];
+        let yearCounts = {};
+
+        async function loadIndex() {
+            try {
+                const resp = await fetch('index.json');
+                if (!resp.ok) {
+                    console.warn('⚠️ 索引文件不存在');
+                    return false;
+                }
+                const index = await resp.json();
+                if (index && index.years && index.years.length > 0) {
+                    index.years.sort((a, b) => parseInt(b.year) - parseInt(a.year));
+                    allAvailableYears = index.years.map(item => item.year);
+                    yearCounts = {};
+                    index.years.forEach(item => {
+                        yearCounts[item.year] = item.count;
+                    });
+                    console.log('📅 从索引加载年份:', allAvailableYears);
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                console.warn('⚠️ 加载索引失败:', e.message);
+                return false;
+            }
+        }
 
         async function loadYearData(year) {
             if (loadedData[year]) {
@@ -629,7 +657,7 @@
             try {
                 const resp = await fetch(`zh.${year}.json`);
                 if (!resp.ok) {
-                    console.warn(`⚠️ ${year} 年文件不存在 (HTTP ${resp.status})`);
+                    console.warn(`⚠️ ${year} 年文件不存在`);
                     return [];
                 }
                 const data = await resp.json();
@@ -644,34 +672,8 @@
             }
         }
 
-        async function scanAvailableYears() {
-            const currentYear = parseInt(getCurrentYear());
-            const years = [];
-            
-            console.log('🔍 开始扫描可用年份...');
-            
-            for (let y = 2020; y <= currentYear; y++) {
-                try {
-                    const resp = await fetch(`zh.${y}.json`);
-                    if (resp.ok) {
-                        const data = await resp.json();
-                        if (Array.isArray(data) && data.length > 0) {
-                            years.push(String(y));
-                            loadedData[String(y)] = data;
-                            console.log(`✅ 发现 ${y} 年数据，共 ${data.length} 条`);
-                        }
-                    }
-                } catch (e) {
-                    // 文件不存在或无法访问，忽略
-                }
-            }
-            
-            console.log(`📅 可用年份:`, years);
-            return years;
-        }
-
         // ============================================================
-        // 3. 筛选与渲染函数
+        // 3. 筛选与渲染
         // ============================================================
 
         function filterImages(images, year, month) {
@@ -743,7 +745,7 @@
         }
 
         // ============================================================
-        // 4. 模态框函数
+        // 4. 模态框
         // ============================================================
 
         function openModal(item) {
@@ -785,7 +787,7 @@
         });
 
         // ============================================================
-        // 5. 加载并渲染指定年份
+        // 5. 加载并渲染
         // ============================================================
 
         async function loadYearAndRender(year, month) {
@@ -813,6 +815,26 @@
             renderGrid(filtered);
         }
 
+        async function loadAllYearsAndRender(month) {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '<div class="loading">加载所有年份数据...</div>';
+            
+            let allData = [];
+            for (const y of allAvailableYears) {
+                const data = loadedData[y] || await loadYearData(y);
+                if (data && data.length > 0) {
+                    allData = allData.concat(data);
+                }
+            }
+            allData.sort((a, b) => {
+                const da = a.date || '';
+                const db = b.date || '';
+                return db.localeCompare(da);
+            });
+            const filtered = filterImages(allData, 'all', month);
+            renderGrid(filtered);
+        }
+
         // ============================================================
         // 6. 主函数
         // ============================================================
@@ -822,22 +844,26 @@
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
 
             try {
-                allAvailableYears = await scanAvailableYears();
+                // 1. 加载索引文件
+                const hasIndex = await loadIndex();
 
-                if (allAvailableYears.length === 0) {
+                if (!hasIndex || allAvailableYears.length === 0) {
                     grid.innerHTML = '<div class="empty">😅 暂无壁纸数据，等待自动归档...</div>';
                     return;
                 }
 
+                // 2. 填充年份下拉框
                 const yearSelect = document.getElementById('yearFilter');
                 yearSelect.innerHTML = '<option value="all">全部年份</option>';
                 allAvailableYears.forEach(y => {
                     const opt = document.createElement('option');
                     opt.value = y;
-                    opt.textContent = y + ' 年';
+                    const count = yearCounts[y] || 0;
+                    opt.textContent = `${y} 年 (${count}张)`;
                     yearSelect.appendChild(opt);
                 });
 
+                // 3. 设置默认年份为当前年份
                 const currentYear = getCurrentYear();
                 if (allAvailableYears.includes(currentYear)) {
                     yearSelect.value = currentYear;
@@ -845,55 +871,32 @@
                     yearSelect.value = allAvailableYears[0];
                 }
 
+                // 4. 设置默认月份为当前月份
                 const currentMonth = getCurrentMonth();
                 document.getElementById('monthFilter').value = currentMonth;
 
+                // 5. 加载默认年份的数据
                 await loadYearAndRender(yearSelect.value, currentMonth);
 
+                // 6. 监听年份切换
                 yearSelect.addEventListener('change', async () => {
                     const year = yearSelect.value;
                     const month = document.getElementById('monthFilter').value;
                     
                     if (year === 'all') {
-                        grid.innerHTML = '<div class="loading">加载所有年份数据...</div>';
-                        let allData = [];
-                        for (const y of allAvailableYears) {
-                            const data = loadedData[y] || await loadYearData(y);
-                            if (data && data.length > 0) {
-                                allData = allData.concat(data);
-                            }
-                        }
-                        allData.sort((a, b) => {
-                            const da = a.date || '';
-                            const db = b.date || '';
-                            return db.localeCompare(da);
-                        });
-                        const filtered = filterImages(allData, 'all', month);
-                        renderGrid(filtered);
+                        await loadAllYearsAndRender(month);
                     } else {
                         await loadYearAndRender(year, month);
                     }
                 });
 
+                // 7. 监听月份切换
                 document.getElementById('monthFilter').addEventListener('change', async () => {
                     const year = yearSelect.value;
                     const month = document.getElementById('monthFilter').value;
                     
                     if (year === 'all') {
-                        let allData = [];
-                        for (const y of allAvailableYears) {
-                            const data = loadedData[y] || await loadYearData(y);
-                            if (data && data.length > 0) {
-                                allData = allData.concat(data);
-                            }
-                        }
-                        allData.sort((a, b) => {
-                            const da = a.date || '';
-                            const db = b.date || '';
-                            return db.localeCompare(da);
-                        });
-                        const filtered = filterImages(allData, 'all', month);
-                        renderGrid(filtered);
+                        await loadAllYearsAndRender(month);
                     } else {
                         await loadYearAndRender(year, month);
                     }
