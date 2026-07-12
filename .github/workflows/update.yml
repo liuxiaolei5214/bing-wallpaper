@@ -75,15 +75,17 @@ jobs:
                       if len(parts) >= 2:
                           subtitle = parts[0].strip()
                           second_part = parts[1].strip()
-                          # 直接使用 second_part，它包含 "标题 - 日期" 格式
+                          # 修复：确保 - 前后各有一个空格
+                          # 将 "标题- 日期" 或 "标题 -日期" 统一为 "标题 - 日期"
+                          second_part = re.sub(r'\s*-\s*', ' - ', second_part)
                           clean_title = second_part
                       else:
                           clean_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
                           clean_title = re.sub(r'\s*,\s*$', '', clean_title)
                           subtitle = clean_title
                       
-                      print(f"✅ 提取到标题: {clean_title}")
-                      print(f"✅ 提取到副标题: {subtitle}")
+                      print(f"✅ 提取到标题: '{clean_title}'")
+                      print(f"✅ 提取到副标题: '{subtitle}'")
 
                   sub_match = re.search(r'<span[^>]*class="sub"[^>]*>([\s\S]*?)</span>', html)
                   if sub_match:
@@ -123,7 +125,7 @@ jobs:
                           img_match = re.search(r'<img[^>]*class="[^"]*view portrait[^"]*"[^>]*alt="([^"]+)"', html)
                       if img_match:
                           main_title = img_match.group(1).strip()
-                          print(f"✅ 从 img alt 提取到主标题 (将存入 subtitle): {main_title}")
+                          print(f"✅ 从 img alt 提取到主标题 (将存入 subtitle): '{main_title}'")
 
                       # 2. 提取副标题 (title)：从 story-copyright 获取，移除版权信息
                       sub_title = ''
@@ -132,7 +134,7 @@ jobs:
                           copyright_raw = copyright_match.group(1).strip()
                           # 移除 (© xxx) 部分，得到纯标题
                           sub_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_raw).strip()
-                          print(f"✅ 从 story-copyright 提取到副标题 (将存入 title): {sub_title}")
+                          print(f"✅ 从 story-copyright 提取到副标题 (将存入 title): '{sub_title}'")
 
                       # 3. 提取日期 (story-date)
                       date_from_page = ''
@@ -143,21 +145,21 @@ jobs:
                           date_from_page = date_raw.replace('年', '-').replace('月', '-').replace('日', '')
                           print(f"✅ 提取到日期: {date_from_page}")
 
-                      # 4. 构建完整标题 (title): "副标题 - 日期"
+                      # 4. 构建完整标题 (title): "副标题 - 日期"（确保 - 前后各有一个空格）
                       if sub_title:
                           if ' - ' in sub_title:
                               clean_title = sub_title
                           else:
                               if date_from_page:
-                                  clean_title = f"{sub_title} - {date_from_page}"
+                                  clean_title = f"{sub_title.strip()} - {date_from_page.strip()}"
                               else:
-                                  clean_title = f"{sub_title} - {date_str}"
-                          print(f"✅ 构建完整标题 (title): {clean_title}")
+                                  clean_title = f"{sub_title.strip()} - {date_str}"
+                          print(f"✅ 构建完整标题 (title): '{clean_title}'")
 
                       # 5. 设置 subtitle 为主标题
                       if main_title:
                           subtitle = main_title
-                          print(f"✅ 设置 subtitle: {subtitle}")
+                          print(f"✅ 设置 subtitle: '{subtitle}'")
 
                       # 6. 提取描述 (story-paragraph)
                       story_match = re.search(r'<div[^>]*class="story-content"[^>]*>([\s\S]*?)</div>', html)
@@ -190,7 +192,7 @@ jobs:
               # 从 copyright_text 构建标题，格式: "标题 - 日期"
               base_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
               base_title = re.sub(r'\s*,\s*$', '', base_title)
-              clean_title = f"{base_title} - {date_str}"
+              clean_title = f"{base_title.strip()} - {date_str}"
 
           if not subtitle:
               subtitle = clean_title.split(' - ')[0].strip() if ' - ' in clean_title else clean_title
@@ -198,8 +200,8 @@ jobs:
           bing_url = f"https://bing.com{urlbase}_UHD.jpg" if urlbase else ''
 
           result = {
-              "title": clean_title,  # 格式: "副标题 - 日期"，- 前后各有一个空格
-              "subtitle": subtitle,  # 主标题（来自 img alt）
+              "title": clean_title,
+              "subtitle": subtitle,
               "description": description,
               "date": date_str,
               "bing_url": bing_url
@@ -209,8 +211,8 @@ jobs:
               json.dump(result, f, ensure_ascii=False, indent=2)
 
           print(f"✅ 处理完成")
-          print(f"📝 title: {clean_title}")
-          print(f"📝 subtitle: {subtitle}")
+          print(f"📝 title: '{clean_title}'")
+          print(f"📝 subtitle: '{subtitle}'")
           print(f"📝 描述长度: {len(description)} 字符")
           print(f"📅 日期: {date_str}")
           EOF
