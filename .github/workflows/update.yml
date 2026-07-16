@@ -18,7 +18,6 @@ jobs:
           pip install requests beautifulsoup4 lxml
 
       - name: Fetch and process today's wallpaper
-        id: fetch
         run: |
           python3 << 'EOF'
           import json
@@ -28,52 +27,35 @@ jobs:
           import os
 
           # ============================================================
-          # 1. 从 Bing API 获取 today.json
-          # ============================================================
-          print("📡 从 Bing API 获取今日数据...")
-          api_url = "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&setmkt=zh-CN"
-          resp = requests.get(api_url, timeout=10)
-          if resp.status_code != 200:
-              print(f"❌ API 请求失败: {resp.status_code}")
-              exit(1)
-
-          api_data = resp.json()
-          if not api_data.get('images'):
-              print("❌ API 返回数据为空")
-              exit(1)
-
-          img = api_data['images'][0]
-          enddate = img.get('enddate', '')
-          
-          # 构建日期字符串 YYYY-MM-DD
-          if len(enddate) == 8:
-              date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}"
-          else:
-              date_str = enddate
-
-          print(f"📅 API 返回日期: {date_str}")
-
-          # ============================================================
-          # 2. 检查 today.json 是否存在且是当天的数据
+          # 1. 优先检查 today.json 是否存在且是当天数据
           # ============================================================
           today_file = 'today.json'
           use_cache = False
           cached_data = None
+          date_str = None
+          title = ''
+          subtitle = ''
+          description = ''
+          bing_url = ''
+
+          # 获取当天日期
+          now = datetime.now()
+          today_str = f"{now.year}-{str(now.month).zfill(2)}-{str(now.day).zfill(2)}"
 
           if os.path.exists(today_file):
               try:
                   with open(today_file, 'r', encoding='utf-8') as f:
                       cached_data = json.load(f)
-                  if cached_data.get('date') == date_str:
+                  if cached_data.get('date') == today_str:
                       use_cache = True
-                      print(f"✅ 缓存 today.json 已是当天数据 ({date_str})，直接使用")
+                      print(f"✅ today.json 已是当天数据 ({today_str})，直接使用缓存")
                   else:
-                      print(f"⚠️ 缓存日期 {cached_data.get('date')} 不等于今日 {date_str}，需要更新")
+                      print(f"⚠️ today.json 日期 {cached_data.get('date')} 不等于今日 {today_str}，需要更新")
               except Exception as e:
-                  print(f"⚠️ 读取缓存失败: {e}")
+                  print(f"⚠️ 读取 today.json 失败: {e}")
 
           # ============================================================
-          # 3. 如果缓存有效，直接使用；否则从 ee123.net 或 dailybing.cn 提取
+          # 2. 如果缓存有效，直接使用；否则从 API + 第三方提取
           # ============================================================
           if use_cache and cached_data:
               # 直接使用缓存数据
@@ -81,20 +63,40 @@ jobs:
               subtitle = cached_data.get('subtitle', '')
               description = cached_data.get('description', '')
               bing_url = cached_data.get('bing_url', '')
+              date_str = cached_data.get('date', today_str)
               print("📦 使用缓存数据 (today.json)")
 
           else:
-              # 需要从 ee123.net 或 dailybing.cn 提取
-              print("🔄 需要从第三方网站提取数据...")
-              
-              title = ''
-              subtitle = ''
-              description = ''
-              bing_url = f"https://bing.com{img.get('urlbase', '')}_UHD.jpg" if img.get('urlbase') else ''
+              # ============================================================
+              # 2a. 从 Bing API 获取数据
+              # ============================================================
+              print("📡 从 Bing API 获取今日数据...")
+              api_url = "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&setmkt=zh-CN"
+              resp = requests.get(api_url, timeout=10)
+              if resp.status_code != 200:
+                  print(f"❌ API 请求失败: {resp.status_code}")
+                  exit(1)
+
+              api_data = resp.json()
+              if not api_data.get('images'):
+                  print("❌ API 返回数据为空")
+                  exit(1)
+
+              img = api_data['images'][0]
+              enddate = img.get('enddate', '')
               copyright_text = img.get('copyright', '')
               urlbase = img.get('urlbase', '')
 
-              # ---- 来源1: bing.ee123.net ----
+              if len(enddate) == 8:
+                  date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}"
+              else:
+                  date_str = enddate
+
+              print(f"📅 API 返回日期: {date_str}")
+
+              # ============================================================
+              # 2b. 从 bing.ee123.net 提取
+              # ============================================================
               try:
                   print("🔗 尝试从 bing.ee123.net 提取...")
                   detail_url = f"https://bing.ee123.net/detail/{enddate}"
@@ -144,7 +146,9 @@ jobs:
               except Exception as e:
                   print(f"⚠️ bing.ee123.net 提取失败: {e}")
 
-              # ---- 来源2: dailybing.cn ----
+              # ============================================================
+              # 2c. 如果 ee123 失败，从 dailybing.cn 提取（兜底）
+              # ============================================================
               if not description or not title:
                   try:
                       print("🔗 尝试从 dailybing.cn 提取...")
@@ -173,23 +177,12 @@ jobs:
                               sub_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_raw).strip()
                               print(f"✅ 从 dailybing 提取到副标题: '{sub_title}'")
 
-                          # 提取日期
-                          date_from_page = ''
-                          date_match = re.search(r'<div[^>]*class="story-date"[^>]*>([^<]+)</div>', html)
-                          if date_match:
-                              date_raw = date_match.group(1).strip()
-                              date_from_page = date_raw.replace('年', '-').replace('月', '-').replace('日', '')
-                              print(f"✅ 从 dailybing 提取到日期: {date_from_page}")
-
                           # 构建完整标题
                           if sub_title:
                               if ' - ' in sub_title:
                                   title = sub_title
                               else:
-                                  if date_from_page:
-                                      title = f"{sub_title.strip()} - {date_from_page.strip()}"
-                                  else:
-                                      title = f"{sub_title.strip()} - {date_str}"
+                                  title = f"{sub_title.strip()} - {date_str}"
                               print(f"✅ 构建完整标题: '{title}'")
 
                           if main_title:
@@ -217,7 +210,9 @@ jobs:
                   except Exception as e:
                       print(f"⚠️ dailybing.cn 提取失败: {e}")
 
-              # ---- 备用 ----
+              # ============================================================
+              # 2d. 备用：使用 copyright 文本
+              # ============================================================
               if not description:
                   description = copyright_text
                   print(f"⚠️ 使用 copyright 作为备用描述")
@@ -230,7 +225,11 @@ jobs:
               if not subtitle:
                   subtitle = title.split(' - ')[0].strip() if ' - ' in title else title
 
-              # ---- 保存到 today.json ----
+              bing_url = f"https://bing.com{urlbase}_UHD.jpg" if urlbase else ''
+
+              # ============================================================
+              # 2e. 保存到 today.json
+              # ============================================================
               result = {
                   "title": title,
                   "subtitle": subtitle,
@@ -244,14 +243,13 @@ jobs:
               print("✅ 已更新 today.json")
 
           # ============================================================
-          # 4. 写入 zh.{year}.json
+          # 3. 写入 zh.{year}.json
           # ============================================================
           year = date_str[:4]
           year_file = f"docs/zh.{year}.json"
           
           print(f"📄 写入年份文件: {year_file}")
           
-          # 读取现有数据
           existing = []
           if os.path.exists(year_file):
               try:
@@ -262,14 +260,12 @@ jobs:
                   print(f"⚠️ 读取失败: {e}")
                   existing = []
 
-          # 去重并追加
           before_count = len(existing)
           existing = [item for item in existing if item.get('date') != date_str]
           removed_count = before_count - len(existing)
           if removed_count > 0:
               print(f"🗑️ 删除了 {removed_count} 条日期为 {date_str} 的旧数据")
 
-          # 使用今天的数据
           new_data = {
               "title": title,
               "subtitle": subtitle,
@@ -280,7 +276,6 @@ jobs:
           existing.append(new_data)
           existing.sort(key=lambda x: x.get('date', ''), reverse=True)
 
-          # 确保目录存在
           os.makedirs('docs', exist_ok=True)
 
           with open(year_file, 'w', encoding='utf-8') as f:
@@ -288,7 +283,7 @@ jobs:
           print(f"✅ 已更新 {year_file}，共 {len(existing)} 张壁纸")
 
           # ============================================================
-          # 5. 生成 today_clean.json（兼容旧逻辑）
+          # 4. 生成 today_clean.json（兼容）
           # ============================================================
           with open('today_clean.json', 'w', encoding='utf-8') as f:
               json.dump(new_data, f, ensure_ascii=False, indent=2)
