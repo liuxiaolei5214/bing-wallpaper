@@ -636,39 +636,34 @@
                 return `${y}-${m}-${d}`;
             }
 
-            // ===== 加载今日壁纸 =====
+            // ===== 加载今日壁纸（从 today.json） =====
             async function loadToday() {
                 const container = document.getElementById('todayCard');
                 try {
-                    const resp = await fetch('zh.2026.json');
+                    const resp = await fetch('today.json');
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const data = await resp.json();
-                    if (!Array.isArray(data) || data.length === 0) {
-                        throw new Error('数据为空');
-                    }
-
-                    // 按日期降序排列
-                    data.sort((a, b) => {
-                        const da = a.date || '';
-                        const db = b.date || '';
-                        return db.localeCompare(da);
-                    });
-
-                    // 查找今天的数据
-                    const todayStr = getTodayStr();
-                    let item = data.find(item => item.date === todayStr);
                     
-                    // 如果没找到今天，取第一条（最新）
-                    if (!item) {
+                    // 检查数据格式
+                    let item = null;
+                    if (Array.isArray(data) && data.length > 0) {
+                        // 如果是数组，取第一条
                         item = data[0];
-                        console.log(`⚠️ 未找到 ${todayStr} 的数据，使用最新: ${item.date}`);
+                    } else if (typeof data === 'object' && data !== null) {
+                        // 如果是对象，直接使用
+                        item = data;
                     } else {
-                        console.log(`✅ 找到今日壁纸: ${item.date}`);
+                        throw new Error('数据格式无效');
                     }
 
-                    const imgUrl = get1080pUrl(item.bing_url || '');
+                    // 确保有 date 字段，如果没有则使用今天
+                    if (!item.date) {
+                        item.date = getTodayStr();
+                    }
+
+                    const imgUrl = get1080pUrl(item.bing_url || item.url || '');
                     const title = formatTitle(item);
-                    const desc = item.description || '暂无详细介绍';
+                    const desc = item.description || item.desc || '暂无详细介绍';
 
                     let descHtml = '';
                     if (desc) {
@@ -686,17 +681,18 @@
                             <div class="today-title">${title}</div>
                             <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
                             <div class="today-actions">
-                                <a href="${get4kUrl(item.bing_url || '')}" class="btn btn-primary" target="_blank">${ICONS.download} UHD/4K</a>
-                                <a href="${get1080pUrl(item.bing_url || '')}" class="btn btn-secondary" target="_blank">${ICONS.download} 1080P</a>
+                                <a href="${get4kUrl(item.bing_url || item.url || '')}" class="btn btn-primary" target="_blank">${ICONS.download} UHD/4K</a>
+                                <a href="${get1080pUrl(item.bing_url || item.url || '')}" class="btn btn-secondary" target="_blank">${ICONS.download} 1080P</a>
                                 <a href="${detailUrl}" class="btn btn-secondary" target="_blank">${ICONS.book} 光影回顾</a>
                                 <a href="/archive.html" class="btn btn-secondary">${ICONS.archive} 壁纸归档</a>
-                                <span class="today-scroll-hint"><span>⬇ 滚动 · 查看历史轮播</span></span>
+                                <span class="today-scroll-hint"><span>⬇ 滚动 · 查看历史</span></span>
                             </div>
                         </div>
                     `;
+                    console.log('✅ 今日壁纸加载成功:', item.date);
                 } catch (e) {
                     console.warn('今日壁纸加载失败:', e);
-                    container.innerHTML = `<div class="loading">⚠️ 加载失败，请刷新</div>`;
+                    container.innerHTML = `<div class="loading">⚠️ 加载失败: ${e.message}</div>`;
                 }
             }
 
@@ -722,15 +718,15 @@
                 const item = allData[index];
                 if (!item) return;
 
-                const imgUrl = get1080pUrl(item.bing_url || '');
+                const imgUrl = get1080pUrl(item.bing_url || item.url || '');
                 const title = item.title || '壁纸';
 
                 slide.style.backgroundImage = `url('${imgUrl}')`;
                 titleEl.textContent = title;
                 dateEl.textContent = '';
 
-                const hd4k = get4kUrl(item.bing_url || '');
-                const hd1080 = get1080pUrl(item.bing_url || '');
+                const hd4k = get4kUrl(item.bing_url || item.url || '');
+                const hd1080 = get1080pUrl(item.bing_url || item.url || '');
                 downloadBtn.innerHTML = `${ICONS.download} UHD/4K`;
                 downloadBtn.href = hd4k;
                 document.getElementById('archiveBtn').innerHTML = `${ICONS.archive} 壁纸归档`;
@@ -817,7 +813,7 @@
                     allData.forEach((item, idx) => {
                         const thumb = document.createElement('div');
                         thumb.className = 'thumb-item' + (idx === 0 ? ' active' : '');
-                        thumb.style.backgroundImage = `url('${get1080pUrl(item.bing_url || '')}')`;
+                        thumb.style.backgroundImage = `url('${get1080pUrl(item.bing_url || item.url || '')}')`;
                         thumb.title = item.title || '壁纸';
                         thumb.addEventListener('click', () => goToSlide(idx));
                         thumbnails.appendChild(thumb);
