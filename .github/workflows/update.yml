@@ -359,17 +359,6 @@ jobs:
           print(f"✅ 已更新 {year_file}，共 {len(existing)} 张壁纸")
 
           # ============================================================
-          # 4. 生成 today_clean.json（兼容）
-          # ============================================================
-          print("\n" + "=" * 60)
-          print("📋 步骤4: 生成 today_clean.json")
-          print("=" * 60)
-
-          with open('docs/today_clean.json', 'w', encoding='utf-8') as f:
-              json.dump(new_data, f, ensure_ascii=False, indent=2)
-          print("✅ 已生成 docs/today_clean.json")
-
-          # ============================================================
           # 5. 输出汇总
           # ============================================================
           print("\n" + "=" * 60)
@@ -448,7 +437,7 @@ jobs:
           git config --local user.email "liuxiaolei5214@gmail.com"
           git config --local user.name "liuxiaolei5214"
           git remote set-url origin https://x-access-token:${TOKEN}@github.com/liuxiaolei5214/bing-wallpaper.git
-          git add docs/zh.*.json docs/history.json docs/index.json docs/index.html docs/cache.log docs/today.json docs/today_clean.json
+          git add docs/zh.*.json docs/history.json docs/index.json docs/index.html docs/cache.log docs/today.json
           if git diff --cached --quiet; then
             echo "No changes to commit, skipping push."
           else
