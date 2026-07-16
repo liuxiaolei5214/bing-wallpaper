@@ -40,6 +40,13 @@ jobs:
           for f in files:
               print(f"  - {f}")
 
+          # 检查 docs 目录
+          if os.path.exists('docs'):
+              docs_files = os.listdir('docs')
+              print(f"📄 docs 目录下共有 {len(docs_files)} 个文件/文件夹")
+              for f in docs_files:
+                  print(f"  - docs/{f}")
+
           # ============================================================
           # 1. 优先检查 today.json 是否存在且是当天数据
           # ============================================================
@@ -47,7 +54,8 @@ jobs:
           print("📋 步骤1: 检查 today.json 缓存")
           print("=" * 60)
 
-          today_file = 'today.json'
+          # ===== 关键修改：在 docs 目录下查找 today.json =====
+          today_file = 'docs/today.json'
           use_cache = False
           cached_data = None
           date_str = None
@@ -63,7 +71,7 @@ jobs:
 
           # 检查文件是否存在
           if os.path.exists(today_file):
-              print(f"✅ today.json 文件存在")
+              print(f"✅ today.json 文件存在 (docs/today.json)")
               try:
                   with open(today_file, 'r', encoding='utf-8') as f:
                       cached_data = json.load(f)
@@ -86,11 +94,10 @@ jobs:
 
               except json.JSONDecodeError as e:
                   print(f"❌ today.json 格式错误: {e}")
-                  print(f"📄 文件内容: {open(today_file, 'r', encoding='utf-8').read()}")
               except Exception as e:
                   print(f"❌ 读取 today.json 失败: {e}")
           else:
-              print(f"❌ today.json 文件不存在，需要从 API 获取")
+              print(f"❌ today.json 文件不存在 (docs/today.json)，需要从 API 获取")
 
           # ============================================================
           # 2. 如果缓存有效，直接使用；否则从 API + 第三方提取
@@ -106,7 +113,7 @@ jobs:
               description = cached_data.get('description', '')
               bing_url = cached_data.get('bing_url', '')
               date_str = cached_data.get('date', today_str)
-              print(f"📦 使用缓存数据 (today.json)")
+              print(f"📦 使用缓存数据 (docs/today.json)")
               print(f"  - title: {title}")
               print(f"  - subtitle: {subtitle}")
               print(f"  - date: {date_str}")
@@ -288,9 +295,9 @@ jobs:
               print(f"  - bing_url: {bing_url}")
 
               # ============================================================
-              # 2e. 保存到 today.json
+              # 2e. 保存到 docs/today.json
               # ============================================================
-              print("\n💾 保存到 today.json")
+              print("\n💾 保存到 docs/today.json")
               result = {
                   "title": title,
                   "subtitle": subtitle,
@@ -299,9 +306,12 @@ jobs:
                   "bing_url": bing_url
               }
 
-              with open('today.json', 'w', encoding='utf-8') as f:
+              # 确保 docs 目录存在
+              os.makedirs('docs', exist_ok=True)
+
+              with open('docs/today.json', 'w', encoding='utf-8') as f:
                   json.dump(result, f, ensure_ascii=False, indent=2)
-              print("✅ 已更新 today.json")
+              print("✅ 已更新 docs/today.json")
 
           # ============================================================
           # 3. 写入 zh.{year}.json
@@ -349,15 +359,15 @@ jobs:
           print(f"✅ 已更新 {year_file}，共 {len(existing)} 张壁纸")
 
           # ============================================================
-          # 4. 生成 today_clean.json
+          # 4. 生成 today_clean.json（兼容）
           # ============================================================
           print("\n" + "=" * 60)
           print("📋 步骤4: 生成 today_clean.json")
           print("=" * 60)
 
-          with open('today_clean.json', 'w', encoding='utf-8') as f:
+          with open('docs/today_clean.json', 'w', encoding='utf-8') as f:
               json.dump(new_data, f, ensure_ascii=False, indent=2)
-          print("✅ 已生成 today_clean.json")
+          print("✅ 已生成 docs/today_clean.json")
 
           # ============================================================
           # 5. 输出汇总
@@ -369,11 +379,11 @@ jobs:
           print(f"📝 subtitle: '{subtitle}'")
           print(f"📝 描述长度: {len(description)} 字符")
           print(f"📅 日期: {date_str}")
-          print(f"📦 数据来源: {'缓存 (today.json)' if use_cache else 'API + 第三方提取'}")
+          print(f"📦 数据来源: {'缓存 (docs/today.json)' if use_cache else 'API + 第三方提取'}")
 
           # 验证文件
           print("\n🔍 验证文件:")
-          for f in ['today.json', 'today_clean.json', year_file]:
+          for f in ['docs/today.json', 'docs/today_clean.json', year_file]:
               if os.path.exists(f):
                   size = os.path.getsize(f)
                   print(f"  ✅ {f} 存在 ({size} 字节)")
@@ -438,7 +448,7 @@ jobs:
           git config --local user.email "liuxiaolei5214@gmail.com"
           git config --local user.name "liuxiaolei5214"
           git remote set-url origin https://x-access-token:${TOKEN}@github.com/liuxiaolei5214/bing-wallpaper.git
-          git add docs/zh.*.json docs/history.json docs/index.json docs/index.html docs/cache.log today.json today_clean.json
+          git add docs/zh.*.json docs/history.json docs/index.json docs/index.html docs/cache.log docs/today.json docs/today_clean.json
           if git diff --cached --quiet; then
             echo "No changes to commit, skipping push."
           else
