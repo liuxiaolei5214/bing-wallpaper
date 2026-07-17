@@ -372,7 +372,7 @@ jobs:
 
           # 验证文件
           print("\n🔍 验证文件:")
-          for f in ['docs/today.json', 'docs/today_clean.json', year_file]:
+          for f in ['docs/today.json', year_file]:
               if os.path.exists(f):
                   size = os.path.getsize(f)
                   print(f"  ✅ {f} 存在 ({size} 字节)")
