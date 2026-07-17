@@ -428,7 +428,9 @@ jobs:
       - name: Touch index.html to refresh cache
         run: |
           touch docs/index.html
-          echo "✅ Cache refreshed at $(date)" >> docs/cache.log
+          # 设置时区为北京时间 (UTC+8)
+          export TZ='Asia/Shanghai'
+          echo "✅ 缓存已刷新 (北京时间)  $(date '+%Y-%m-%d %H:%M:%S')" >> docs/cache.log
 
       - name: Commit and push changes
         env:
