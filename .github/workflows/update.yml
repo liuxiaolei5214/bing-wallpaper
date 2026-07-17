@@ -2,6 +2,7 @@ name: Daily Update
 
 on:
   schedule:
+    # UTC时间+8小时
     - cron: '5 16 * * *'
   workflow_dispatch:
 
