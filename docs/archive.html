@@ -75,11 +75,11 @@
             font-weight: 600;
         }
 
-        /* ===== 筛选控件样式 ===== */
-        .filter-bar {
+        /* ===== 双联控件样式 ===== */
+        .date-filter-bar {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
             flex-wrap: wrap;
             flex: 1;
         }
@@ -95,7 +95,7 @@
             white-space: nowrap;
         }
         .filter-input {
-            width: 120px;
+            width: 140px;
             height: 34px;
             padding: 0 10px;
             border: 2px solid #4d96ff;
@@ -110,42 +110,6 @@
         .filter-input:hover { border-color: #6aafff; }
         .filter-input:focus { border-color: #7abfff; box-shadow: 0 0 0 3px rgba(77,150,255,0.2); }
         .filter-input::placeholder { color: #666; }
-
-        /* 年份切换按钮 */
-        .year-nav {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .year-nav-btn {
-            background: #2a2a2a;
-            border: 1px solid #3a3a3a;
-            color: #e0e0e0;
-            width: 30px;
-            height: 30px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .year-nav-btn:hover {
-            background: #4d96ff;
-            border-color: #4d96ff;
-            color: #fff;
-        }
-        .year-nav-btn:active {
-            transform: scale(0.95);
-        }
-        .year-display {
-            font-size: 16px;
-            font-weight: 600;
-            color: #e0e0e0;
-            min-width: 60px;
-            text-align: center;
-        }
 
         .btn-filter-reset {
             padding: 6px 16px;
@@ -163,7 +127,7 @@
             transform: translateY(-1px);
         }
 
-        /* ===== 月份选择弹窗（新样式） ===== */
+        /* 遮罩弹窗 */
         .date-mask {
             position: fixed;
             top: 0;
@@ -175,13 +139,12 @@
             z-index: 999;
         }
         .date-mask.show { display: block; }
-
         .date-popup {
             position: absolute;
             background: #1a1a1a;
             border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            width: 360px;
+            width: 380px;
             overflow: hidden;
             animation: popupFade 0.2s ease;
             border: 1px solid #2a2a2a;
@@ -190,51 +153,42 @@
             from { opacity: 0; transform: translateY(-8px) scale(0.97); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
-
-        /* 弹窗头部 - 年份切换 */
         .popup-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 20px;
+            padding: 12px 16px;
             border-bottom: 1px solid #2a2a2a;
             background: #111;
         }
-        .popup-header .popup-year-nav {
+        .header-arrow-group {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            gap: 6px;
         }
-        .popup-header .popup-year-btn {
-            background: transparent;
-            border: none;
+        .header-arrow {
+            font-size: 18px;
             color: #888;
-            font-size: 20px;
             cursor: pointer;
+            user-select: none;
             padding: 0 4px;
             transition: color 0.2s;
+            font-weight: 300;
         }
-        .popup-header .popup-year-btn:hover {
-            color: #e0e0e0;
-        }
-        .popup-header .popup-year-text {
-            font-size: 18px;
+        .header-arrow:hover { color: #e0e0e0; }
+        .header-title {
+            font-size: 20px;
             color: #e0e0e0;
             font-weight: 600;
-            min-width: 60px;
-            text-align: center;
         }
-
-        /* 月份网格 - 3列4行 */
-        .month-grid {
-            padding: 16px 20px 20px;
+        .grid-wrap {
+            padding: 16px 18px 18px;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
         }
-        .month-cell {
+        .grid-cell {
             text-align: center;
-            padding: 10px 0;
+            padding: 8px 0;
             font-size: 15px;
             color: #aaa;
             border-radius: 6px;
@@ -242,11 +196,8 @@
             transition: all 0.2s;
             font-weight: 500;
         }
-        .month-cell:hover {
-            background: #2a2a2a;
-            color: #fff;
-        }
-        .month-cell.active {
+        .grid-cell:hover { background: #2a2a2a; color: #fff; }
+        .grid-cell.active {
             background: #4d96ff;
             color: #fff;
         }
@@ -546,7 +497,7 @@
                 margin-left: 0;
                 text-align: center;
             }
-            .filter-bar {
+            .date-filter-bar {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 8px;
@@ -556,9 +507,6 @@
             }
             .filter-input {
                 width: 100%;
-            }
-            .year-nav {
-                justify-content: center;
             }
             .grid {
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -654,24 +602,6 @@
                 height: 32px;
                 font-size: 1rem;
             }
-            .date-popup {
-                width: 95%;
-                left: 2.5% !important;
-            }
-            .month-grid {
-                padding: 12px 14px 16px;
-                gap: 4px;
-            }
-            .month-cell {
-                padding: 8px 0;
-                font-size: 13px;
-            }
-            .popup-header {
-                padding: 10px 14px;
-            }
-            .popup-header .popup-year-text {
-                font-size: 16px;
-            }
         }
     </style>
 </head>
@@ -685,22 +615,17 @@
 
     <!-- ===== 筛选器 ===== -->
     <div class="filters">
-        <!-- ===== 筛选控件 ===== -->
-        <div class="filter-bar">
-            <!-- 年份切换 -->
-            <div class="year-nav">
-                <button class="year-nav-btn" id="yearPrevBtn">‹</button>
-                <span class="year-display" id="yearDisplay">2026</span>
-                <button class="year-nav-btn" id="yearNextBtn">›</button>
+        <!-- ===== 双联控件（年份 + 月份） ===== -->
+        <div class="date-filter-bar">
+            <div class="filter-item">
+                <span class="filter-label">年份：</span>
+                <input class="filter-input" id="yearInput" placeholder="请选择年份" readonly>
             </div>
-
-            <!-- 月份选择 -->
             <div class="filter-item">
                 <span class="filter-label">月份：</span>
                 <input class="filter-input" id="monthInput" placeholder="请选择月份" readonly>
             </div>
-
-            <button class="btn-filter-reset" onclick="resetFilter()">↺ 重置</button>
+            <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置</button>
         </div>
         <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
     </div>
@@ -730,7 +655,7 @@
         </div>
     </div>
 
-    <!-- ===== 月份选择弹窗 ===== -->
+    <!-- ===== 日期选择弹窗遮罩 ===== -->
     <div class="date-mask" id="mask">
         <div class="date-popup" id="popup"></div>
     </div>
@@ -740,7 +665,7 @@
     <!-- ============================================================ -->
     <script>
         // ============================================================
-        // 1. 筛选控件（年份切换 + 月份选择）
+        // 1. 双联控件（年份 + 月份）
         // ============================================================
         (function() {
             var today = new Date();
@@ -748,150 +673,222 @@
             var currentMonth = today.getMonth() + 1;
 
             var state = {
+                view: 'year',
                 year: currentYear,
-                month: currentMonth
+                month: currentMonth,
+                panelStart: 2020,
+                pageSize: 12
             };
 
             var mask = document.getElementById('mask');
             var popup = document.getElementById('popup');
+            var yearInput = document.getElementById('yearInput');
             var monthInput = document.getElementById('monthInput');
-            var yearDisplay = document.getElementById('yearDisplay');
-            var yearPrevBtn = document.getElementById('yearPrevBtn');
-            var yearNextBtn = document.getElementById('yearNextBtn');
-            var monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            var monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
 
-            // ---------- 更新年份显示 ----------
-            function updateYearDisplay() {
-                yearDisplay.textContent = state.year;
-            }
-
-            // ---------- 月份弹窗 ----------
             function closePopup() {
                 mask.classList.remove('show');
             }
 
-            function openPopup() {
-                var rect = monthInput.getBoundingClientRect();
+            function openPopup(input) {
+                var rect = input.getBoundingClientRect();
                 mask.classList.add('show');
                 popup.style.left = Math.max(0, rect.left) + 'px';
                 popup.style.top = (rect.bottom + 6 + window.scrollY) + 'px';
+                if (input === yearInput) {
+                    state.view = 'year';
+                    if (yearInput.value) {
+                        var yearVal = parseInt(yearInput.value.replace('年', ''));
+                        if (!isNaN(yearVal)) {
+                            state.year = yearVal;
+                            var start = state.panelStart;
+                            var end = start + state.pageSize - 1;
+                            if (state.year < start || state.year > end) {
+                                state.panelStart = state.year - (state.year % state.pageSize);
+                            }
+                        }
+                    }
+                } else if (input === monthInput) {
+                    state.view = 'month';
+                    if (monthInput.value) {
+                        var parts = monthInput.value.split('-');
+                        if (parts.length === 2) {
+                            var y = parseInt(parts[0]);
+                            var m = parseInt(parts[1]);
+                            if (!isNaN(y)) state.year = y;
+                            if (!isNaN(m)) state.month = m;
+                        }
+                    }
+                }
                 renderPopup();
             }
 
             function renderPopup() {
-                var html = '';
-                // 弹窗头部 - 年份切换
-                html += '<div class="popup-header">';
-                html += '<div class="popup-year-nav">';
-                html += '<button class="popup-year-btn" id="popupYearPrev">‹</button>';
-                html += '<span class="popup-year-text" id="popupYearText">' + state.year + '年</span>';
-                html += '<button class="popup-year-btn" id="popupYearNext">›</button>';
+                popup.innerHTML = '';
+                if (state.view === 'year') renderYear();
+                else if (state.view === 'month') renderMonth();
+            }
+
+            // ---------- 年份 ----------
+            function renderYear() {
+                var start = state.panelStart;
+                var end = start + state.pageSize - 1;
+                var html = '<div class="popup-header">';
+                html += '<div class="header-arrow-group">';
+                html += '<span class="header-arrow" data-act="page-prev">«</span>';
+                html += '<span class="header-arrow" data-act="year-prev">‹</span>';
+                html += '</div>';
+                html += '<div class="header-title">' + state.year + '年</div>';
+                html += '<div class="header-arrow-group">';
+                html += '<span class="header-arrow" data-act="year-next">›</span>';
+                html += '<span class="header-arrow" data-act="page-next">»</span>';
                 html += '</div>';
                 html += '</div>';
-                // 月份网格
-                html += '<div class="month-grid">';
-                for (var i = 0; i < monthNames.length; i++) {
-                    var num = i + 1;
-                    var cls = (state.month === num) ? 'active' : '';
-                    html += '<div class="month-cell ' + cls + '" data-val="' + num + '">' + monthNames[i] + '</div>';
+                html += '<div class="grid-wrap">';
+                for (var y = start; y <= end; y++) {
+                    var cls = (state.year === y) ? 'active' : '';
+                    html += '<div class="grid-cell ' + cls + '" data-val="' + y + '">' + y + '年</div>';
                 }
                 html += '</div>';
                 popup.innerHTML = html;
 
-                // 弹窗内年份切换
-                document.getElementById('popupYearPrev').onclick = function(e) {
-                    e.stopPropagation();
-                    state.year--;
-                    document.getElementById('popupYearText').textContent = state.year + '年';
-                    // 更新主界面年份显示
-                    updateYearDisplay();
-                    // 更新月份输入框
-                    updateMonthInput();
-                    // 重新加载数据
-                    loadData();
-                };
-                document.getElementById('popupYearNext').onclick = function(e) {
-                    e.stopPropagation();
-                    state.year++;
-                    document.getElementById('popupYearText').textContent = state.year + '年';
-                    updateYearDisplay();
-                    updateMonthInput();
-                    loadData();
-                };
-
-                // 月份选择
-                popup.querySelectorAll('.month-cell').forEach(function(el) {
+                popup.querySelectorAll('.header-arrow').forEach(function(el) {
                     el.onclick = function() {
-                        state.month = parseInt(el.dataset.val);
-                        // 移除其他高亮
-                        popup.querySelectorAll('.month-cell').forEach(function(c) {
-                            c.classList.remove('active');
-                        });
-                        el.classList.add('active');
-                        updateMonthInput();
-                        loadData();
+                        var act = el.dataset.act;
+                        if (act === 'year-prev') state.year--;
+                        else if (act === 'year-next') state.year++;
+                        else if (act === 'page-prev') state.panelStart -= state.pageSize;
+                        else if (act === 'page-next') state.panelStart += state.pageSize;
+                        yearInput.value = state.year + '年';
+                        // 更新月份输入框的年份前缀
+                        updateMonthDisplay(state.year);
+                        renderPopup();
+                    };
+                });
+
+                popup.querySelectorAll('.grid-cell').forEach(function(el) {
+                    el.onclick = function() {
+                        state.year = parseInt(el.dataset.val);
+                        yearInput.value = state.year + '年';
+                        // 更新月份输入框的年份前缀
+                        updateMonthDisplay(state.year);
+                        // 自动筛选
+                        doAutoFilter();
                         closePopup();
                     };
                 });
             }
 
-            // ---------- 更新月份输入框 ----------
-            function updateMonthInput() {
-                var monthStr = String(state.month).padStart(2, '0');
-                monthInput.value = state.year + '年 ' + monthStr + '月';
-            }
-
-            // ---------- 年份切换 ----------
-            function changeYear(delta) {
-                state.year += delta;
-                updateYearDisplay();
-                // 如果有月份输入值，更新年份
-                if (monthInput.value) {
-                    var parts = monthInput.value.split('年');
-                    if (parts.length === 2) {
-                        monthInput.value = state.year + '年 ' + parts[1];
-                    }
+            // ---------- 月份 ----------
+            function renderMonth() {
+                var html = '<div class="popup-header">';
+                html += '<div class="header-arrow-group">';
+                html += '<span class="header-arrow" data-act="year-prev">‹</span>';
+                html += '</div>';
+                html += '<div class="header-title">' + state.year + '年</div>';
+                html += '<div class="header-arrow-group">';
+                html += '<span class="header-arrow" data-act="year-next">›</span>';
+                html += '</div>';
+                html += '</div>';
+                html += '<div class="grid-wrap">';
+                for (var i = 0; i < monthNames.length; i++) {
+                    var num = i + 1;
+                    var cls = (state.month === num) ? 'active' : '';
+                    html += '<div class="grid-cell ' + cls + '" data-val="' + num + '">' + monthNames[i] + '</div>';
                 }
-                loadData();
+                html += '</div>';
+                popup.innerHTML = html;
+
+                popup.querySelectorAll('.header-arrow').forEach(function(el) {
+                    el.onclick = function() {
+                        var act = el.dataset.act;
+                        if (act === 'year-prev') state.year--;
+                        else if (act === 'year-next') state.year++;
+                        yearInput.value = state.year + '年';
+                        updateMonthDisplay(state.year);
+                        renderPopup();
+                    };
+                });
+
+                popup.querySelectorAll('.grid-cell').forEach(function(el) {
+                    el.onclick = function() {
+                        state.month = parseInt(el.dataset.val);
+                        var monthStr = String(state.month).padStart(2, '0');
+                        monthInput.value = state.year + '-' + monthStr;
+                        // 自动筛选
+                        doAutoFilter();
+                        closePopup();
+                    };
+                });
             }
 
-            yearPrevBtn.onclick = function() { changeYear(-1); };
-            yearNextBtn.onclick = function() { changeYear(1); };
+            // ---------- 辅助函数 ----------
+            function updateMonthDisplay(year) {
+                if (monthInput.value) {
+                    var parts = monthInput.value.split('-');
+                    if (parts.length === 2) {
+                        var m = parts[1];
+                        monthInput.value = year + '-' + m;
+                    } else {
+                        monthInput.value = year + '-';
+                    }
+                } else {
+                    monthInput.value = year + '-';
+                }
+            }
 
             // ---------- 事件绑定 ----------
-            monthInput.onclick = function() { openPopup(); };
+            yearInput.onclick = function() { openPopup(yearInput); };
+            monthInput.onclick = function() { openPopup(monthInput); };
             mask.onclick = function(e) { if (e.target === mask) closePopup(); };
 
-            // ---------- 重置 ----------
-            window.resetFilter = function() {
-                var now = new Date();
-                state.year = now.getFullYear();
-                state.month = now.getMonth() + 1;
-                monthInput.value = '';
-                updateYearDisplay();
-                loadData();
-            };
-
-            // ---------- 加载数据 ----------
-            function loadData() {
+            // ---------- 自动筛选函数 ----------
+            function doAutoFilter() {
                 var year = state.year;
-                var month = String(state.month).padStart(2, '0');
-                loadMonthData(year, month);
+                var month = state.month;
+                var hasYear = yearInput.value && yearInput.value !== '';
+                var hasMonth = monthInput.value && monthInput.value !== '' && monthInput.value.indexOf('-') > 0;
+
+                if (hasMonth) {
+                    loadYearAndRender(String(year), String(month).padStart(2, '0'));
+                } else if (hasYear) {
+                    loadYearAndRender(String(year), 'all');
+                } else {
+                    var now = new Date();
+                    var curYear = now.getFullYear();
+                    var curMonth = String(now.getMonth() + 1).padStart(2, '0');
+                    loadYearAndRender(String(curYear), curMonth);
+                }
             }
 
+            // ---------- 重置功能 ----------
+            window.resetAllFilters = function() {
+                var now = new Date();
+                var y = now.getFullYear();
+                var m = now.getMonth() + 1;
+                state.year = y;
+                state.month = m;
+                yearInput.value = '';
+                monthInput.value = '';
+                loadYearAndRender(String(y), String(m).padStart(2, '0'));
+            };
+
             // ---------- 初始化 ----------
+            yearInput.placeholder = '请选择年份';
             monthInput.placeholder = '请选择月份';
-            updateYearDisplay();
 
             // 加载默认数据（当前年月）
             window.addEventListener('DOMContentLoaded', function() {
+                var now = new Date();
+                var curYear = now.getFullYear();
+                var curMonth = String(now.getMonth() + 1).padStart(2, '0');
                 setTimeout(function() {
-                    loadData();
+                    loadYearAndRender(String(curYear), curMonth);
                 }, 100);
             });
 
             // 暴露内部状态
-            window.filterState = {
+            window.datePicker = {
                 getYear: function() { return state.year; },
                 getMonth: function() { return state.month; }
             };
@@ -971,7 +968,7 @@
         var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
         // ============================================================
-        // 3. 数据加载
+        // 3. 数据加载（使用索引文件）
         // ============================================================
 
         var loadedData = {};
@@ -1025,11 +1022,14 @@
         // 4. 筛选与渲染
         // ============================================================
 
-        function filterImagesByMonth(images, month) {
+        function filterImages(images, year, month) {
             if (!images || images.length === 0) return [];
             return images.filter(function(img) {
+                var y = getYearFromDate(img.date);
                 var m = getMonthFromDate(img.date);
-                return m === month;
+                if (year !== 'all' && y !== year) return false;
+                if (month !== 'all' && m !== month) return false;
+                return true;
             });
         }
 
@@ -1130,22 +1130,23 @@
         });
 
         // ============================================================
-        // 6. 加载数据
+        // 6. 加载并渲染
         // ============================================================
 
-        async function loadMonthData(year, month) {
+        async function loadYearAndRender(year, month) {
             var grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
 
-            if (allAvailableYears.length === 0) {
-                await loadIndex();
+            if (year === 'all' || !year) {
+                await loadAllYearsAndRender(month);
+                return;
             }
 
             var data = loadedData[year];
             if (!data) {
                 data = await loadYearData(year);
             }
-
+            
             if (!data || data.length === 0) {
                 grid.innerHTML = '<div class="empty">😅 ' + year + ' 年暂无壁纸数据</div>';
                 document.getElementById('totalCount').textContent = '0';
@@ -1158,15 +1159,43 @@
                 return db.localeCompare(da);
             });
 
-            var filtered = filterImagesByMonth(sortedData, month);
-
-            if (filtered.length === 0) {
-                grid.innerHTML = '<div class="empty">😅 ' + year + '年 ' + month + '月 暂无壁纸数据</div>';
-                document.getElementById('totalCount').textContent = '0';
-                return;
+            var monthStr = month || 'all';
+            
+            if (monthStr !== 'all' && monthStr.length === 2) {
+                var filtered = filterImages(sortedData, year, monthStr);
+                renderGrid(filtered);
+            } else {
+                var filtered = filterImages(sortedData, year, 'all');
+                renderGrid(filtered);
             }
+        }
 
-            renderGrid(filtered);
+        async function loadAllYearsAndRender(month) {
+            var grid = document.getElementById('grid');
+            grid.innerHTML = '<div class="loading">加载所有年份数据...</div>';
+            
+            var allData = [];
+            for (var i = 0; i < allAvailableYears.length; i++) {
+                var y = allAvailableYears[i];
+                var data = loadedData[y] || await loadYearData(y);
+                if (data && data.length > 0) {
+                    allData = allData.concat(data);
+                }
+            }
+            allData.sort(function(a, b) {
+                var da = a.date || '';
+                var db = b.date || '';
+                return db.localeCompare(da);
+            });
+            
+            var monthStr = month || 'all';
+            
+            if (monthStr !== 'all' && monthStr.length === 2) {
+                var filtered = filterImages(allData, 'all', monthStr);
+                renderGrid(filtered);
+            } else {
+                renderGrid(allData);
+            }
         }
 
         // ============================================================
