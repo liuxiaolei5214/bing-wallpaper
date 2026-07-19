@@ -111,6 +111,22 @@
         .filter-input:focus { border-color: #7abfff; box-shadow: 0 0 0 3px rgba(77,150,255,0.2); }
         .filter-input::placeholder { color: #666; }
 
+        .btn-filter-reset {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            background: #6c757d;
+            color: #fff;
+        }
+        .btn-filter-reset:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+
         /* 遮罩弹窗 */
         .date-mask {
             position: fixed;
@@ -562,6 +578,10 @@
                 width: 92%;
                 left: 4% !important;
             }
+            .btn-filter-reset {
+                width: 100%;
+                text-align: center;
+            }
         }
 
         @media (max-width: 480px) {
@@ -641,6 +661,7 @@
                 <span class="filter-label">日期：</span>
                 <input class="filter-input" id="dayInput" placeholder="请选择日期" readonly>
             </div>
+            <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置</button>
         </div>
         <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
     </div>
@@ -704,6 +725,11 @@
             var dayInput = document.getElementById('dayInput');
             var monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
 
+            // 存储当前选中的值（用于显示）
+            var selectedYear = '';
+            var selectedMonth = '';
+            var selectedDay = '';
+
             function closePopup() {
                 mask.classList.remove('show');
             }
@@ -713,9 +739,48 @@
                 mask.classList.add('show');
                 popup.style.left = Math.max(0, rect.left) + 'px';
                 popup.style.top = (rect.bottom + 6 + window.scrollY) + 'px';
-                if (input === yearInput) state.view = 'year';
-                else if (input === monthInput) state.view = 'month';
-                else if (input === dayInput) state.view = 'calendar';
+                if (input === yearInput) {
+                    state.view = 'year';
+                    // 如果年份输入框有值，解析并设置
+                    if (yearInput.value) {
+                        var yearVal = parseInt(yearInput.value.replace('年', ''));
+                        if (!isNaN(yearVal)) {
+                            state.year = yearVal;
+                            // 自动调整面板范围
+                            var start = state.panelStart;
+                            var end = start + state.pageSize - 1;
+                            if (state.year < start || state.year > end) {
+                                state.panelStart = state.year - (state.year % state.pageSize);
+                            }
+                        }
+                    }
+                } else if (input === monthInput) {
+                    state.view = 'month';
+                    // 如果月份输入框有值，解析并设置
+                    if (monthInput.value) {
+                        var parts = monthInput.value.split('-');
+                        if (parts.length === 2) {
+                            var y = parseInt(parts[0]);
+                            var m = parseInt(parts[1]);
+                            if (!isNaN(y)) state.year = y;
+                            if (!isNaN(m)) state.month = m;
+                        }
+                    }
+                } else if (input === dayInput) {
+                    state.view = 'calendar';
+                    // 如果日期输入框有值，解析并设置
+                    if (dayInput.value) {
+                        var parts = dayInput.value.split('-');
+                        if (parts.length === 3) {
+                            var y = parseInt(parts[0]);
+                            var m = parseInt(parts[1]);
+                            var d = parseInt(parts[2]);
+                            if (!isNaN(y)) state.year = y;
+                            if (!isNaN(m)) state.month = m;
+                            if (!isNaN(d)) state.day = d;
+                        }
+                    }
+                }
                 renderPopup();
             }
 
@@ -755,7 +820,10 @@
                         else if (act === 'year-next') state.year++;
                         else if (act === 'page-prev') state.panelStart -= state.pageSize;
                         else if (act === 'page-next') state.panelStart += state.pageSize;
+                        // 实时更新年份输入框显示
                         yearInput.value = state.year + '年';
+                        // 更新月份和日期输入框的年份前缀
+                        updateMonthAndDayDisplay(state.year);
                         renderPopup();
                     };
                 });
@@ -763,6 +831,8 @@
                     el.onclick = function() {
                         state.year = parseInt(el.dataset.val);
                         yearInput.value = state.year + '年';
+                        // 更新月份和日期输入框的年份前缀
+                        updateMonthAndDayDisplay(state.year);
                         // 自动筛选
                         doAutoFilter();
                         closePopup();
@@ -795,13 +865,18 @@
                         if (act === 'year-prev') state.year--;
                         else if (act === 'year-next') state.year++;
                         yearInput.value = state.year + '年';
+                        // 更新月份和日期输入框的年份前缀
+                        updateMonthAndDayDisplay(state.year);
                         renderPopup();
                     };
                 });
                 popup.querySelectorAll('.grid-cell').forEach(function(el) {
                     el.onclick = function() {
                         state.month = parseInt(el.dataset.val);
-                        monthInput.value = state.year + '-' + String(state.month).padStart(2, '0');
+                        var monthStr = String(state.month).padStart(2, '0');
+                        monthInput.value = state.year + '-' + monthStr;
+                        // 更新日期输入框的年份月份前缀
+                        updateDayDisplay(state.year, state.month);
                         // 自动筛选
                         doAutoFilter();
                         closePopup();
@@ -859,18 +934,66 @@
                         state.month = nm + 1;
                         yearInput.value = state.year + '年';
                         monthInput.value = state.year + '-' + String(state.month).padStart(2, '0');
+                        // 更新日期输入框
+                        updateDayDisplay(state.year, state.month);
                         renderPopup();
                     };
                 });
                 popup.querySelectorAll('.day-cell:not(.gray)').forEach(function(el) {
                     el.onclick = function() {
                         state.day = parseInt(el.dataset.val);
-                        dayInput.value = state.year + '-' + String(state.month).padStart(2, '0') + '-' + String(state.day).padStart(2, '0');
+                        var dateStr = state.year + '-' + String(state.month).padStart(2, '0') + '-' + String(state.day).padStart(2, '0');
+                        dayInput.value = dateStr;
                         // 自动筛选
                         doAutoFilter();
                         closePopup();
                     };
                 });
+            }
+
+            // ---------- 辅助函数：更新月份和日期显示 ----------
+            function updateMonthAndDayDisplay(year) {
+                // 如果月份输入框有值，更新年份部分
+                if (monthInput.value) {
+                    var parts = monthInput.value.split('-');
+                    if (parts.length === 2) {
+                        var m = parts[1];
+                        monthInput.value = year + '-' + m;
+                    } else {
+                        // 如果月份输入框为空或格式不对，只显示年份+
+                        monthInput.value = year + '-';
+                    }
+                } else {
+                    monthInput.value = year + '-';
+                }
+                // 如果日期输入框有值，更新年份部分
+                if (dayInput.value) {
+                    var parts = dayInput.value.split('-');
+                    if (parts.length === 3) {
+                        var m = parts[1];
+                        var d = parts[2];
+                        dayInput.value = year + '-' + m + '-' + d;
+                    } else {
+                        dayInput.value = year + '-';
+                    }
+                } else {
+                    dayInput.value = year + '-';
+                }
+            }
+
+            function updateDayDisplay(year, month) {
+                var monthStr = String(month).padStart(2, '0');
+                if (dayInput.value) {
+                    var parts = dayInput.value.split('-');
+                    if (parts.length === 3) {
+                        var d = parts[2];
+                        dayInput.value = year + '-' + monthStr + '-' + d;
+                    } else {
+                        dayInput.value = year + '-' + monthStr + '-';
+                    }
+                } else {
+                    dayInput.value = year + '-' + monthStr + '-';
+                }
             }
 
             // ---------- 事件绑定 ----------
@@ -884,9 +1007,9 @@
                 var year = state.year;
                 var month = state.month;
                 var day = state.day;
-                var hasYear = yearInput.value !== '';
-                var hasMonth = monthInput.value !== '';
-                var hasDay = dayInput.value !== '';
+                var hasYear = yearInput.value && yearInput.value !== '';
+                var hasMonth = monthInput.value && monthInput.value !== '' && monthInput.value.indexOf('-') > 0;
+                var hasDay = dayInput.value && dayInput.value !== '' && dayInput.value.split('-').length === 3;
 
                 if (hasDay) {
                     // 有日期：精确筛选日期
@@ -907,7 +1030,24 @@
                 }
             }
 
-            // 初始化 - 显示提示文字，不自动填充
+            // ---------- 重置功能 ----------
+            window.resetAllFilters = function() {
+                var now = new Date();
+                var y = now.getFullYear();
+                var m = now.getMonth() + 1;
+                var d = now.getDate();
+                state.year = y;
+                state.month = m;
+                state.day = d;
+                yearInput.value = '';
+                monthInput.value = '';
+                dayInput.value = '';
+                // 重新加载当前年月
+                loadYearAndRender(String(y), String(m).padStart(2, '0'), 'all');
+            };
+
+            // ---------- 初始化 ----------
+            // 不填充默认值，显示占位符
             yearInput.placeholder = '请选择年份';
             monthInput.placeholder = '请选择月份';
             dayInput.placeholder = '请选择日期';
@@ -917,7 +1057,6 @@
                 var now = new Date();
                 var curYear = now.getFullYear();
                 var curMonth = String(now.getMonth() + 1).padStart(2, '0');
-                // 延迟执行，等待其他模块初始化
                 setTimeout(function() {
                     loadYearAndRender(String(curYear), curMonth, 'all');
                 }, 100);
@@ -1190,7 +1329,6 @@
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
 
             if (year === 'all' || !year) {
-                // 加载所有年份
                 await loadAllYearsAndRender(month, day);
                 return;
             }
@@ -1216,7 +1354,6 @@
             var monthStr = month || 'all';
             
             if (dayStr !== 'all' && dayStr.length === 2) {
-                // 精确日期筛选
                 var exactDate = year + '-' + monthStr + '-' + dayStr;
                 var exactData = sortedData.filter(function(item) {
                     return item.date === exactDate;
@@ -1297,12 +1434,9 @@
         }
 
         // ============================================================
-        // 8. 主函数 - 初始化加载
+        // 8. 主函数
         // ============================================================
 
-        // 页面加载完成后自动加载当前年月数据
-        // 注意：loadYearAndRender 已在三联控件模块的 DOMContentLoaded 中调用
-        // 这里不再重复调用，避免冲突
         console.log('📚 壁纸归档已加载');
     </script>
 </body>
