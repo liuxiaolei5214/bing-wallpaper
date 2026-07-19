@@ -75,8 +75,8 @@
             font-weight: 600;
         }
 
-        /* ===== 月份控件样式 ===== */
-        .month-filter-bar {
+        /* ===== 筛选控件样式 ===== */
+        .filter-bar {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -95,7 +95,7 @@
             white-space: nowrap;
         }
         .filter-input {
-            width: 140px;
+            width: 120px;
             height: 34px;
             padding: 0 10px;
             border: 2px solid #4d96ff;
@@ -110,6 +110,42 @@
         .filter-input:hover { border-color: #6aafff; }
         .filter-input:focus { border-color: #7abfff; box-shadow: 0 0 0 3px rgba(77,150,255,0.2); }
         .filter-input::placeholder { color: #666; }
+
+        /* 年份切换按钮 */
+        .year-nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .year-nav-btn {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            color: #e0e0e0;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .year-nav-btn:hover {
+            background: #4d96ff;
+            border-color: #4d96ff;
+            color: #fff;
+        }
+        .year-nav-btn:active {
+            transform: scale(0.95);
+        }
+        .year-display {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e0e0e0;
+            min-width: 70px;
+            text-align: center;
+        }
 
         .btn-filter-reset {
             padding: 6px 16px;
@@ -483,7 +519,7 @@
                 margin-left: 0;
                 text-align: center;
             }
-            .month-filter-bar {
+            .filter-bar {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 8px;
@@ -493,6 +529,9 @@
             }
             .filter-input {
                 width: 100%;
+            }
+            .year-nav {
+                justify-content: center;
             }
             .grid {
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -601,13 +640,22 @@
 
     <!-- ===== 筛选器 ===== -->
     <div class="filters">
-        <!-- ===== 月份控件 ===== -->
-        <div class="month-filter-bar">
+        <!-- ===== 筛选控件 ===== -->
+        <div class="filter-bar">
+            <!-- 年份切换 -->
+            <div class="year-nav">
+                <button class="year-nav-btn" id="yearPrevBtn">‹</button>
+                <span class="year-display" id="yearDisplay">2026</span>
+                <button class="year-nav-btn" id="yearNextBtn">›</button>
+            </div>
+
+            <!-- 月份选择 -->
             <div class="filter-item">
-                <span class="filter-label">📆 月份：</span>
+                <span class="filter-label">月份：</span>
                 <input class="filter-input" id="monthInput" placeholder="请选择月份" readonly>
             </div>
-            <button class="btn-filter-reset" onclick="resetMonthFilter()">↺ 重置</button>
+
+            <button class="btn-filter-reset" onclick="resetFilter()">↺ 重置</button>
         </div>
         <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
     </div>
@@ -647,23 +695,32 @@
     <!-- ============================================================ -->
     <script>
         // ============================================================
-        // 1. 月份控件（独立模块）
+        // 1. 筛选控件（年份切换 + 月份选择）
         // ============================================================
         (function() {
             var today = new Date();
-            var currentMonth = today.getMonth() + 1;
             var currentYear = today.getFullYear();
+            var currentMonth = today.getMonth() + 1;
 
             var state = {
-                month: currentMonth,
-                year: currentYear
+                year: currentYear,
+                month: currentMonth
             };
 
             var mask = document.getElementById('mask');
             var popup = document.getElementById('popup');
             var monthInput = document.getElementById('monthInput');
+            var yearDisplay = document.getElementById('yearDisplay');
+            var yearPrevBtn = document.getElementById('yearPrevBtn');
+            var yearNextBtn = document.getElementById('yearNextBtn');
             var monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
 
+            // ---------- 更新年份显示 ----------
+            function updateYearDisplay() {
+                yearDisplay.textContent = state.year;
+            }
+
+            // ---------- 月份弹窗 ----------
             function closePopup() {
                 mask.classList.remove('show');
             }
@@ -681,10 +738,9 @@
                 renderMonthGrid();
             }
 
-            // ---------- 月份网格 ----------
             function renderMonthGrid() {
                 var html = '<div class="popup-header">';
-                html += '<div class="header-title">选择月份</div>';
+                html += '<div class="header-title">' + state.year + '年 选择月份</div>';
                 html += '</div>';
                 html += '<div class="grid-wrap">';
                 for (var i = 0; i < monthNames.length; i++) {
@@ -701,50 +757,66 @@
                         var monthStr = String(state.month).padStart(2, '0');
                         monthInput.value = state.year + '年 ' + monthStr + '月';
                         // 自动筛选
-                        doMonthFilter();
+                        loadData();
                         closePopup();
                     };
                 });
             }
 
+            // ---------- 年份切换 ----------
+            function changeYear(delta) {
+                state.year += delta;
+                updateYearDisplay();
+                // 更新月份输入框中的年份
+                if (monthInput.value) {
+                    var parts = monthInput.value.split('年');
+                    if (parts.length === 2) {
+                        monthInput.value = state.year + '年 ' + parts[1];
+                    }
+                }
+                // 重新加载数据
+                loadData();
+            }
+
+            yearPrevBtn.onclick = function() { changeYear(-1); };
+            yearNextBtn.onclick = function() { changeYear(1); };
+
             // ---------- 事件绑定 ----------
             monthInput.onclick = function() { openPopup(); };
             mask.onclick = function(e) { if (e.target === mask) closePopup(); };
 
-            // ---------- 月份筛选 ----------
-            function doMonthFilter() {
-                var year = state.year;
-                var month = state.month;
-                var monthStr = String(month).padStart(2, '0');
-                loadMonthData(year, monthStr);
-            }
-
             // ---------- 重置 ----------
-            window.resetMonthFilter = function() {
+            window.resetFilter = function() {
                 var now = new Date();
                 state.year = now.getFullYear();
                 state.month = now.getMonth() + 1;
                 monthInput.value = '';
-                loadMonthData(state.year, String(state.month).padStart(2, '0'));
+                updateYearDisplay();
+                loadData();
             };
+
+            // ---------- 加载数据 ----------
+            function loadData() {
+                var year = state.year;
+                var month = String(state.month).padStart(2, '0');
+                loadMonthData(year, month);
+            }
 
             // ---------- 初始化 ----------
             monthInput.placeholder = '请选择月份';
+            updateYearDisplay();
 
             // 加载默认数据（当前年月）
             window.addEventListener('DOMContentLoaded', function() {
-                var now = new Date();
-                var year = now.getFullYear();
-                var month = String(now.getMonth() + 1).padStart(2, '0');
                 setTimeout(function() {
-                    loadMonthData(year, month);
+                    loadData();
                 }, 100);
             });
 
             // 暴露内部状态
-            window.monthPicker = {
-                getMonth: function() { return state.month; },
-                getYear: function() { return state.year; }
+            window.filterState = {
+                getYear: function() { return state.year; },
+                getMonth: function() { return state.month; }
             };
         })();
 
@@ -822,7 +894,7 @@
         var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
         // ============================================================
-        // 3. 数据加载（使用索引文件）
+        // 3. 数据加载
         // ============================================================
 
         var loadedData = {};
@@ -881,14 +953,6 @@
             return images.filter(function(img) {
                 var m = getMonthFromDate(img.date);
                 return m === month;
-            });
-        }
-
-        function filterImagesByYear(images, year) {
-            if (!images || images.length === 0) return [];
-            return images.filter(function(img) {
-                var y = getYearFromDate(img.date);
-                return y === year;
             });
         }
 
@@ -996,12 +1060,10 @@
             var grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
 
-            // 先加载索引
             if (allAvailableYears.length === 0) {
                 await loadIndex();
             }
 
-            // 如果该年数据未加载，加载它
             var data = loadedData[year];
             if (!data) {
                 data = await loadYearData(year);
@@ -1013,14 +1075,12 @@
                 return;
             }
 
-            // 按日期排序（最新在前）
             var sortedData = data.slice().sort(function(a, b) {
                 var da = a.date || '';
                 var db = b.date || '';
                 return db.localeCompare(da);
             });
 
-            // 按月份筛选
             var filtered = filterImagesByMonth(sortedData, month);
 
             if (filtered.length === 0) {
