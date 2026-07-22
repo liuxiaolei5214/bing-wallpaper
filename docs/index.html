@@ -251,6 +251,29 @@
             animation: bobble 2.4s infinite;
         }
 
+        /* 全局滚动提示，PC/手机都可见，固定画面底部居中 */
+        .global-scroll-hint {
+            position: absolute;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            z-index: 5;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .global-scroll-hint span {
+            display: inline-block;
+            animation: bobble 2.4s infinite;
+        }
+        
+        /* 隐藏PC按钮组内部旧的滚动提示（避免重复出现） */
+        .today-actions-pc .today-scroll-hint {
+            display: none !important;
+        }
+
         @keyframes bobble {
             0%,
             100% {
@@ -773,6 +796,10 @@
                             <div class="today-title">${title}</div>
                             <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
                             ${htmlPcActions}
+                        </div>
+                        <!-- 全局共用滚动提示，PC+移动端同时显示 -->
+                        <div class="global-scroll-hint today-scroll-hint">
+                            <span>? 滚动 · 查看历史</span>
                         </div>
                         <div class="today-actions-mobile">${mobileBtnWrap.innerHTML}</div>
                     `;
