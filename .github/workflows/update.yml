@@ -64,10 +64,10 @@ jobs:
           description = ''
           bing_url = ''
 
-          # 获取当天日期
-          now = datetime.now()
-          today_str = f"{now.year}-{str(now.month).zfill(2)}-{str(now.day).zfill(2)}"
-          print(f"📅 今日日期: {today_str}")
+          beijing_tz = timezone(timedelta(hours=8))
+          now_beijing = datetime.now(beijing_tz)
+          today_str = f"{now_beijing.year}-{str(now_beijing.month).zfill(2)}-{str(now_beijing.day).zfill(2)}"
+          print(f"📅 今日日期 (北京时间): {today_str}")
 
           # 检查文件是否存在
           if os.path.exists(today_file):
