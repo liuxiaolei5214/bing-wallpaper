@@ -352,7 +352,7 @@
             transform: scale(1.02);
         }
 
-        /* ===== 轮播控制按钮 ===== */
+        /* ===== 轮播控制按钮【默认隐藏，点击图片切换显示】 ===== */
         .movie-btn {
             position: absolute;
             top: 50%;
@@ -370,8 +370,13 @@
             justify-content: center;
             transition: all 0.25s;
             z-index: 10;
-            opacity: 0.7;
+            opacity: 0;
+            visibility: hidden;
             padding: 0;
+        }
+        .movie-slide.show-nav .movie-btn {
+            opacity: 0.7;
+            visibility: visible;
         }
         .movie-btn:hover {
             background: rgba(30, 40, 48, 0.7);
@@ -436,11 +441,37 @@
             transform: scale(1.04);
         }
 
-        /* ===== 响应式 ===== */
+        /* ===== 移动端样式 ===== */
         @media (max-width: 640px) {
+            /* 需求2：今日页面改造 */
             #todayCard .today-overlay {
                 padding: 16px 18px 14px;
                 min-height: 35%;
+                bottom: 80px; /* 整体上移 */
+            }
+            /* 顶部遮罩，防止按钮看不清 */
+            #todayCard::before {
+                content:"";
+                position:absolute;
+                top:0;
+                left:0;
+                width:100%;
+                height:160px;
+                background:linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+                z-index:1;
+                pointer-events:none;
+            }
+            /* 今日页面按钮组移动到右上角 */
+            #todayCard .today-overlay .today-actions {
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                margin-top: 0;
+                flex-direction: column;
+                gap: 8px;
+            }
+            #todayCard .today-overlay .today-actions .today-scroll-hint {
+                display: none;
             }
             #todayCard .today-overlay .today-title {
                 font-size: 1.2rem;
@@ -454,12 +485,17 @@
                 font-size: 0.6rem;
                 padding: 4px 12px;
             }
-            #todayCard .today-overlay .today-actions .today-scroll-hint {
-                font-size: 0.55rem;
-            }
+
+            /* 需求3：轮播页面改造 */
             .movie-title-bar {
-                top: 0.6rem;
-                left: 1.2rem;
+                top: auto;
+                left: 50%;
+                transform: translateX(-50%);
+                bottom: 72px;
+                text-align:center;
+            }
+            .movie-title-bar .movie-title {
+                font-size:1rem !important;
             }
             .movie-actions {
                 top: 0.6rem;
@@ -486,14 +522,22 @@
             .movie-btn.next {
                 right: 0.4rem;
             }
+            /* 缩略图单行，横向滚动 */
+            .movie-thumbnails {
+                max-width: calc(100% - 24px);
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                justify-content: flex-start;
+                transform: translateX(-50%);
+                bottom: 1.2rem;
+                scrollbar-width:none;
+            }
+            .movie-thumbnails::-webkit-scrollbar {
+                display:none;
+            }
             .movie-thumbnails .thumb-item {
                 width: 2.4rem;
                 height: 1.6rem;
-            }
-            .movie-thumbnails {
-                gap: 0.3rem;
-                padding: 0.3rem 0.6rem;
-                bottom: 0.8rem;
             }
             .movie-title-overlay {
                 height: 35%;
@@ -504,6 +548,7 @@
             #todayCard .today-overlay {
                 padding: 12px 14px 12px;
                 min-height: 30%;
+                bottom:70px;
             }
             #todayCard .today-overlay .today-title {
                 font-size: 1rem;
@@ -516,9 +561,6 @@
             #todayCard .today-overlay .today-actions .btn {
                 font-size: 0.5rem;
                 padding: 3px 10px;
-            }
-            #todayCard .today-overlay .today-actions .today-scroll-hint {
-                font-size: 0.5rem;
             }
             .movie-title-overlay {
                 height: 30%;
@@ -580,16 +622,25 @@
                 archive: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`,
             };
 
-            // ===== 工具函数 =====
+            // ===== 判断移动端 =====
+            function isMobileDevice() {
+                return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || window.innerWidth <= 640;
+            }
+
+            // ===== 工具函数【需求1：区分横竖版壁纸地址】 =====
             function get1080pUrl(url) {
                 if (!url) return '';
                 let result = url;
-                result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
-                result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
-                result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
-                if (result === url) {
-                    result = url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+                // 移动端使用竖版 1080x1920
+                if(isMobileDevice()){
+                    result = result.replace(/_UHD\.jpg/g, '_1080x1920.jpg');
+                    result = result.replace(/_1920x1080\.jpg/g, '_1080x1920.jpg');
+                }else{
+                    // PC横版
+                    result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+                    result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
                 }
+                result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
                 return result;
             }
 
@@ -598,7 +649,12 @@
                 if (url.includes('_UHD.jpg')) {
                     return url;
                 }
-                return url.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+                // PC使用横版4K，移动端仍然竖版
+                if(isMobileDevice()){
+                    return url.replace(/_1920x1080\.jpg/g, '_1080x1920.jpg');
+                }else{
+                    return url.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+                }
             }
 
             function formatTitle(item) {
@@ -644,19 +700,15 @@
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
                     const data = await resp.json();
                     
-                    // 检查数据格式
                     let item = null;
                     if (Array.isArray(data) && data.length > 0) {
-                        // 如果是数组，取第一条
                         item = data[0];
                     } else if (typeof data === 'object' && data !== null) {
-                        // 如果是对象，直接使用
                         item = data;
                     } else {
                         throw new Error('数据格式无效');
                     }
 
-                    // 确保有 date 字段，如果没有则使用今天
                     if (!item.date) {
                         item.date = getTodayStr();
                     }
@@ -712,6 +764,14 @@
             const thumbnails = document.getElementById('movieThumbnails');
             const prevBtn = document.getElementById('moviePrev');
             const nextBtn = document.getElementById('movieNext');
+
+            // 需求4：点击图片切换左右箭头显示
+            slide.addEventListener("click", function(e){
+                // 不点击按钮时才切换
+                if(!e.target.closest(".movie-btn") && !e.target.closest(".thumb-item") && !e.target.closest(".movie-actions")){
+                    slide.classList.toggle("show-nav");
+                }
+            })
 
             function updateSlide(index) {
                 if (!allData || allData.length === 0) return;
