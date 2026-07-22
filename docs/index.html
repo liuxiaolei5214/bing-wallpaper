@@ -528,7 +528,7 @@
             }
             /* 标题字体进一步缩小 */
             .movie-title-bar .movie-title {
-                font-size:0.5rem !important;
+                font-size:0.7rem !important;
             }
             /* 右上角按钮缩小 */
             .movie-actions {
@@ -768,6 +768,7 @@
 
                     container.innerHTML = `
                         <img src="${imgUrl}" alt="${title}" loading="lazy" onerror="this.style.display='none'" />
+                        <div class="today-gradient"></div>
                         <div class="today-overlay">
                             <div class="today-title">${title}</div>
                             <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
