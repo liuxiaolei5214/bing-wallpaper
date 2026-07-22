@@ -100,14 +100,14 @@
             pointer-events:none;
         }
 
-        /* ===== 今日壁纸 - 遮层容器 ===== */
-        #todayCard .today-overlay {
+        /* 今日页面底部渐变遮罩：永远贴底，不随内容上移 */
+        #todayCard .today-gradient {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
+            height: 45%;
             z-index: 2;
-            padding: 28px 32px 20px;
             background: linear-gradient(to top, 
                 rgba(0, 0, 0, 0.95) 0%, 
                 rgba(0, 0, 0, 0.7) 40%,
@@ -115,11 +115,23 @@
                 transparent 100%
             );
             pointer-events: none;
+        }
+        
+        /* 今日页面内容容器：可以整体上移，不再负责渐变 */
+        #todayCard .today-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 3;
+            padding: 28px 32px 20px;
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             min-height: 45%;
         }
+
 
         /* ===== 标题 ===== */
         #todayCard .today-overlay .today-title {
@@ -477,6 +489,9 @@
             #todayCard .today-actions-mobile {
                 display: flex;
             }
+            #todayCard .today-gradient {
+                height: 38%;
+            }
             /* overlay贴底，内容整体向上偏移 */
             #todayCard .today-overlay {
                 padding: 16px 18px 14px;
@@ -513,7 +528,7 @@
             }
             /* 标题字体进一步缩小 */
             .movie-title-bar .movie-title {
-                font-size:0.88rem !important;
+                font-size:0.5rem !important;
             }
             /* 右上角按钮缩小 */
             .movie-actions {
@@ -560,6 +575,9 @@
         }
 
         @media (max-width: 480px) {
+            #todayCard .today-gradient {
+                height: 34%;
+            }
             #todayCard .today-overlay {
                 padding: 12px 14px 12px;
                 min-height: 30%;
