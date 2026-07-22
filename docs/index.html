@@ -162,8 +162,8 @@
             margin-top: 0;
         }
 
-        /* ===== 按钮组 ===== */
-        #todayCard .today-overlay .today-actions {
+        /* ===== 按钮组【PC端：放在底部overlay内】 ===== */
+        #todayCard .today-overlay .today-actions-pc {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -172,8 +172,21 @@
             pointer-events: auto;
             position: relative;
         }
+        /* 移动端悬浮按钮，直接相对于#todayCard定位，画面右上角 */
+        #todayCard .today-actions-mobile {
+            display: none;
+            position: absolute;
+            top: 16px;
+            right: 12px;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 6px;
+            z-index: 3;
+            max-width: calc(100vw - 24px);
+        }
 
-        #todayCard .today-overlay .today-actions .btn {
+        #todayCard .today-actions-pc .btn,
+        #todayCard .today-actions-mobile .btn {
             display: inline-flex;
             align-items: center;
             padding: 6px 18px;
@@ -190,26 +203,27 @@
             white-space: nowrap;
         }
 
-        #todayCard .today-overlay .today-actions .btn svg {
+        #todayCard .today-actions-pc .btn svg,
+        #todayCard .today-actions-mobile .btn svg {
             flex-shrink: 0;
             margin-right: 4px;
         }
 
-        #todayCard .today-overlay .today-actions .btn-primary {
+        .btn-primary {
             background: rgba(220, 210, 180, 0.15);
             border-color: rgba(240, 230, 200, 0.2);
         }
-        #todayCard .today-overlay .today-actions .btn-primary:hover {
+        .btn-primary:hover {
             background: rgba(220, 210, 180, 0.3);
             transform: scale(1.03);
         }
-        #todayCard .today-overlay .today-actions .btn-secondary:hover {
+        .btn-secondary:hover {
             background: rgba(200, 200, 200, 0.15);
             transform: scale(1.02);
         }
 
         /* ===== 滚动提示（居中） ===== */
-        #todayCard .today-overlay .today-actions .today-scroll-hint {
+        .today-scroll-hint {
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
@@ -220,7 +234,7 @@
             white-space: nowrap;
         }
 
-        #todayCard .today-overlay .today-actions .today-scroll-hint span {
+        .today-scroll-hint span {
             display: inline-block;
             animation: bobble 2.4s infinite;
         }
@@ -275,8 +289,8 @@
             position: relative;
         }
 
-        /* ===== 轮播标题 - 顶部渐变遮层 ===== */
-        .movie-title-overlay {
+        /* ===== 轮播顶部渐变遮层 ===== */
+        .movie-title-overlay-top {
             position: absolute;
             top: 0;
             left: 0;
@@ -288,6 +302,18 @@
                 rgba(0, 0, 0, 0.4) 40%,
                 transparent 100%
             );
+            pointer-events: none;
+        }
+        /* =====【新增】移动端标题+缩略图底部区域遮罩 ===== */
+        .movie-bottom-safe-overlay {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+            z-index: 11;
             pointer-events: none;
         }
 
@@ -350,19 +376,6 @@
         .movie-actions .btn svg {
             flex-shrink: 0;
             margin-right: 4px;
-        }
-
-        .movie-actions .btn-primary {
-            background: rgba(220, 210, 180, 0.15);
-            border-color: rgba(240, 230, 200, 0.2);
-        }
-        .movie-actions .btn-primary:hover {
-            background: rgba(220, 210, 180, 0.3);
-            transform: scale(1.03);
-        }
-        .movie-actions .btn-secondary:hover {
-            background: rgba(200, 200, 200, 0.15);
-            transform: scale(1.02);
         }
 
         /* ===== 轮播控制按钮【默认隐藏，点击图片切换显示】 ===== */
@@ -456,30 +469,21 @@
 
         /* ===== 移动端样式 ===== */
         @media (max-width: 640px) {
-            /* ========== 今日页面移动端修改 ========== */
+            /* ========== 今日页面移动端 ========== */
+            /* 切换显示移动端悬浮按钮 */
+            #todayCard .today-overlay .today-actions-pc {
+                display: none;
+            }
+            #todayCard .today-actions-mobile {
+                display: flex;
+            }
+            /* overlay贴底，内容整体向上偏移 */
             #todayCard .today-overlay {
                 padding: 16px 18px 14px;
                 min-height: 35%;
-                /* bottom 恢复默认，固定贴底，不向上移动 */
                 bottom: 0;
+                transform: translateY(-30px);
             }
-            /* 右上角悬浮按钮组，水平排列 */
-            #todayCard .today-overlay .today-actions {
-                position: absolute;
-                top: 16px;
-                right: 12px;
-                margin-top: 0;
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 6px;
-                max-width: calc(100vw - 24px);
-            }
-            /* 按钮进一步缩小 */
-            #todayCard .today-overlay .today-actions .btn {
-                font-size: 0.52rem;
-                padding: 3px 9px;
-            }
-            /* 滚动提示保留显示 */
             #todayCard .today-overlay .today-title {
                 font-size: 1.2rem;
             }
@@ -488,30 +492,40 @@
                 line-height: 1.7;
                 max-height: 30vh;
             }
+            /* 移动端悬浮按钮缩小 */
+            #todayCard .today-actions-mobile .btn {
+                font-size: 0.5rem;
+                padding: 3px 8px;
+            }
 
-            /* ========== 轮播页面移动端修改 ========== */
-            /* 标题移到缩略图上方、靠左 */
+            /* ========== 轮播页面移动端 ========== */
+            /* 启用底部安全遮罩，保护标题和缩略图 */
+            .movie-bottom-safe-overlay {
+                display: block;
+            }
+            /* 标题移动到缩略图上方靠左 */
             .movie-title-bar {
                 top: auto;
                 left: 1.2rem;
                 transform: none;
-                bottom: calc(1.2rem + 56px);
+                bottom: calc(1.2rem + 54px);
                 text-align:left;
             }
+            /* 标题字体进一步缩小 */
             .movie-title-bar .movie-title {
-                font-size:1rem !important;
+                font-size:0.88rem !important;
             }
-            /* 右上角按钮继续缩小 */
+            /* 右上角按钮缩小 */
             .movie-actions {
                 top: 0.6rem;
                 right: 0.8rem;
                 gap: 0.3rem;
             }
             .movie-actions .btn {
-                font-size: 0.5rem;
-                padding: 0.2rem 0.5rem;
+                font-size: 0.48rem;
+                padding: 0.18rem 0.45rem;
             }
-            /* 左右切换按钮缩小 */
+            /* 切换箭头缩小 */
             .movie-btn {
                 width: 2.6rem;
                 height: 2.6rem;
@@ -543,9 +557,6 @@
                 width: 2.4rem;
                 height: 1.6rem;
             }
-            .movie-title-overlay {
-                height: 35%;
-            }
         }
 
         @media (max-width: 480px) {
@@ -553,6 +564,7 @@
                 padding: 12px 14px 12px;
                 min-height: 30%;
                 bottom:0;
+                transform: translateY(-24px);
             }
             #todayCard .today-overlay .today-title {
                 font-size: 1rem;
@@ -561,9 +573,6 @@
                 font-size: 0.75rem;
                 line-height: 1.6;
                 max-height: 25vh;
-            }
-            .movie-title-overlay {
-                height: 30%;
             }
         }
     </style>
@@ -577,6 +586,8 @@
         <section id="today" class="fullscreen-section">
             <div id="todayCard">
                 <div class="loading">加载中...</div>
+                <!-- 移动端悬浮右上角按钮容器（独立层级） -->
+                <div class="today-actions-mobile"></div>
             </div>
         </section>
 
@@ -584,8 +595,9 @@
         <section id="movieCarouselSection" class="fullscreen-section">
             <div class="carousel-movie">
                 <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
-                    <!-- ===== 渐变遮层（顶部） ===== -->
-                    <div class="movie-title-overlay"></div>
+                    <div class="movie-title-overlay-top"></div>
+                    <!-- 新增底部保护遮罩 -->
+                    <div class="movie-bottom-safe-overlay"></div>
                     
                     <div class="movie-title-bar">
                         <div class="movie-info">
@@ -631,12 +643,10 @@
             function get1080pUrl(url) {
                 if (!url) return '';
                 let result = url;
-                // 移动端使用竖版 1080x1920
                 if(isMobileDevice()){
                     result = result.replace(/_UHD\.jpg/g, '_1080x1920.jpg');
                     result = result.replace(/_1920x1080\.jpg/g, '_1080x1920.jpg');
                 }else{
-                    // PC横版
                     result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
                     result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
                 }
@@ -649,7 +659,6 @@
                 if (url.includes('_UHD.jpg')) {
                     return url;
                 }
-                // PC横版4K / 移动端竖版
                 if(isMobileDevice()){
                     return url.replace(/_1920x1080\.jpg/g, '_1080x1920.jpg');
                 }else{
@@ -666,12 +675,9 @@
                 return mainTitle || subTitle || '壁纸';
             }
 
-            // ===== 生成光影回顾链接 =====
             function getDetailUrl(title, dateStr) {
                 if (!dateStr) return '#';
-                
                 let cleanTitle = title.replace(/\s*[-–]\s*\d{4}\/\d{2}\/\d{2}$/, '').trim();
-                
                 const parts = dateStr.split('-');
                 const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
                 d.setDate(d.getDate() - 1);
@@ -679,11 +685,9 @@
                 const m = String(d.getMonth() + 1).padStart(2, '0');
                 const day = String(d.getDate()).padStart(2, '0');
                 const dateParam = `${y}${m}${day}_1600`;
-                
                 return `https://cn.bing.com/search?q=${encodeURIComponent(cleanTitle)}&form=hpcapt&filters=HpDate:%22${dateParam}%22+mgzv3configlist:%22BingQA_Encyclopedia_Layout%22`;
             }
 
-            // ===== 获取今日日期字符串 =====
             function getTodayStr() {
                 const now = new Date();
                 const y = now.getFullYear();
@@ -695,6 +699,7 @@
             // ===== 加载今日壁纸 =====
             async function loadToday() {
                 const container = document.getElementById('todayCard');
+                const mobileBtnWrap = container.querySelector('.today-actions-mobile');
                 try {
                     const resp = await fetch('today.json');
                     if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -726,20 +731,31 @@
                     }
 
                     const detailUrl = getDetailUrl(item.title || item.subtitle || '', item.date);
+                    const htmlPcActions = `
+                        <div class="today-actions-pc">
+                            <a href="${get4kUrl(item.bing_url || item.url || '')}" class="btn btn-primary" target="_blank">${ICONS.download} UHD/4K</a>
+                            <a href="${get1080pUrl(item.bing_url || item.url || '')}" class="btn btn-secondary" target="_blank">${ICONS.download} 1080P</a>
+                            <a href="${detailUrl}" class="btn btn-secondary" target="_blank">${ICONS.book} 光影回顾</a>
+                            <a href="/archive.html" class="btn btn-secondary">${ICONS.archive} 壁纸归档</a>
+                            <span class="today-scroll-hint"><span>⬇ 滚动 · 查看历史</span></span>
+                        </div>
+                    `;
+                    // 移动端右上角悬浮按钮
+                    mobileBtnWrap.innerHTML = `
+                        <a href="${get4kUrl(item.bing_url || item.url || '')}" class="btn btn-primary" target="_blank">${ICONS.download} UHD/4K</a>
+                        <a href="${get1080pUrl(item.bing_url || item.url || '')}" class="btn btn-secondary" target="_blank">${ICONS.download} 1080P</a>
+                        <a href="${detailUrl}" class="btn btn-secondary" target="_blank">${ICONS.book} 光影回顾</a>
+                        <a href="/archive.html" class="btn btn-secondary">${ICONS.archive} 壁纸归档</a>
+                    `;
 
                     container.innerHTML = `
                         <img src="${imgUrl}" alt="${title}" loading="lazy" onerror="this.style.display='none'" />
                         <div class="today-overlay">
                             <div class="today-title">${title}</div>
                             <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
-                            <div class="today-actions">
-                                <a href="${get4kUrl(item.bing_url || item.url || '')}" class="btn btn-primary" target="_blank">${ICONS.download} UHD/4K</a>
-                                <a href="${get1080pUrl(item.bing_url || item.url || '')}" class="btn btn-secondary" target="_blank">${ICONS.download} 1080P</a>
-                                <a href="${detailUrl}" class="btn btn-secondary" target="_blank">${ICONS.book} 光影回顾</a>
-                                <a href="/archive.html" class="btn btn-secondary">${ICONS.archive} 壁纸归档</a>
-                                <span class="today-scroll-hint"><span>⬇ 滚动 · 查看历史</span></span>
-                            </div>
+                            ${htmlPcActions}
                         </div>
+                        <div class="today-actions-mobile">${mobileBtnWrap.innerHTML}</div>
                     `;
                     console.log('✅ 今日壁纸加载成功:', item.date);
                 } catch (e) {
@@ -765,7 +781,6 @@
             const prevBtn = document.getElementById('moviePrev');
             const nextBtn = document.getElementById('movieNext');
 
-            // 点击画面切换左右箭头显示（不拦截按钮、缩略图点击）
             slide.addEventListener("click", function(e){
                 if(!e.target.closest(".movie-btn") && !e.target.closest(".thumb-item") && !e.target.closest(".movie-actions")){
                     slide.classList.toggle("show-nav");
@@ -883,7 +898,6 @@
                 }
             }
 
-            // ===== 事件绑定 =====
             prevBtn.addEventListener('click', () => { prevSlide(); resetAutoPlay(); });
             nextBtn.addEventListener('click', () => { nextSlide(); resetAutoPlay(); });
 
@@ -905,10 +919,8 @@
                 }
             }, { passive: true });
 
-            // ===== 初始化 =====
             loadToday();
             loadCarousel();
-
             console.log('✨ 整屏切换已启用');
         })();
     </script>
