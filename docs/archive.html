@@ -532,8 +532,17 @@
                 margin: 10px;
                 border-radius: 20px;
             }
+            /* 移动端移除固定横版比例，自适应图片 */
             .modal-image {
-                aspect-ratio: 16 / 9;
+                aspect-ratio: unset;
+                min-height: 70vh;
+                height: auto;
+            }
+            .modal-image img {
+                width: 100%;
+                height: auto;
+                min-height: 70vh;
+                object-fit: cover;
             }
             .modal-content {
                 padding: 14px 20px 18px;
@@ -549,12 +558,15 @@
             .modal-image::after {
                 height: 65%;
             }
+            /* 移动端关键改动：关闭按钮锁定在【图片容器右上角】 */
             .modal-close {
-                top: 10px;
-                right: 10px;
+                top: 12px;
+                right: 12px;
                 width: 36px;
                 height: 36px;
                 font-size: 1.2rem;
+                /* 层级高于图片渐变，不会被遮挡 */
+                z-index: 12;
             }
             .date-popup {
                 width: 92%;
@@ -615,7 +627,13 @@
                 max-height: 98vh;
             }
             .modal-image {
-                aspect-ratio: 16 / 10;
+                aspect-ratio: unset;
+                min-height: 75vh;
+            }
+            .modal-image img {
+                width:100%;
+                height:auto;
+                min-height:75vh;
             }
             .modal-content {
                 padding: 10px 14px 14px;
@@ -637,6 +655,7 @@
                 width: 32px;
                 height: 32px;
                 font-size: 1rem;
+                z-index:12;
             }
             .date-popup {
                 width: 95%;
@@ -661,7 +680,7 @@
                 <span class="filter-label">📆 选择年月：</span>
                 <input class="filter-input" id="monthInput" placeholder="请选择" readonly>
             </div>
-            <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置</button>
+            <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置筛选</button>
         </div>
         <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
     </div>
