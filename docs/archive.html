@@ -526,22 +526,31 @@
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
                 gap: 12px;
             }
+        
+            /* ========== 移动端模态框全屏核心修改 ========== */
+            .modal-overlay {
+                padding: 0 !important;
+            }
             .modal-box {
                 max-width: 100%;
-                max-height: 95vh;
-                margin: 10px;
-                border-radius: 20px;
+                max-height: 100vh !important;
+                height: 100vh !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                display: flex;
+                flex-direction: column;
             }
-            /* 移动端移除固定横版比例，自适应图片 */
             .modal-image {
-                aspect-ratio: unset;
-                min-height: 70vh;
-                height: auto;
+                flex: 1;
+                aspect-ratio: unset !important;
+                width: 100%;
+                height: 100%;
             }
             .modal-image img {
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
+                background:#000;
             }
             .modal-content {
                 padding: 14px 20px 18px;
@@ -557,16 +566,16 @@
             .modal-image::after {
                 height: 65%;
             }
-            /* 移动端关键改动：关闭按钮锁定在【图片容器右上角】 */
             .modal-close {
                 top: 12px;
                 right: 12px;
                 width: 36px;
                 height: 36px;
                 font-size: 1.2rem;
-                /* 层级高于图片渐变，不会被遮挡 */
-                z-index: 12;
+                z-index: 12 !important;
             }
+            /* ===================================== */
+        
             .date-popup {
                 width: 92%;
                 left: 4% !important;
@@ -620,18 +629,29 @@
                 font-size: 0.65rem;
                 padding: 3px 10px;
             }
+        
+            /* ========== 小屏模态框全屏适配 ========== */
+            .modal-overlay {
+                padding: 0 !important;
+            }
             .modal-box {
-                border-radius: 16px;
-                margin: 8px;
-                max-height: 98vh;
+                max-width: 100%;
+                max-height: 100vh !important;
+                height: 100vh !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                display: flex;
+                flex-direction: column;
             }
             .modal-image {
-                aspect-ratio: unset;
-                min-height: 75vh;
+                flex: 1;
+                aspect-ratio: unset !important;
+                width: 100%;
+                height: 100%;
             }
             .modal-image img {
-                width:100%;
-                height:100%;
+                width: 100%;
+                height: 100%;
                 object-fit: cover;
                 background:#000;
             }
@@ -655,8 +675,10 @@
                 width: 32px;
                 height: 32px;
                 font-size: 1rem;
-                z-index:12;
+                z-index:12 !important;
             }
+            /* ===================================== */
+        
             .date-popup {
                 width: 95%;
                 left: 2.5% !important;
