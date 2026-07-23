@@ -706,7 +706,15 @@
                     return url.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
                 }
             }
-
+            
+            function get720pUrl(url) {
+                if (!url) return '';
+                let res = url;
+                // 仅将 _UHD.jpg 替换为 _1280x720.jpg
+                res = res.replace(/_UHD\.jpg/g, '_1280x720.jpg');
+                return res;
+            }
+            
             function formatTitle(item) {
                 const mainTitle = item.subtitle || '';
                 const subTitle = item.title || '';
