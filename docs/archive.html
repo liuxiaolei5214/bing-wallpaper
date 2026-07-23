@@ -413,12 +413,18 @@
             padding: 20px 32px 28px;
             z-index: 2;
             max-height: 60%;
+            /* 删掉overflow-y:auto，外层不再滚动 */
+        }
+        
+        /* 新增：独立滚动容器 */
+        .modal-scroll-desc {
+            max-height: 45vh;
             overflow-y: auto;
             scrollbar-width: none;
+            margin-top: 6px;
         }
-
-        .modal-content::-webkit-scrollbar {
-            width: 0px;
+        .modal-scroll-desc::-webkit-scrollbar {
+            width: 0;
             background: transparent;
         }
 
@@ -555,6 +561,9 @@
                 padding: 14px 20px 18px;
                 max-height: 55%;
             }
+            .modal-scroll-desc {
+                max-height: 30vh; /* 和你今日页面保持一致 30vh */
+            }
             .modal-title {
                 font-size: 1.2rem;
             }
@@ -658,6 +667,9 @@
                 padding: 10px 14px 14px;
                 max-height: 50%;
             }
+            .modal-scroll-desc {
+                max-height: 25vh; /* 和你今日页面保持一致 25vh */
+            }
             .modal-title {
                 font-size: 1rem;
             }
@@ -725,8 +737,10 @@
             </div>
             <div class="modal-content">
                 <div class="modal-title" id="modalTitle"></div>
-                <div class="modal-subtitle" id="modalSubtitle"></div>
-                <div class="modal-desc" id="modalDesc"></div>
+                <div class="modal-scroll-desc">
+                    <div class="modal-subtitle" id="modalSubtitle"></div>
+                    <div class="modal-desc" id="modalDesc"></div>
+                </div>
             </div>
         </div>
     </div>
