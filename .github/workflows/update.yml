@@ -425,7 +425,7 @@ jobs:
               f.write(f"DATE={date_str}\n")
               f.write(f"BING_URL={bing_url}\n")
               f.write(f"NEED_WRITE={need_write}\n")
-              f.write(f"DATA_SOURCE={'缓存' if use_cache else 'API + 第三方提取'}\n")
+              f.write(f"DATA_SOURCE={'本地缓存' if use_cache else '第三方提取'}\n")
           EOF
 
       - name: Call sync API
@@ -449,6 +449,7 @@ jobs:
           import json
           import os
           import random
+          import re
       
           # ============================================================
           # 配置
@@ -478,6 +479,9 @@ jobs:
           def get_random_image():
               return random.choice(IMAGES) if IMAGES else ''
       
+          def clean_title(title):
+              return re.sub(r' - \d{4}/\d{2}/\d{2}$', '', title)
+      
           # ============================================================
           # 获取环境变量
           # ============================================================
@@ -487,23 +491,25 @@ jobs:
           need_write = os.environ.get('NEED_WRITE', 'True') == 'True'
           data_source = os.environ.get('DATA_SOURCE', '缓存')
       
+          title_clean = clean_title(title)
+      
           # ============================================================
           # 构建消息
           # ============================================================
           if need_write:
-              title_msg = '?? Bing壁纸 · 提取推送'
+              title_msg = '🎉 Bing壁纸 · 提取推送'
               description_msg = f'数据来源：{data_source}\n'
               description_msg += f'壁纸主标：{subtitle}\n'
-              description_msg += f'壁纸副标：{title}\n'
+              description_msg += f'壁纸副标：{title_clean}\n'
               description_msg += f'提取日期：{date_str}'
           else:
-              title_msg = '?? Bing壁纸 · 今日已更新'
-              description_msg = f'状态：今日数据已存在，跳过提取\n'
-              description_msg += f'日期：{date_str}\n'
+              title_msg = '⏭️ Bing壁纸 · 今日已更新'
+              description_msg = f'当前状态：数据已存在\n'
+              description_msg += f'当前日期：{date_str}\n'
               description_msg += f'数据来源：{data_source}'
       
           # ============================================================
-          # 发送消息
+          # 发送消息（强制 UTF-8 编码）
           # ============================================================
           message = {
               'msgtype': 'news',
@@ -518,7 +524,15 @@ jobs:
           }
       
           try:
-              response = requests.post(WECHAT_WEBHOOK, json=message, timeout=10)
+              # 使用 ensure_ascii=False 保留 emoji
+              payload = json.dumps(message, ensure_ascii=False).encode('utf-8')
+              
+              response = requests.post(
+                  WECHAT_WEBHOOK,
+                  data=payload,
+                  timeout=10,
+                  headers={'Content-Type': 'application/json; charset=utf-8'}
+              )
               result = response.json()
               if result.get('errcode') == 0:
                   print('? 企业微信通知发送成功')
@@ -527,7 +541,6 @@ jobs:
           except Exception as e:
               print(f'?? 企业微信通知发送异常: {e}')
           EOF
-
 
       - name: Generate combined history.json
         run: |
