@@ -3,7 +3,7 @@ name: Daily Update
 on:
   schedule:
     # UTC时间+8小时
-    - cron: '5 16 * * *'
+    - cron: '0 16 * * *'
   workflow_dispatch:
 
 jobs:
@@ -19,6 +19,7 @@ jobs:
           pip install requests beautifulsoup4 lxml
 
       - name: Fetch and process today's wallpaper
+        id: fetch
         run: |
           python3 << 'EOF'
           import json
@@ -414,6 +415,162 @@ jobs:
               else:
                   print(f"  ❌ {f} 不存在")
 
+          # 写入环境变量供后续步骤使用
+          with open(os.environ['GITHUB_ENV'], 'a') as f:
+              f.write(f"TITLE={title}\n")
+              f.write(f"SUBTITLE={subtitle}\n")
+              f.write(f"DESCRIPTION={description}\n")
+              f.write(f"DATE={date_str}\n")
+              f.write(f"BING_URL={bing_url}\n")
+              f.write(f"NEED_WRITE={need_write}\n")
+
+          EOF
+
+      - name: Call sync API
+        run: |
+          echo "📡 调用同步API..."
+          curl -s -X GET "https://bing.ll1524.cc.cd/api/sync-github?key=ll1524ql2026" || echo "⚠️ API调用失败，继续执行"
+
+      - name: Send WeChat notification
+        if: env.NEED_WRITE == 'True'
+        env:
+          TITLE: ${{ env.TITLE }}
+          SUBTITLE: ${{ env.SUBTITLE }}
+          DESCRIPTION: ${{ env.DESCRIPTION }}
+          DATE: ${{ env.DATE }}
+          BING_URL: ${{ env.BING_URL }}
+          NEED_WRITE: ${{ env.NEED_WRITE }}
+          DATA_SOURCE: ${{ env.DATA_SOURCE }}
+        run: |
+          echo "?? 发送企业微信通知..."
+          python3 << 'EOF'
+          import requests
+          import json
+          import os
+          import random
+          from datetime import datetime, timedelta, timezone
+      
+          # ============================================================
+          # 配置
+          # ============================================================
+          WECHAT_WEBHOOK = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=fbc3ee80-bc01-439f-965b-6e8806e39351'
+          LINK_URL = 'https://ql.ll1524.cc.cd/task10?key=ll1524ql2026'
+      
+          # 随机图片列表
+          IMAGES = [
+              'https://image.lei5214.cc.cd/img/2026/03/1.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/2.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/3.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/4.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/5.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/6.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/7.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/8.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/9.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/10.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/11.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/12.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/13.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/14.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/15.jpg',
+              'https://image.lei5214.cc.cd/img/2026/03/16.jpg'
+          ]
+      
+          # ============================================================
+          # 工具函数
+          # ============================================================
+          def get_random_image():
+              return random.choice(IMAGES) if IMAGES else ''
+      
+          def get_beijing_date():
+              beijing_tz = timezone(timedelta(hours=8))
+              return datetime.now(beijing_tz)
+      
+          def format_beijing_date(dt):
+              return dt.strftime('%Y-%m-%d %H:%M:%S')
+      
+          # ============================================================
+          # 获取环境变量
+          # ============================================================
+          title = os.environ.get('TITLE', '今日壁纸')
+          subtitle = os.environ.get('SUBTITLE', '')
+          description = os.environ.get('DESCRIPTION', '')
+          date_str = os.environ.get('DATE', '')
+          bing_url = os.environ.get('BING_URL', '')
+          need_write = os.environ.get('NEED_WRITE', 'True') == 'True'
+          data_source = os.environ.get('DATA_SOURCE', '缓存')
+      
+          # ============================================================
+          # 构建消息
+          # ============================================================
+          # 如果是跳过状态（数据未变化），显示不同的标题
+          if need_write:
+              # 数据有变化，推送成功
+              worker_status = '推送成功'
+              github_status = '推送成功'
+              skip_reason = ''
+      
+              title_msg = '?? Bing壁纸 · 提取推送'
+              description_msg = f'Worker：{worker_status}\n'
+              description_msg += f'Github：{github_status}\n'
+              description_msg += f'数据来源：{data_source}\n'
+      
+              if description:
+                  description_msg += f'描述长度：{len(description)} 字符\n'
+              if date_str:
+                  description_msg += f'提取日期：{date_str}\n'
+      
+              if subtitle:
+                  description_msg += f'壁纸主标：{subtitle}\n'
+      
+              clean_title = title
+              if clean_title:
+                  import re
+                  clean_title = re.sub(r' - \d{4}/\d{2}/\d{2}$', '', clean_title)
+                  description_msg += f'壁纸副标：{clean_title}'
+      
+              if not description and not date_str:
+                  beijing_now = get_beijing_date()
+                  description_msg += f'提取日期：{format_beijing_date(beijing_now)}'
+      
+          else:
+              # 数据未变化，跳过
+              title_msg = '?? Bing壁纸 · 今日已更新'
+              description_msg = f'状态：今日数据已存在，跳过提取\n'
+              if date_str:
+                  description_msg += f'日期：{date_str}\n'
+              description_msg += f'数据来源：{data_source}\n'
+              description_msg += f'Worker：推送成功\n'
+              description_msg += f'Github：推送成功'
+      
+          # ============================================================
+          # 发送企业微信消息（news类型）
+          # ============================================================
+          pic_url = get_random_image()
+          link_url = LINK_URL
+      
+          message = {
+              'msgtype': 'news',
+              'news': {
+                  'articles': [{
+                      'title': title_msg,
+                      'description': description_msg,
+                      'url': link_url,
+                      'picurl': pic_url
+                  }]
+              }
+          }
+      
+          try:
+              response = requests.post(WECHAT_WEBHOOK, json=message, timeout=10)
+              result = response.json()
+              if result.get('errcode') == 0:
+                  print('? 企业微信通知发送成功')
+              else:
+                  print(f'? 企业微信通知发送失败: {result.get("errmsg")}')
+          except Exception as e:
+              print(f'?? 企业微信通知发送异常: {e}')
+      
           EOF
 
       - name: Generate combined history.json
