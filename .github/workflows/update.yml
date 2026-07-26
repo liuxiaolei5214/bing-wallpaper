@@ -498,14 +498,14 @@ jobs:
           if need_write:
               title_msg = '🎉 Bing壁纸 · 提取推送'
               description_msg = f'数据来源：{data_source}\n'
+              description_msg += f'提取日期：{date_str}\n'
               description_msg += f'壁纸主标：{subtitle}\n'
-              description_msg += f'壁纸副标：{title_clean}\n'
-              description_msg += f'提取日期：{date_str}'
+              description_msg += f'壁纸副标：{title_clean}'
           else:
               title_msg = '⏭️ Bing壁纸 · 今日已更新'
-              description_msg = f'当前状态：数据已存在\n'
-              description_msg += f'当前日期：{date_str}\n'
-              description_msg += f'数据来源：{data_source}'
+              description_msg = f'数据来源：{data_source}\n'
+              description_msg += f'当前状态：数据已存在\n'
+              description_msg += f'当前日期：{date_str}'
       
           # ============================================================
           # 发送消息（强制 UTF-8 编码）
