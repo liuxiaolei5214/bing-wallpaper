@@ -212,87 +212,93 @@ jobs:
                   print(f"⚠️ bing.ee123.net 提取失败: {e}")
 
               # ============================================================
-              # 2c. 兜底：dailybing.cn
+              # 2c. 兜底：dailybing.cn（使用 BeautifulSoup 提取）
               # ============================================================
               if not description or not title:
                   print("\n🔗 尝试从 dailybing.cn 提取...")
                   try:
+                      from bs4 import BeautifulSoup
+                      
                       detail_url = f"https://www.dailybing.cn/view/zh-cn/{enddate}.html"
                       print(f"  - URL: {detail_url}")
                       response = requests.get(detail_url, timeout=15, headers={
                           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                       })
                       print(f"  - 状态码: {response.status_code}")
-
+              
                       if response.status_code == 200:
                           html = response.text
                           print(f"  - HTML 长度: {len(html)} 字符")
-
-                          main_title = ''
-                          img_match = re.search(r'<img[^>]*class="[^"]*view landscape[^"]*"[^>]*alt="([^"]+)"', html)
-                          if not img_match:
-                              img_match = re.search(r'<img[^>]*class="[^"]*view portrait[^"]*"[^>]*alt="([^"]+)"', html)
-                          if img_match:
-                              main_title = img_match.group(1).strip()
-                              print(f"✅ 从 dailybing 提取到主标题: '{main_title}'")
-
-                          sub_title = ''
-                          copyright_match = re.search(r'<div[^>]*class="story-copyright"[^>]*>([^<]+)</div>', html)
-                          if copyright_match:
-                              copyright_raw = copyright_match.group(1).strip()
+              
+                          soup = BeautifulSoup(html, "html.parser")
+              
+                          # ----- 1. 提取主标题（img alt）-----
+                          main_title = ""
+                          img_ele = soup.select_one('img.view.landscape') or soup.select_one('img.view.portrait')
+                          if img_ele and img_ele.has_attr("alt"):
+                              main_title = img_ele["alt"].strip()
+                              print(f"  ✅ 提取主标题: '{main_title}'")
+              
+                          # ----- 2. 提取 copyright 作为副标题 -----
+                          sub_title = ""
+                          copyright_ele = soup.select_one(".story-copyright")
+                          if copyright_ele:
+                              copyright_raw = copyright_ele.get_text(strip=False)
+                              # 清洗HTML实体
+                              copyright_raw = copyright_raw.replace('&nbsp;', ' ')
+                              copyright_raw = copyright_raw.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
+                              copyright_raw = copyright_raw.replace('&quot;', '"').replace('&#39;', "'")
+                              copyright_raw = re.sub(r'\s+', ' ', copyright_raw).strip()
+                              # 移除版权标记
                               sub_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_raw).strip()
-                              print(f"✅ 从 dailybing 提取到副标题: '{sub_title}'")
-
-                          if sub_title:
-                              if ' - ' in sub_title:
-                                  title = sub_title
+                              print(f"  ✅ 提取副标题: '{sub_title[:60]}...'")
+              
+                          # ----- 3. 组装标题 -----
+                          clean_title = sub_title or main_title
+                          date_slash = date_str.replace("-", "/")
+                          if clean_title:
+                              title = f"{clean_title.strip()} - {date_slash}"
+                          else:
+                              title = main_title or date_slash
+                          print(f"  ✅ 构建完整标题: '{title}'")
+              
+                          # ----- 4. 提取描述（跳过第一段） -----
+                          description = ""
+                          story_content_ele = soup.select_one(".story-content")
+                          if story_content_ele:
+                              p_list = story_content_ele.select(".story-paragraph")
+                              print(f"  📖 找到 {len(p_list)} 个段落")
+                              clean_parts = []
+                              is_first = True
+                              for p in p_list:
+                                  raw_text = p.get_text()
+                                  text = re.sub(r'\s+', ' ', raw_text).strip()
+                                  text = text.replace('&nbsp;', ' ')
+                                  text = text.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
+                                  if len(text) > 10:
+                                      if is_first:
+                                          is_first = False
+                                          continue
+                                      clean_parts.append(text)
+                              if clean_parts:
+                                  description = '\n'.join(clean_parts)
+                                  print(f"  ✅ 提取描述：共 {len(clean_parts)} 段，{len(description)} 字符")
                               else:
-                                  title = f"{sub_title.strip()} - {date_str}"
-                              print(f"✅ 构建完整标题: '{title}'")
-
+                                  print(f"  ⚠️ 未提取到有效描述段落")
+              
+                          # ----- 5. 设置 subtitle -----
                           if main_title:
                               subtitle = main_title
-
-                          story_match = re.search(r'<div[^>]*class="story-content"[^>]*>([\s\S]*?)</div>', html)
-                          if story_match:
-                              story_content = story_match.group(1)
-                              p_tags = re.findall(r'<div[^>]*class="story-paragraph"[^>]*>(.*?)</div>', story_content, re.DOTALL)
-                              desc_parts = [p.strip() for p in p_tags if p.strip()]
-                              if desc_parts:
-                                  clean_parts = []
-                                  for p in desc_parts:
-                                      p = p.replace('&nbsp;', ' ')
-                                      p = p.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
-                                      p = p.replace('&quot;', '"').replace('&#39;', "'")
-                                      p = re.sub(r'\s+', ' ', p).strip()
-                                      if p:
-                                          clean_parts.append(p)
-                                  if clean_parts:
-                                      description = '\n'.join(clean_parts)
-                                      print(f"✅ 从 dailybing 提取成功，共 {len(clean_parts)} 段描述")
+                          elif sub_title:
+                              subtitle = sub_title
+                          else:
+                              subtitle = clean_title
 
                   except Exception as e:
-                      print(f"⚠️ dailybing.cn 提取失败: {e}")
+                      print(f"  ❌ dailybing.cn 提取失败: {e}")
 
-              # ============================================================
-              # 2d. 备用：copyright
-              # ============================================================
-              if not description:
-                  description = copyright_text
-                  print(f"⚠️ 使用 copyright 作为备用描述")
-                  print(f"  - 内容: {description[:200]}...")
 
-              if not title:
-                  base_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
-                  base_title = re.sub(r'\s*,\s*$', '', base_title)
-                  title = f"{base_title.strip()} - {date_str}"
-                  print(f"⚠️ 从 copyright 构建标题: '{title}'")
-
-              if not subtitle:
-                  subtitle = title.split(' - ')[0].strip() if ' - ' in title else title
-                  print(f"⚠️ 从 title 构建 subtitle: '{subtitle}'")
-
-              bing_url = f"https://bing.com{urlbase}_UHD.jpg" if urlbase else ''
+              bing_url = f"https://cn.bing.com{urlbase}_UHD.jpg" if urlbase else ''
               print(f"  - bing_url: {bing_url}")
 
               # ============================================================
