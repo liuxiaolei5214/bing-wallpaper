@@ -326,38 +326,45 @@ jobs:
           print("\n" + "=" * 60)
           print("📋 步骤3: 对比数据是否变化")
           print("=" * 60)
-
+          
           year = date_str[:4]
           year_file = f"docs/zh.{year}.json"
           print(f"📄 对比文件: {year_file}")
-
+          
           need_write = True
           existing = []
-
+          
           # 读取 zh.{year}.json
           if os.path.exists(year_file):
               try:
                   with open(year_file, 'r', encoding='utf-8') as f:
                       existing = json.load(f)
                   print(f"📊 读取到 {len(existing)} 条现有数据")
-
+          
                   # 获取最新一条数据
                   if existing:
                       latest = existing[0]
+                      latest_date = latest.get('date', '')
                       print(f"📄 最新一条数据:")
                       print(f"  - title: {latest.get('title')}")
-                      print(f"  - date: {latest.get('date')}")
-
-                      # 对比 today.json 和最新一条数据
-                      if (latest.get('title') == title and
-                          latest.get('subtitle') == subtitle and
-                          latest.get('description') == description and
-                          latest.get('bing_url') == bing_url):
-                          need_write = False
-                          print(f"✅ 数据未变化，跳过写入 {year_file}")
+                      print(f"  - date: {latest_date}")
+          
+                      # ===== 关键修改：如果最新数据日期不是今天，强制写入 =====
+                      if latest_date != today_str:
+                          need_write = True
+                          print(f"⚠️ 最新数据日期 ({latest_date}) 不等于今日 ({today_str})，强制更新")
                       else:
-                          print(f"⚠️ 数据有变化，需要更新")
-                          print(f"  - title 变化: {latest.get('title')} != {title}")
+                          # 对比 today.json 和最新一条数据
+                          if (latest.get('title') == title and
+                              latest.get('subtitle') == subtitle and
+                              latest.get('description') == description and
+                              latest.get('bing_url') == bing_url):
+                              need_write = False
+                              print(f"✅ 数据未变化，跳过写入 {year_file}")
+                          else:
+                              need_write = True
+                              print(f"⚠️ 数据有变化，需要更新")
+                              print(f"  - title 变化: {latest.get('title')} != {title}")
                   else:
                       print(f"📄 文件为空，需要写入")
               except Exception as e:
