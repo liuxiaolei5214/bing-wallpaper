@@ -582,7 +582,7 @@ jobs:
       - name: Generate combined history.json
         run: |
           echo '[]' > docs/history.json
-          for year in $(seq 2020 $(date +'%Y')); do
+          for year in $(seq 2016 $(date +'%Y')); do
             if [ -f "docs/zh.${year}.json" ]; then
               jq -s '.[0] + .[1]' docs/history.json "docs/zh.${year}.json" > docs/history_temp.json
               mv docs/history_temp.json docs/history.json
@@ -602,7 +602,7 @@ jobs:
           current_year = datetime.now().year
           index = {"years": []}
 
-          for year in range(2020, current_year + 1):
+          for year in range(2016, current_year + 1):
               filename = f"docs/zh.{year}.json"
               if os.path.exists(filename):
                   try:
