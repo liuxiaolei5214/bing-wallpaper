@@ -111,28 +111,6 @@
         .filter-input:focus { border-color: #7abfff; box-shadow: 0 0 0 3px rgba(77,150,255,0.2); }
         .filter-input::placeholder { color: #666; }
 
-        /* ===== 新增：确认按钮 ===== */
-        .btn-confirm-month {
-            padding: 6px 20px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.85rem;
-            background: #4d96ff;
-            color: #fff;
-        }
-        .btn-confirm-month:hover {
-            background: #3a7bd5;
-            transform: translateY(-1px);
-        }
-        .btn-confirm-month:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-        }
-
         .btn-filter-reset {
             padding: 6px 16px;
             border: none;
@@ -177,6 +155,7 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
+        /* ===== 关键修改：弹窗头部居中 ===== */
         .popup-header {
             display: flex;
             align-items: center;
@@ -434,8 +413,10 @@
             padding: 20px 32px 28px;
             z-index: 2;
             max-height: 60%;
+            /* 删掉overflow-y:auto，外层不再滚动 */
         }
         
+        /* 新增：独立滚动容器 */
         .modal-scroll-desc {
             max-height: 45vh;
             overflow-y: auto;
@@ -552,6 +533,7 @@
                 gap: 12px;
             }
         
+            /* ========== 移动端模态框全屏核心修改 ========== */
             .modal-overlay {
                 padding: 0 !important;
             }
@@ -581,7 +563,7 @@
                 max-height: 55%;
             }
             .modal-scroll-desc {
-                max-height: 30vh;
+                max-height: 30vh; /* 和你今日页面保持一致 30vh */
             }
             .modal-title {
                 font-size: 1.2rem;
@@ -601,6 +583,7 @@
                 font-size: 1.2rem;
                 z-index: 12 !important;
             }
+            /* ===================================== */
         
             .date-popup {
                 width: 92%;
@@ -656,6 +639,7 @@
                 padding: 3px 10px;
             }
         
+            /* ========== 小屏模态框全屏适配 ========== */
             .modal-overlay {
                 padding: 0 !important;
             }
@@ -685,7 +669,7 @@
                 max-height: 50%;
             }
             .modal-scroll-desc {
-                max-height: 25vh;
+                max-height: 25vh; /* 和你今日页面保持一致 25vh */
             }
             .modal-title {
                 font-size: 1rem;
@@ -705,6 +689,7 @@
                 font-size: 1rem;
                 z-index:12 !important;
             }
+            /* ===================================== */
         
             .date-popup {
                 width: 95%;
@@ -723,13 +708,12 @@
 
     <!-- ===== 筛选器 ===== -->
     <div class="filters">
+        <!-- ===== 月份控件 ===== -->
         <div class="month-filter-bar">
             <div class="filter-item">
                 <span class="filter-label">📆 选择年月：</span>
                 <input class="filter-input" id="monthInput" placeholder="请选择" readonly>
             </div>
-            <!-- ===== 新增：确认加载按钮 ===== -->
-            <button class="btn-confirm-month" id="confirmMonthBtn">📥 加载该月</button>
             <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置筛选</button>
         </div>
         <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
@@ -779,30 +763,17 @@
             var currentYear = today.getFullYear();
             var currentMonth = today.getMonth() + 1;
 
-            // ===== 核心修改：状态 =====
             var state = {
                 year: currentYear,
-                month: currentMonth,
-                // 新增：真正需要加载的目标（初始为 null）
-                targetYear: null,
-                targetMonth: null
+                month: currentMonth
             };
 
             var mask = document.getElementById('mask');
             var popup = document.getElementById('popup');
             var monthInput = document.getElementById('monthInput');
-            var confirmBtn = document.getElementById('confirmMonthBtn');
             var monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
 
-            // ---------- 更新输入框显示 ----------
-            function updateMonthInput() {
-                var monthStr = String(state.month).padStart(2, '0');
-                monthInput.value = state.year + ' - ' + monthStr;
-                // 启用确认按钮
-                confirmBtn.disabled = false;
-            }
-
-            // ---------- 弹窗 ----------
+            // ---------- 月份弹窗 ----------
             function closePopup() {
                 mask.classList.remove('show');
             }
@@ -817,6 +788,7 @@
 
             function renderPopup() {
                 var html = '';
+                // 弹窗头部 - 年份切换（居中）
                 html += '<div class="popup-header">';
                 html += '<div class="popup-year-nav">';
                 html += '<button class="popup-year-btn" id="popupYearPrev">‹</button>';
@@ -824,6 +796,7 @@
                 html += '<button class="popup-year-btn" id="popupYearNext">›</button>';
                 html += '</div>';
                 html += '</div>';
+                // 月份网格
                 html += '<div class="month-grid">';
                 for (var i = 0; i < monthNames.length; i++) {
                     var num = i + 1;
@@ -833,88 +806,78 @@
                 html += '</div>';
                 popup.innerHTML = html;
 
-                // 年份切换（只更新弹窗显示，不加载数据）
+                // 弹窗内年份切换
                 document.getElementById('popupYearPrev').onclick = function(e) {
                     e.stopPropagation();
                     state.year--;
                     document.getElementById('popupYearText').textContent = state.year + '年';
                     updateMonthInput();
-                    // 重新渲染月份网格（只刷新高亮，不加载数据）
-                    renderPopup();
+                    loadData();
                 };
                 document.getElementById('popupYearNext').onclick = function(e) {
                     e.stopPropagation();
                     state.year++;
                     document.getElementById('popupYearText').textContent = state.year + '年';
                     updateMonthInput();
-                    renderPopup();
+                    loadData();
                 };
 
-                // 月份点击：只更新状态和样式，不加载数据
+                // 月份选择
                 popup.querySelectorAll('.month-cell').forEach(function(el) {
                     el.onclick = function() {
                         state.month = parseInt(el.dataset.val);
+                        // 移除其他高亮
                         popup.querySelectorAll('.month-cell').forEach(function(c) {
                             c.classList.remove('active');
                         });
                         el.classList.add('active');
                         updateMonthInput();
-                        // ===== 关键修改：不调用 loadData()，只更新状态 =====
+                        loadData();
+                        closePopup();
                     };
                 });
             }
 
-            // ---------- 确认加载 ----------
-            function confirmAndLoad() {
-                // 将当前选中的年月设置为目标
-                state.targetYear = state.year;
-                state.targetMonth = state.month;
-                // 关闭弹窗
-                closePopup();
-                // 执行加载
-                loadMonthData(state.targetYear, String(state.targetMonth).padStart(2, '0'));
+            // ---------- 更新月份输入框 ----------
+            function updateMonthInput() {
+                var monthStr = String(state.month).padStart(2, '0');
+                monthInput.value = state.year + ' - ' + monthStr;
             }
+
+            // ---------- 事件绑定 ----------
+            monthInput.onclick = function() { openPopup(); };
+            mask.onclick = function(e) { if (e.target === mask) closePopup(); };
 
             // ---------- 重置 ----------
             window.resetAllFilters = function() {
                 var now = new Date();
                 state.year = now.getFullYear();
                 state.month = now.getMonth() + 1;
-                state.targetYear = state.year;
-                state.targetMonth = state.month;
                 monthInput.value = '';
-                confirmBtn.disabled = true;
-                // 加载当前月份
-                loadMonthData(state.year, String(state.month).padStart(2, '0'));
+                loadData();
             };
 
-            // ---------- 事件绑定 ----------
-            monthInput.onclick = function() { openPopup(); };
-            mask.onclick = function(e) { if (e.target === mask) closePopup(); };
-            // ===== 新增：确认按钮事件 =====
-            confirmBtn.onclick = function() { confirmAndLoad(); };
+            // ---------- 加载数据 ----------
+            function loadData() {
+                var year = state.year;
+                var month = String(state.month).padStart(2, '0');
+                loadMonthData(year, month);
+            }
 
             // ---------- 初始化 ----------
             monthInput.placeholder = '请选择';
-            confirmBtn.disabled = true; // 初始禁用
 
-            // 首次加载：默认加载当前月
+            // 加载默认数据（当前年月）
             window.addEventListener('DOMContentLoaded', function() {
                 setTimeout(function() {
-                    state.targetYear = state.year;
-                    state.targetMonth = state.month;
-                    loadMonthData(state.year, String(state.month).padStart(2, '0'));
-                    // 更新输入框显示
-                    var monthStr = String(state.month).padStart(2, '0');
-                    monthInput.value = state.year + ' - ' + monthStr;
-                    confirmBtn.disabled = false;
+                    loadData();
                 }, 100);
             });
 
             // 暴露内部状态
             window.filterState = {
-                getYear: function() { return state.targetYear || state.year; },
-                getMonth: function() { return state.targetMonth || state.month; }
+                getYear: function() { return state.year; },
+                getMonth: function() { return state.month; }
             };
         })();
 
@@ -973,6 +936,7 @@
         function get720pUrl(url) {
             if (!url) return '';
             let res = url;
+            // 仅将 _UHD.jpg 替换为 _1280x720.jpg
             res = res.replace(/_UHD\.jpg/g, '_1280x720.jpg');
             return res;
         }
@@ -1005,7 +969,7 @@
         var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
         // ============================================================
-        // 3. 数据加载
+        // 3. 数据加载（使用索引文件）
         // ============================================================
 
         var loadedData = {};
@@ -1088,6 +1052,7 @@
                 var displayUrl = get720pUrl(url);
                 var hd4kUrl = get4kUrl(url);
                 var hd1080Url = get1080pUrl(url);
+                // ===== 核心修改：判断是否为 UHD =====
                 var isUhd = isUhdUrl(url);
                 var escapedData = encodeURIComponent(JSON.stringify(img));
 
@@ -1219,7 +1184,6 @@
         // ============================================================
 
         console.log('📚 壁纸归档已加载');
-        console.log('💡 选择年月后，点击"加载该月"按钮才会刷新壁纸');
     </script>
 </body>
 </html>
