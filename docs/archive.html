@@ -15,25 +15,42 @@
             color: #e0e0e0;
             min-height: 100vh;
             padding: 20px;
+            /* ===== 新增：固定背景图 ===== */
+            background-image: url('https://bingimg.lei5214.cc.cd/bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
         }
 
-        /* ========== 头部 ========== */
+        /* ===== 新增：背景遮罩，让文字更清晰 ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.7);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ========== 头部（已删除 h1，只保留返回首页） ========== */
         header {
             max-width: 1400px;
             margin: 0 auto 30px;
             display: flex;
             flex-wrap: wrap;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
             padding-bottom: 16px;
             border-bottom: 1px solid #2a2a2a;
-        }
-
-        header h1 {
-            font-size: 2rem;
-            background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
         header .nav-link {
@@ -59,15 +76,17 @@
             flex-wrap: wrap;
             gap: 16px;
             align-items: center;
-            background: #161616;
+            background: rgba(22, 22, 22, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 16px 20px;
             border-radius: 12px;
         }
 
         .filters .stats {
-            margin-left: auto;
             color: #888;
             font-size: 0.9rem;
+            margin-left: auto;
         }
 
         .filters .stats span {
@@ -111,6 +130,15 @@
         .filter-input:focus { border-color: #7abfff; box-shadow: 0 0 0 3px rgba(77,150,255,0.2); }
         .filter-input::placeholder { color: #666; }
 
+        /* ===== 右侧控制区：返回首页 + 重置筛选 + 统计 ===== */
+        .filter-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
         .btn-filter-reset {
             padding: 6px 16px;
             border: none;
@@ -121,10 +149,37 @@
             font-size: 0.85rem;
             background: #6c757d;
             color: #fff;
+            white-space: nowrap;
         }
         .btn-filter-reset:hover {
             background: #5a6268;
             transform: translateY(-1px);
+        }
+
+        .filter-right .stats {
+            color: #888;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        .filter-right .stats span {
+            color: #e0e0e0;
+            font-weight: 600;
+        }
+
+        .filter-right .nav-link {
+            color: #4d96ff;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 6px 14px;
+            border: 1px solid #4d96ff;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .filter-right .nav-link:hover {
+            background: #4d96ff;
+            color: #fff;
         }
 
         /* ===== 月份选择弹窗 ===== */
@@ -155,7 +210,6 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* ===== 关键修改：弹窗头部居中 ===== */
         .popup-header {
             display: flex;
             align-items: center;
@@ -226,7 +280,9 @@
         }
 
         .card {
-            background: #161616;
+            background: rgba(22, 22, 22, 0.9);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             border-radius: 12px;
             overflow: hidden;
             transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -413,10 +469,8 @@
             padding: 20px 32px 28px;
             z-index: 2;
             max-height: 60%;
-            /* 删掉overflow-y:auto，外层不再滚动 */
         }
         
-        /* 新增：独立滚动容器 */
         .modal-scroll-desc {
             max-height: 45vh;
             overflow-y: auto;
@@ -494,8 +548,8 @@
             margin: 40px auto 0;
             text-align: center;
             padding: 20px 0 10px;
-            border-top: 1px solid #1a1a1a;
-            color: #555;
+            border-top: 1px solid rgba(26, 26, 26, 0.8);
+            color: rgba(85, 85, 85, 0.8);
             font-size: 0.85rem;
         }
 
@@ -503,11 +557,8 @@
         @media (max-width: 768px) {
             header {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: flex-end;
                 gap: 12px;
-            }
-            header h1 {
-                font-size: 1.5rem;
             }
             .filters {
                 flex-direction: column;
@@ -528,12 +579,22 @@
             .filter-input {
                 width: 100%;
             }
+            .filter-right {
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-left: 0;
+                width: 100%;
+            }
+            .filter-right .stats {
+                order: 3;
+                width: 100%;
+                text-align: center;
+            }
             .grid {
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
                 gap: 12px;
             }
         
-            /* ========== 移动端模态框全屏核心修改 ========== */
             .modal-overlay {
                 padding: 0 !important;
             }
@@ -563,7 +624,7 @@
                 max-height: 55%;
             }
             .modal-scroll-desc {
-                max-height: 30vh; /* 和你今日页面保持一致 30vh */
+                max-height: 30vh;
             }
             .modal-title {
                 font-size: 1.2rem;
@@ -583,7 +644,6 @@
                 font-size: 1.2rem;
                 z-index: 12 !important;
             }
-            /* ===================================== */
         
             .date-popup {
                 width: 92%;
@@ -639,7 +699,6 @@
                 padding: 3px 10px;
             }
         
-            /* ========== 小屏模态框全屏适配 ========== */
             .modal-overlay {
                 padding: 0 !important;
             }
@@ -669,7 +728,7 @@
                 max-height: 50%;
             }
             .modal-scroll-desc {
-                max-height: 25vh; /* 和你今日页面保持一致 25vh */
+                max-height: 25vh;
             }
             .modal-title {
                 font-size: 1rem;
@@ -689,7 +748,6 @@
                 font-size: 1rem;
                 z-index:12 !important;
             }
-            /* ===================================== */
         
             .date-popup {
                 width: 95%;
@@ -700,23 +758,25 @@
 </head>
 <body>
 
-    <!-- ===== 头部 ===== -->
+    <!-- ===== 头部（已删除 h1，只保留返回首页） ===== -->
     <header>
-        <h1>📚 壁纸归档</h1>
         <a href="/" class="nav-link">🏠 返回首页</a>
     </header>
 
     <!-- ===== 筛选器 ===== -->
     <div class="filters">
-        <!-- ===== 月份控件 ===== -->
         <div class="month-filter-bar">
             <div class="filter-item">
                 <span class="filter-label">📆 选择年月：</span>
                 <input class="filter-input" id="monthInput" placeholder="请选择" readonly>
             </div>
-            <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置筛选</button>
         </div>
-        <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
+        <!-- ===== 右侧控制区：统计 + 重置筛选 + 返回首页 ===== -->
+        <div class="filter-right">
+            <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
+            <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置筛选</button>
+            <a href="/" class="nav-link">🏠 返回首页</a>
+        </div>
     </div>
 
     <!-- ===== 网格 ===== -->
@@ -773,7 +833,6 @@
             var monthInput = document.getElementById('monthInput');
             var monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
 
-            // ---------- 月份弹窗 ----------
             function closePopup() {
                 mask.classList.remove('show');
             }
@@ -788,7 +847,6 @@
 
             function renderPopup() {
                 var html = '';
-                // 弹窗头部 - 年份切换（居中）
                 html += '<div class="popup-header">';
                 html += '<div class="popup-year-nav">';
                 html += '<button class="popup-year-btn" id="popupYearPrev">‹</button>';
@@ -796,7 +854,6 @@
                 html += '<button class="popup-year-btn" id="popupYearNext">›</button>';
                 html += '</div>';
                 html += '</div>';
-                // 月份网格
                 html += '<div class="month-grid">';
                 for (var i = 0; i < monthNames.length; i++) {
                     var num = i + 1;
@@ -806,7 +863,7 @@
                 html += '</div>';
                 popup.innerHTML = html;
 
-                // 弹窗内年份切换
+                // 年份切换：只更新显示，不触发 API
                 document.getElementById('popupYearPrev').onclick = function(e) {
                     e.stopPropagation();
                     state.year--;
@@ -820,11 +877,10 @@
                     updateMonthInput();
                 };
 
-                // 月份选择
+                // 月份选择：点击后触发 API
                 popup.querySelectorAll('.month-cell').forEach(function(el) {
                     el.onclick = function() {
                         state.month = parseInt(el.dataset.val);
-                        // 移除其他高亮
                         popup.querySelectorAll('.month-cell').forEach(function(c) {
                             c.classList.remove('active');
                         });
@@ -836,17 +892,14 @@
                 });
             }
 
-            // ---------- 更新月份输入框 ----------
             function updateMonthInput() {
                 var monthStr = String(state.month).padStart(2, '0');
                 monthInput.value = state.year + ' - ' + monthStr;
             }
 
-            // ---------- 事件绑定 ----------
             monthInput.onclick = function() { openPopup(); };
             mask.onclick = function(e) { if (e.target === mask) closePopup(); };
 
-            // ---------- 重置 ----------
             window.resetAllFilters = function() {
                 var now = new Date();
                 state.year = now.getFullYear();
@@ -855,24 +908,20 @@
                 loadData();
             };
 
-            // ---------- 加载数据 ----------
             function loadData() {
                 var year = state.year;
                 var month = String(state.month).padStart(2, '0');
                 loadMonthData(year, month);
             }
 
-            // ---------- 初始化 ----------
             monthInput.placeholder = '请选择';
 
-            // 加载默认数据（当前年月）
             window.addEventListener('DOMContentLoaded', function() {
                 setTimeout(function() {
                     loadData();
                 }, 100);
             });
 
-            // 暴露内部状态
             window.filterState = {
                 getYear: function() { return state.year; },
                 getMonth: function() { return state.month; }
@@ -934,12 +983,10 @@
         function get720pUrl(url) {
             if (!url) return '';
             let res = url;
-            // 仅将 _UHD.jpg 替换为 _1280x720.jpg
             res = res.replace(/_UHD\.jpg/g, '_1280x720.jpg');
             return res;
         }
 
-        // ===== 新增：判断是否为 UHD =====
         function isUhdUrl(url) {
             if (!url) return false;
             return url.includes('_UHD.jpg') || url.includes('_UHD');
@@ -967,7 +1014,7 @@
         var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
         // ============================================================
-        // 3. 数据加载（使用索引文件）
+        // 3. 数据加载
         // ============================================================
 
         var loadedData = {};
@@ -1050,7 +1097,6 @@
                 var displayUrl = get720pUrl(url);
                 var hd4kUrl = get4kUrl(url);
                 var hd1080Url = get1080pUrl(url);
-                // ===== 核心修改：判断是否为 UHD =====
                 var isUhd = isUhdUrl(url);
                 var escapedData = encodeURIComponent(JSON.stringify(img));
 
@@ -1061,15 +1107,12 @@
                 html += '<div class="title">' + displayTitle + '</div>';
                 html += '<div class="btn-group">';
                 
-                // ===== 核心修改：根据是否 UHD 决定显示按钮 =====
                 if (isUhd) {
-                    // 有 UHD：显示 UHD/4K + 1080P
                     html += '<a href="' + hd4kUrl + '" class="download-btn btn-4k" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' UHD/4K</a>';
                     html += '<a href="' + hd1080Url + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 1080P</a>';
                 } else {
-                    // 只有 1080P
                     html += '<a href="' + hd1080Url + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 1080P</a>';
                 }
