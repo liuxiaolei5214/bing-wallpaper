@@ -11,19 +11,18 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #0a0a0a;
             color: #e0e0e0;
             min-height: 100vh;
             padding: 20px;
-            /* ===== 新增：固定背景图 ===== */
-            background-image: url('https://bingimg.lei5214.cc.cd/bg.jpg');
+            /* ===== 背景图 ===== */
+            background-image: url('https://image.lei5214.cc.cd/img/2026/06/100.jpg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
             background-repeat: no-repeat;
         }
 
-        /* ===== 新增：背景遮罩，让文字更清晰 ===== */
+        /* ===== 背景遮罩 ===== */
         body::before {
             content: '';
             position: fixed;
@@ -39,33 +38,6 @@
         body > * {
             position: relative;
             z-index: 1;
-        }
-
-        /* ========== 头部（已删除 h1，只保留返回首页） ========== */
-        header {
-            max-width: 1400px;
-            margin: 0 auto 30px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            align-items: center;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #2a2a2a;
-        }
-
-        header .nav-link {
-            color: #4d96ff;
-            text-decoration: none;
-            font-weight: 600;
-            padding: 8px 16px;
-            border: 1px solid #4d96ff;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-
-        header .nav-link:hover {
-            background: #4d96ff;
-            color: #fff;
         }
 
         /* ========== 筛选器 ========== */
@@ -86,7 +58,6 @@
         .filters .stats {
             color: #888;
             font-size: 0.9rem;
-            margin-left: auto;
         }
 
         .filters .stats span {
@@ -130,7 +101,7 @@
         .filter-input:focus { border-color: #7abfff; box-shadow: 0 0 0 3px rgba(77,150,255,0.2); }
         .filter-input::placeholder { color: #666; }
 
-        /* ===== 右侧控制区：返回首页 + 重置筛选 + 统计 ===== */
+        /* ===== 右侧控制区 ===== */
         .filter-right {
             display: flex;
             align-items: center;
@@ -164,22 +135,6 @@
         .filter-right .stats span {
             color: #e0e0e0;
             font-weight: 600;
-        }
-
-        .filter-right .nav-link {
-            color: #4d96ff;
-            text-decoration: none;
-            font-weight: 600;
-            padding: 6px 14px;
-            border: 1px solid #4d96ff;
-            border-radius: 6px;
-            transition: all 0.2s;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-        .filter-right .nav-link:hover {
-            background: #4d96ff;
-            color: #fff;
         }
 
         /* ===== 月份选择弹窗 ===== */
@@ -555,11 +510,6 @@
 
         /* ========== 响应式 ========== */
         @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 12px;
-            }
             .filters {
                 flex-direction: column;
                 align-items: stretch;
@@ -758,11 +708,6 @@
 </head>
 <body>
 
-    <!-- ===== 头部（已删除 h1，只保留返回首页） ===== -->
-    <header>
-        <a href="/" class="nav-link">🏠 返回首页</a>
-    </header>
-
     <!-- ===== 筛选器 ===== -->
     <div class="filters">
         <div class="month-filter-bar">
@@ -771,11 +716,10 @@
                 <input class="filter-input" id="monthInput" placeholder="请选择" readonly>
             </div>
         </div>
-        <!-- ===== 右侧控制区：统计 + 重置筛选 + 返回首页 ===== -->
+        <!-- ===== 右侧控制区：统计 + 重置筛选 ===== -->
         <div class="filter-right">
-            <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
             <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置筛选</button>
-            <a href="/" class="nav-link">🏠 返回首页</a>
+            <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
         </div>
     </div>
 
