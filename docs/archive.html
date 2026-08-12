@@ -812,14 +812,12 @@
                     state.year--;
                     document.getElementById('popupYearText').textContent = state.year + '年';
                     updateMonthInput();
-                    loadData();
                 };
                 document.getElementById('popupYearNext').onclick = function(e) {
                     e.stopPropagation();
                     state.year++;
                     document.getElementById('popupYearText').textContent = state.year + '年';
                     updateMonthInput();
-                    loadData();
                 };
 
                 // 月份选择
