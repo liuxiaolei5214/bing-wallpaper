@@ -527,74 +527,62 @@
             font-size: 0.85rem;
         }
 
-        /* 仅手机端生效，PC端完全不触发 */
         @media (max-width: 768px) {
           .top-bar {
             display: flex;
             flex-direction: column;
-            align-items: flex-start !important; /* 全部左对齐，解决居中错乱 */
-            gap: 16px;
+            align-items: flex-start;
+            gap: 18px;
             width: 100%;
           }
-        
-          /* 返回首页按钮靠左，不撑满 */
           .btn-home {
             width: fit-content;
           }
         
           .filters {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 16px;
             width: 100%;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 14px;
+            row-gap: 18px;
           }
         
-          /* 关键：年月行 + 重置按钮 放同一行 */
+          /* 年月选择区域占满左侧剩余空间 */
           .filter-item {
             display: flex;
             align-items: center;
             gap: 8px;
-            flex: 1;
             width: 100%;
           }
           .filter-label {
             white-space: nowrap;
+            font-size: inherit;
           }
           .filter-input {
             flex: 1;
             min-width: 0;
+            /* 和按钮统一高度 */
+            padding: 14px 12px;
+            box-sizing: border-box;
           }
         
-          /* 把年月容器和重置按钮包裹成一行 */
-          .filters {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            grid-template-rows: auto auto;
-            gap: 16px;
-          }
-          /* 年月选择占第一整列 */
-          .filter-item {
-            grid-column: 1 / 2;
-            grid-row: 1;
-          }
-          /* 重置按钮靠右同行 */
+          /* 重置按钮统一高度，加宽内边距匹配输入框视觉大小 */
           .btn-filter-reset {
-            grid-column: 2 / 3;
-            grid-row: 1;
-            white-space: nowrap;
             flex-shrink: 0;
-            padding: 12px 16px;
+            white-space: nowrap;
+            padding: 14px 22px;
+            box-sizing: border-box;
+            font-size: inherit;
           }
-          /* 统计文字独占整行 */
+        
+          /* 壁纸数量独占整行 */
           .stats {
             grid-column: 1 / -1;
-            grid-row: 2;
-            font-size: 1.2rem;
-          }
-        }
-
-        
+            width: 100%;
+            text-align: left;
+            font-size: 1.3rem;
+          }        
         
             /* 卡片网格保持移动端适配 */
             .grid {
