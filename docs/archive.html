@@ -38,6 +38,21 @@
             position: relative;
             z-index: 1;
         }
+        
+        /* ===== 新增：外部包裹层 ===== */
+        .top-bar {
+            max-width: 1400px;
+            margin: 0 auto 30px;
+            display: flex;
+            justify-content: space-between; /* 强制两边对齐：左按钮，右筛选区 */
+            align-items: center;            /* 垂直居中对齐 */
+            padding: 12px 20px;             /* 内边距 */
+            gap: 20px;                      /* 左右两边的间距 */
+            background: rgba(22, 22, 22, 0.3); /* 【从旧 .filters 移过来的毛玻璃背景】 */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+        }
 
         /* ========== 筛选器 ========== */
         .filters {
@@ -47,11 +62,6 @@
             flex-wrap: wrap;
             gap: 12px;
             align-items: center;
-            background: rgba(22, 22, 22, 0.3);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 12px 20px;
-            border-radius: 12px;
             justify-content: space-between; 
             flex-wrap: nowrap; /* 强制不允许换行，保证在一行内 */
         }
@@ -703,11 +713,12 @@
 <body>
 
     <!-- ===== 筛选器 ===== -->
-    <div class="filters">
-        <!-- 最左侧：返回首页 -->
+    <div class="top-bar">
+        <!-- 左侧：返回首页 -->
         <a href="/" class="btn-home">🏠 返回首页</a>
-        <!-- 右侧：日历控件 + 重置筛选 + 统计 -->
-        <div class="filter-left">
+    
+        <!-- 右侧：保留你原有的 .filters 容器，里面放着日历、重置、统计 -->
+        <div class="filters">
             <div class="filter-item">
                 <span class="filter-label">📆 选择年月：</span>
                 <input class="filter-input" id="monthInput" placeholder="请选择" readonly>
@@ -716,6 +727,7 @@
             <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
         </div>
     </div>
+
 
     <!-- ===== 网格 ===== -->
     <div class="grid" id="grid">
