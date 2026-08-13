@@ -39,34 +39,34 @@
             z-index: 1;
         }
         
-        /* ===== 新增：外部包裹层 ===== */
+        /* ========== 顶部外层容器（唯一控制左右两端对齐） ========== */
         .top-bar {
             max-width: 1400px;
             margin: 0 auto 30px;
             display: flex;
-            justify-content: space-between; /* 强制两边对齐：左按钮，右筛选区 */
-            align-items: center;            /* 垂直居中对齐 */
-            padding: 12px 20px;             /* 内边距 */
-            gap: 20px;                      /* 左右两边的间距 */
-            background: rgba(22, 22, 22, 0.3); /* 【从旧 .filters 移过来的毛玻璃背景】 */
+            /* 核心：左右元素贴两端 */
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            gap: 20px;
+            /* 毛玻璃背景统一放外层，删除filters里的背景 */
+            background: rgba(22, 22, 22, 0.3);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-radius: 12px;
         }
-
-        /* ========== 筛选器 ========== */
+        
+        /* ========== 筛选器 .filters 只做内部横向排列，删除所有左右布局代码 ========== */
         .filters {
-            max-width: 1400px;
-            margin: 0 auto 30px;
+            /* 删除 margin-left:auto / justify-content:space-between 等冲突代码 */
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 12px;
-            margin-left: auto; 
             align-items: center;
-            justify-content: space-between; 
-            flex-wrap: nowrap; /* 强制不允许换行，保证在一行内 */
+            /* 禁止自动挤压，保证完整显示 */
+            flex-shrink: 0;
         }
-
+        
         /* ===== 左侧：日历控件 + 重置筛选 + 统计 ===== */
         .filter-left {
             display: flex;
@@ -75,7 +75,7 @@
             flex-wrap: wrap;
             flex: 1;
         }
-
+        
         .filter-item {
             display: flex;
             align-items: center;
@@ -103,7 +103,7 @@
         .filter-input:hover { border-color: #6aafff; }
         .filter-input:focus { border-color: #7abfff; box-shadow: 0 0 0 3px rgba(77,150,255,0.2); }
         .filter-input::placeholder { color: #666; }
-
+        
         /* ===== 重置筛选按钮 ===== */
         .btn-filter-reset {
             padding: 6px 16px;
@@ -121,7 +121,7 @@
             background: #5a6268;
             transform: translateY(-1px);
         }
-
+        
         /* ===== 统计 ===== */
         .stats {
             color: #ffffff;
@@ -132,8 +132,8 @@
             color: #ffffff;
             font-weight: 600;
         }
-
-        /* ===== 返回首页（最右侧） ===== */
+        
+        /* ===== 返回首页（最左侧） ===== */
         .btn-home {
             padding: 6px 16px;
             border: 1px solid #4d96ff;
@@ -148,6 +148,7 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
+            /* 禁止被挤压 */
             flex-shrink: 0;
         }
         .btn-home:hover {
