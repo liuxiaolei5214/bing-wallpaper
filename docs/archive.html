@@ -527,64 +527,29 @@
             font-size: 0.85rem;
         }
 
+        /* ========== 响应式 ========== */
         @media (max-width: 768px) {
-          .top-bar {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 18px;
-            width: 100%;
-          }
-          .btn-home {
-            width: fit-content;
-          }
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .filter-left {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .filter-item {
+                justify-content: stretch;
+            }
+            .filter-input {
+                width: 100%;
+            }
+            .btn-home {
+                margin-left: 0;
+                justify-content: center;
+            }     
         
-          .filters {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1fr auto;
-            align-items: center;
-            gap: 14px;
-            row-gap: 18px;
-          }
-        
-          /* 年月选择区域占满左侧剩余空间 */
-          .filter-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
-          }
-          .filter-label {
-            white-space: nowrap;
-            font-size: inherit;
-          }
-          .filter-input {
-            flex: 1;
-            min-width: 0;
-            /* 和按钮统一高度 */
-            padding: 14px 12px;
-            box-sizing: border-box;
-          }
-        
-          /* 重置按钮统一高度，加宽内边距匹配输入框视觉大小 */
-          .btn-filter-reset {
-            flex-shrink: 0;
-            white-space: nowrap;
-            padding: 14px 12px;
-            box-sizing: border-box;
-            font-size: inherit;
-          }
-        
-          /* 壁纸数量独占整行 */
-          .stats {
-            grid-column: 1 / -1;
-            width: 100%;
-            text-align: left;
-            font-size: 1.3rem;
-          }        
-        
-            /* 卡片网格保持移动端适配 */
             .grid {
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
                 gap: 12px;
