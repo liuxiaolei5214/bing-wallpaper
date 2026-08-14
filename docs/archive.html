@@ -529,7 +529,7 @@
 
         /* ========== 响应式 ========== */
         @media (max-width: 768px) {
-            /* 顶部容器改为上下三行 */
+            /* 顶部容器改为纵向排列 */
             .top-bar {
                 flex-direction: column;
                 align-items: stretch;
@@ -542,7 +542,7 @@
                 justify-content: flex-start;
             }
         
-            /* 筛选器区域改为纵向三行 */
+            /* 筛选器区域改为纵向排列 */
             .filters {
                 flex-direction: column;
                 align-items: stretch;
@@ -550,28 +550,44 @@
                 flex-shrink: 0;
             }
         
-            /* 年月选择单独一行，输入框自动撑满 */
+            /* ----------------------------------------- */
+            /* 重点修改：选择年月 和 重置 放在同一行      */
+            /* ----------------------------------------- */
             .filter-item {
-                width: 70%;
-                justify-content: stretch;
+                display: flex;       /* 启用 flex */
+                flex-direction: row; /* 横向排列 */
+                align-items: center; /* 垂直居中 */
+                width: 100%;         /* 占满全宽 */
+                gap: 10px;           /* 文字、输入框、按钮之间的间距 */
+                justify-content: flex-start; /* 整体靠左排列 */
+            }
+        
+            .filter-label {
+                font-size: 16px;     /* 【修改点 1】选择年月字体放大 */
+                white-space: nowrap;
+                flex-shrink: 0;      /* 防止文字被挤压 */
             }
         
             .filter-input {
-                flex: 1;
+                flex: 1;             /* 输入框自动占据剩余空间 */
                 width: auto;
                 min-width: 0;
             }
         
-            /* 第三行：重置筛选 + 统计 */
-            .filter-left {
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: space-between;
-                gap: 10px;
+            .btn-filter-reset {
+                flex-shrink: 0;      /* 【修改点 2】按钮放置在输入框后方，宽度自适应 */
+                margin-top: 0;       /* 移除上边距 */
+                width: auto;         /* 移除原有的 100% 宽度 */
             }
         
+            /* ----------------------------------------- */
+            /* 统计数据单独排在下方                        */
+            /* ----------------------------------------- */
             .stats {
+                width: 100%;
+                text-align: left;    /* 或者是 center，看你喜好 */
                 white-space: nowrap;
+                margin-top: 4px;
             }
         
             /* 卡片网格保持移动端适配 */
