@@ -575,9 +575,11 @@
             }
         
             .btn-filter-reset {
+                width: auto !important; 
                 flex-shrink: 0;      /* 【修改点 2】按钮放置在输入框后方，宽度自适应 */
                 margin-top: 0;       /* 移除上边距 */
                 width: auto;         /* 移除原有的 100% 宽度 */
+                padding: 6px 14px;
             }
         
             /* ----------------------------------------- */
@@ -765,8 +767,8 @@
             <div class="filter-item">
                 <span class="filter-label">📆 选择年月：</span>
                 <input class="filter-input" id="monthInput" placeholder="请选择" readonly>
-            </div>
             <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置筛选</button>
+            </div>
             <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
         </div>
     </div>
