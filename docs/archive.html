@@ -979,6 +979,7 @@
             if (!url) return '';
             let res = url;
             res = res.replace(/_UHD\.jpg/g, '_1280x720.jpg');
+            res = res.replace(/_1920x1080\.jpg/g, '_1280x720.jpg');
             return res;
         }
 
