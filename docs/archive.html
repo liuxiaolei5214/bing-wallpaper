@@ -955,32 +955,29 @@
             return '未知';
         }
 
+        // 4K/UHD
         function get4kUrl(url) {
             if (!url) return '';
-            if (url.includes('_UHD.jpg')) {
-                return url;
-            }
-            return url.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+            return url
+                .replace('_1920x1080.jpg', '_UHD.jpg')
+                .replace('_1920x1200.jpg', '_UHD.jpg');
         }
-
+        
+        // 1080P
         function get1080pUrl(url) {
             if (!url) return '';
-            var result = url;
-            result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
-            result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
-            result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
-            if (result === url) {
-                result = url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
-            }
-            return result;
+            return url
+                .replace('_UHD.jpg', '_1920x1080.jpg')
+                .replace('_1920x1200.jpg', '_1920x1080.jpg');
         }
-            
+        
+        // 720P
         function get720pUrl(url) {
             if (!url) return '';
-            let res = url;
-            res = res.replace(/_UHD\.jpg/g, '_1280x720.jpg');
-            res = res.replace(/_1920x1080\.jpg/g, '_1280x720.jpg');
-            return res;
+            return url
+                .replace('_UHD.jpg', '_1280x720.jpg')
+                .replace('_1920x1080.jpg', '_1280x720.jpg')
+                .replace('_1920x1200.jpg', '_1280x720.jpg');
         }
 
         function isUhdUrl(url) {
