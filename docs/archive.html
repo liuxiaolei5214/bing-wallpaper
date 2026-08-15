@@ -955,29 +955,28 @@
             return '未知';
         }
 
-        // 4K/UHD
         function get4kUrl(url) {
             if (!url) return '';
-            return url
-                .replace('_1920x1080.jpg', '_UHD.jpg')
-                .replace('_1920x1200.jpg', '_UHD.jpg');
+            return url;
         }
-        
-        // 1080P
+
         function get1080pUrl(url) {
             if (!url) return '';
-            return url
-                .replace('_UHD.jpg', '_1920x1080.jpg')
-                .replace('_1920x1200.jpg', '_1920x1080.jpg');
+            var result = url;
+            result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+            result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
+            result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+            if (result === url) {
+                result = url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+            }
+            return result;
         }
-        
-        // 720P
+            
         function get720pUrl(url) {
             if (!url) return '';
-            return url
-                .replace('_UHD.jpg', '_1280x720.jpg')
-                .replace('_1920x1080.jpg', '_1280x720.jpg')
-                .replace('_1920x1200.jpg', '_1280x720.jpg');
+            let res = url;
+            res = res.replace(/_UHD\.jpg/g, '_1280x720.jpg');
+            return res;
         }
 
         function isUhdUrl(url) {
