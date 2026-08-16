@@ -584,7 +584,7 @@ jobs:
           echo '[]' > docs/history.json
           
           # 遍历所有年份文件
-          for year in $(seq 2016 $(date +'%Y')); do
+          for year in $(seq 2010 $(date +'%Y')); do
             file="docs/zh.${year}.json"
             
             # 检查文件是否存在且非空
@@ -623,7 +623,7 @@ jobs:
           current_year = datetime.now().year
           index = {"years": []}
 
-          for year in range(2016, current_year + 1):
+          for year in range(2010, current_year + 1):
               filename = f"docs/zh.{year}.json"
               if os.path.exists(filename):
                   try:
