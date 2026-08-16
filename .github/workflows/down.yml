@@ -1,0 +1,130 @@
+name: 批量下载并整理壁纸
+
+on:
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: '起始日期 (YYYY-MM-DD)'
+        required: true
+        default: '2010-01-01'
+      end_date:
+        description: '结束日期 (YYYY-MM-DD)'
+        required: true
+        default: '2010-12-31'
+
+jobs:
+  download-and-organize:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+        
+      - name: 安装依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq curl
+          
+      - name: 生成日期列表并下载
+        run: |
+          # 创建 images 目录（如果不存在）
+          mkdir -p images
+          
+          # 从输入的日期范围生成所有日期
+          start_date="${{ github.event.inputs.start_date }}"
+          end_date="${{ github.event.inputs.end_date }}"
+          
+          # 使用 Python 生成日期列表并下载
+          python3 << EOF
+          import os
+          import subprocess
+          from datetime import datetime, timedelta
+          import requests
+          
+          start = datetime.strptime("${{ github.event.inputs.start_date }}", "%Y-%m-%d")
+          end = datetime.strptime("${{ github.event.inputs.end_date }}", "%Y-%m-%d")
+          
+          current = start
+          while current <= end:
+              date_str = current.strftime("%Y%m%d")
+              year = current.strftime("%Y")
+              url = f"https://www.juemeibizhi.com/images/original/{date_str}.jpg"
+              
+              # 创建年份目录
+              os.makedirs(f"images/{year}", exist_ok=True)
+              
+              # 下载图片
+              output_path = f"images/{year}/{date_str}.jpg"
+              try:
+                  response = requests.get(url, timeout=30)
+                  if response.status_code == 200:
+                      with open(output_path, 'wb') as f:
+                          f.write(response.content)
+                      print(f"✅ 下载成功: {date_str}.jpg -> images/{year}/")
+                  else:
+                      print(f"❌ 下载失败: {date_str}.jpg (状态码: {response.status_code})")
+              except Exception as e:
+                  print(f"❌ 下载出错: {date_str}.jpg ({str(e)})")
+              
+              current += timedelta(days=1)
+          EOF
+          
+      - name: 生成 JSON 索引文件
+        run: |
+          # 为所有已下载的图片生成 JSON 索引
+          python3 << EOF
+          import os
+          import json
+          from datetime import datetime
+          
+          images_data = []
+          base_dir = "images"
+          
+          for year_dir in os.listdir(base_dir):
+              year_path = os.path.join(base_dir, year_dir)
+              if not os.path.isdir(year_path):
+                  continue
+                  
+              for img_file in os.listdir(year_path):
+                  if img_file.endswith('.jpg'):
+                      date_str = img_file.replace('.jpg', '')
+                      try:
+                          date_obj = datetime.strptime(date_str, "%Y%m%d")
+                          formatted_date = date_obj.strftime("%Y-%m-%d")
+                          
+                          images_data.append({
+                              "title": f"必应壁纸 - {formatted_date}",
+                              "description": "",
+                              "date": formatted_date,
+                              "bing_url": f"https://www.juemeibizhi.com/images/original/{date_str}.jpg",
+                              "local_path": f"images/{year_dir}/{img_file}"
+                          })
+                      except ValueError:
+                          continue
+          
+          # 按日期排序
+          images_data.sort(key=lambda x: x['date'])
+          
+          # 保存为 images.json
+          with open('images.json', 'w', encoding='utf-8') as f:
+              json.dump(images_data, f, ensure_ascii=False, indent=2)
+              
+          print(f"✅ 生成 images.json，共 {len(images_data)} 张图片")
+          EOF
+          
+      - name: 提交更改
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 添加所有新图片和 JSON 文件
+          git add images/ images.json
+          
+          # 检查是否有更改
+          if git diff --staged --quiet; then
+            echo "没有新的图片需要提交"
+          else
+            git commit -m "批量下载壁纸 $(date +'%Y-%m-%d %H:%M:%S')"
+            git push
+          fi
