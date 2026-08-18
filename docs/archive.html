@@ -135,46 +135,51 @@
             color: #fff;
         }
 
-        /* ===== 月份选择弹窗 ===== */
         .date-mask {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);  /* 遮罩稍微调亮一点 */
+            background: rgba(0,0,0,0.6);
             display: none;
             z-index: 999;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
         }
         .date-mask.show { display: block; }
-        
+
         .date-popup {
             position: absolute;
-            background: #ffffff;           /* 白色背景 */
-            border-radius: 16px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+            background: #1a1a1a;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
             width: 360px;
             overflow: hidden;
             animation: popupFade 0.2s ease;
-            border: 1px solid rgba(0, 0, 0, 0.06);
+            border: 1px solid #2a2a2a;
         }
-        
+        @keyframes popupFade {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
         .popup-header {
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 14px 20px;
-            border-bottom: 1px solid #f0f0f0;
-            background: #fafafa;           /* 浅灰头部 */
+            border-bottom: 1px solid #2a2a2a;
+            background: #111;
             gap: 16px;
         }
-        
+        .popup-year-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
         .popup-year-btn {
             background: transparent;
             border: none;
-            color: #666;                   /* 深色按钮 */
+            color: #ffffff;
             font-size: 20px;
             cursor: pointer;
             padding: 0 30px;
@@ -182,30 +187,35 @@
             line-height: 1;
         }
         .popup-year-btn:hover {
-            color: #4d96ff;
+            color: #e0e0e0;
         }
-        
         .popup-year-text {
             font-size: 18px;
-            color: #333;                   /* 深色文字 */
+            color: #e0e0e0;
             font-weight: 600;
             min-width: 70px;
             text-align: center;
         }
-        
+
+        .month-grid {
+            padding: 16px 20px 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
         .month-cell {
             text-align: center;
             padding: 10px 0;
             font-size: 15px;
-            color: #555;                   /* 深色文字 */
-            border-radius: 8px;
+            color: #aaa;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 500;
         }
         .month-cell:hover {
-            background: #f0f5ff;           /* 浅蓝悬停 */
-            color: #4d96ff;
+            background: #2a2a2a;
+            color: #fff;
         }
         .month-cell.active {
             background: #4d96ff;
@@ -312,17 +322,17 @@
         }
 
         .card .info .btn-group .btn-vertical {
-            background: #fd7e14;
+            background: #6c757d;
         }
         .card .info .btn-group .btn-vertical:hover {
-            background: #e06b0a;
+            background: #5a6268;
         }
 
         .card .info .btn-group .btn-download {
-            background: #6c757d;
+            background: #28a745;
         }
         .card .info .btn-group .btn-download:hover {
-            background: #5a6268;
+            background: #218838;
         }
 
         .loading,
