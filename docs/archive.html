@@ -141,21 +141,23 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.4);
             display: none;
             z-index: 999;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
         .date-mask.show { display: block; }
 
         .date-popup {
             position: absolute;
-            background: #1a1a1a;
+            background: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             width: 360px;
             overflow: hidden;
             animation: popupFade 0.2s ease;
-            border: 1px solid #2a2a2a;
+            border: 1px solid #e8e8e8;
         }
         @keyframes popupFade {
             from { opacity: 0; transform: translateY(-8px) scale(0.97); }
@@ -167,8 +169,8 @@
             align-items: center;
             justify-content: center;
             padding: 14px 20px;
-            border-bottom: 1px solid #2a2a2a;
-            background: #111;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
             gap: 16px;
         }
         .popup-year-nav {
@@ -179,7 +181,7 @@
         .popup-year-btn {
             background: transparent;
             border: none;
-            color: #ffffff;
+            color: #666;
             font-size: 20px;
             cursor: pointer;
             padding: 0 30px;
@@ -187,11 +189,11 @@
             line-height: 1;
         }
         .popup-year-btn:hover {
-            color: #e0e0e0;
+            color: #4d96ff;
         }
         .popup-year-text {
             font-size: 18px;
-            color: #e0e0e0;
+            color: #333;
             font-weight: 600;
             min-width: 70px;
             text-align: center;
@@ -207,15 +209,15 @@
             text-align: center;
             padding: 10px 0;
             font-size: 15px;
-            color: #aaa;
+            color: #555;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 500;
         }
         .month-cell:hover {
-            background: #2a2a2a;
-            color: #fff;
+            background: #f0f5ff;
+            color: #4d96ff;
         }
         .month-cell.active {
             background: #4d96ff;
