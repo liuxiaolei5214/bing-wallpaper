@@ -1,1343 +1,154 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>壁纸归档 · 光影回顾</title>
-    <link rel="icon" href="https://bingimg.lei5214.cc.cd/logo.avif">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            color: #e0e0e0;
-            min-height: 100vh;
-            padding: 20px;
-            background-image: url('https://image.lei5214.cc.cd/img/2026/08/10.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 10, 0.1);
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        body > * {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .top-bar {
-            max-width: 1400px;
-            margin: 0 auto 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            gap: 20px;
-            background: rgba(22, 22, 22, 0.3);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 12px;
-        }
-        
-        .filters {
-            display: flex;
-            flex-wrap: nowrap;
-            gap: 12px;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        
-        .filter-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .filter-label {
-            font-size: 16px;
-            color: #ffffff;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        .filter-input {
-            width: 160px;
-            height: 30px;
-            padding: 0 10px;
-            border: 2px solid #4d96ff;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            cursor: pointer;
-            background: #4a4a4a; 
-            color: #ffffff;
-            transition: border-color 0.3s;
-        }
-        .filter-input:hover { border-color: #6aafff; }
-        .filter-input:focus { border-color: #7abfff; box-shadow: 0 0 0 3px rgba(77,150,255,0.2); }
-        .filter-input::placeholder { color: #666; }
-        
-        .btn-filter-reset {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.85rem;
-            background: #6c757d;
-            color: #fff;
-            white-space: nowrap;
-        }
-        .btn-filter-reset:hover {
-            background: #5a6268;
-            transform: translateY(-1px);
-        }
-        
-        .stats {
-            color: #ffffff;
-            font-size: 0.9rem;
-            white-space: nowrap;
-        }
-        .stats span {
-            color: #ffffff;
-            font-weight: 600;
-        }
-        
-        .btn-home {
-            padding: 6px 16px;
-            border: 1px solid #4d96ff;
-            border-radius: 6px;
-            background: transparent;
-            color: #4d96ff;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.85rem;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-        .btn-home:hover {
-            background: #4d96ff;
-            color: #fff;
-        }
-
-        .date-mask {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            display: none;
-            z-index: 999;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
-        .date-mask.show { display: block; }
-
-        .date-popup {
-            position: absolute;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            width: 360px;
-            overflow: hidden;
-            animation: popupFade 0.2s ease;
-            border: 1px solid #e8e8e8;
-        }
-        @keyframes popupFade {
-            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .popup-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 14px 20px;
-            border-bottom: 1px solid #f0f0f0;
-            background: #fafafa;
-            gap: 16px;
-        }
-        .popup-year-nav {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .popup-year-btn {
-            background: transparent;
-            border: none;
-            color: #666;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 0 30px;
-            transition: color 0.2s;
-            line-height: 1;
-        }
-        .popup-year-btn:hover {
-            color: #4d96ff;
-        }
-        .popup-year-text {
-            font-size: 18px;
-            color: #333;
-            font-weight: 600;
-            min-width: 70px;
-            text-align: center;
-        }
-
-        .month-grid {
-            padding: 16px 20px 20px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-        .month-cell {
-            text-align: center;
-            padding: 10px 0;
-            font-size: 15px;
-            color: #555;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-        .month-cell:hover {
-            background: #f0f5ff;
-            color: #4d96ff;
-        }
-        .month-cell.active {
-            background: #4d96ff;
-            color: #fff;
-        }
-
-        .grid {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 16px;
-        }
-
-        .card {
-            background: rgba(22, 22, 22, 0.5);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            border-radius: 12px;
-            overflow: hidden;
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-        }
-
-        .card img {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            object-fit: cover;
-            display: block;
-            background: #111;
-        }
-
-        .card .info {
-            padding: 10px 14px 14px;
-        }
-
-        .card .info .date {
-            font-size: 0.8rem;
-            color: #ffffff;
-            font-weight: 500;
-        }
-
-        .card .info .title {
-            font-size: 0.85rem;
-            color: #ffffff;
-            font-weight: 600;
-            margin-top: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .card .info .btn-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .card .info .btn-group .download-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 14px;
-            color: #fff;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 0.75rem;
-            font-weight: 600;
-            transition: background 0.2s;
-            border: none;
-            cursor: pointer;
-        }
-
-        .card .info .btn-group .download-btn svg {
-            flex-shrink: 0;
-        }
-
-        .card .info .btn-group .btn-4k {
-            background: #4d96ff;
-        }
-        .card .info .btn-group .btn-4k:hover {
-            background: #3a7bd5;
-        }
-
-        .card .info .btn-group .btn-1080p {
-            background: #6c757d;
-        }
-        .card .info .btn-group .btn-1080p:hover {
-            background: #5a6268;
-        }
-
-        .card .info .btn-group .btn-720p {
-            background: #17a2b8;
-        }
-        .card .info .btn-group .btn-720p:hover {
-            background: #138496;
-        }
-
-        .card .info .btn-group .btn-vertical {
-            background: #6c757d;
-        }
-        .card .info .btn-group .btn-vertical:hover {
-            background: #5a6268;
-        }
-
-        .card .info .btn-group .btn-download {
-            background: #6c757d;
-        }
-        .card .info .btn-group .btn-download:hover {
-            background: #5a6268;
-        }
-
-        .loading,
-        .empty {
-            text-align: center;
-            padding: 60px 0;
-            color: #666;
-            font-size: 1rem;
-            grid-column: 1 / -1;
-        }
-
-        .loading::after {
-            content: "";
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-left: 10px;
-            border: 3px solid #2a2a2a;
-            border-top-color: #4d96ff;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            z-index: 999;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal-overlay.open {
-            display: flex;
-            opacity: 1;
-        }
-
-        .modal-box {
-            background: #1a1a1a;
-            border-radius: 28px;
-            max-width: 1600px;
-            width: 100%;
-            max-height: 95vh;
-            overflow: hidden;
-            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.9);
-            padding: 0;
-            position: relative;
-            transform: scale(0.95);
-            transition: transform 0.3s ease;
-        }
-
-        .modal-overlay.open .modal-box {
-            transform: scale(1);
-        }
-
-        .modal-image {
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background: #0b0b0b;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .modal-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .modal-image::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 65%;
-            background: linear-gradient(to top, 
-                rgba(0, 0, 0, 0.92) 0%, 
-                rgba(0, 0, 0, 0.6) 40%,
-                rgba(0, 0, 0, 0.2) 70%,
-                transparent 100%
-            );
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .modal-content {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 20px 32px 28px;
-            z-index: 2;
-            max-height: 60%;
-        }
-        
-        .modal-scroll-desc {
-            max-height: 45vh;
-            overflow-y: auto;
-            scrollbar-width: none;
-            margin-top: 6px;
-        }
-        .modal-scroll-desc::-webkit-scrollbar {
-            width: 0;
-            background: transparent;
-        }
-
-        .modal-title {
-            font-size: 1.6rem;
-            font-weight: 600;
-            margin-bottom: 4px;
-            color: #fff;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-subtitle {
-            display: none !important;
-        }
-
-        .modal-desc {
-            font-size: 0.95rem;
-            line-height: 1.8;
-            opacity: 0.92;
-            white-space: normal;
-            word-break: break-word;
-            color: #f0f0f0;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-        }
-
-        .modal-desc p {
-            text-indent: 2em;
-            margin: 0;
-            padding: 0;
-            line-height: 1.8;
-        }
-
-        .modal-desc p + p {
-            margin-top: 0;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #fff;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            font-size: 1.6rem;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            line-height: 1;
-        }
-
-        .modal-close:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.05);
-        }
-
-        footer {
-            max-width: 1400px;
-            margin: 40px auto 0;
-            text-align: center;
-            padding: 20px 0 10px;
-            border-top: 1px solid rgba(26, 26, 26, 0.8);
-            color: #ffffff;
-            font-size: 0.85rem;
-        }
-
-        @media (max-width: 768px) {
-            .top-bar {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-            .btn-home {
-                margin-right: auto;
-                justify-content: flex-start;
-            }
-            .filters {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-                flex-shrink: 0;
-            }
-            .filter-item {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                width: 100%;
-                gap: 10px;
-                justify-content: flex-start;
-            }
-            .filter-label {
-                font-size: 16px;
-                white-space: nowrap;
-                flex-shrink: 0;
-            }
-            .filter-input {
-                flex: 1;
-                width: auto;
-                min-width: 0;
-            }
-            .btn-filter-reset {
-                width: auto !important;
-                flex-shrink: 0;
-                margin-top: 0;
-                padding: 6px 14px;
-            }
-            .stats {
-                width: 100%;
-                text-align: left;
-                white-space: nowrap;
-                margin-top: 4px;
-            }
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-                gap: 12px;
-            }
-            .modal-overlay {
-                padding: 0 !important;
-            }
-            .modal-box {
-                max-width: 100%;
-                max-height: 100vh !important;
-                height: 100vh !important;
-                margin: 0 !important;
-                border-radius: 0 !important;
-                display: flex;
-                flex-direction: column;
-            }
-            .modal-image {
-                flex: 1;
-                aspect-ratio: unset !important;
-                width: 100%;
-                height: 100%;
-            }
-            .modal-image img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                background: #000;
-            }
-            .modal-content {
-                padding: 14px 20px 18px;
-                max-height: 55%;
-            }
-            .modal-scroll-desc {
-                max-height: 30vh;
-            }
-            .modal-title {
-                font-size: 1.2rem;
-            }
-            .modal-desc {
-                font-size: 0.85rem;
-                line-height: 1.7;
-            }
-            .modal-image::after {
-                height: 65%;
-            }
-            .modal-close {
-                top: 12px;
-                right: 12px;
-                width: 36px;
-                height: 36px;
-                font-size: 1.2rem;
-                z-index: 12 !important;
-            }
-            .date-popup {
-                width: 92%;
-                left: 4% !important;
-            }
-            .month-grid {
-                padding: 12px 14px 16px;
-                gap: 4px;
-            }
-            .month-cell {
-                padding: 8px 0;
-                font-size: 13px;
-            }
-            .popup-header {
-                padding: 10px 14px;
-                gap: 12px;
-            }
-            .popup-year-text {
-                font-size: 16px;
-                min-width: 60px;
-            }
-            .popup-year-btn {
-                font-size: 18px;
-            }
-            .popup-year-nav {
-                gap: 12px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            .grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                gap: 10px;
-            }
-            .card .info {
-                padding: 6px 10px 10px;
-            }
-            .card .info .date {
-                font-size: 0.7rem;
-            }
-            .card .info .title {
-                font-size: 0.75rem;
-            }
-            .card .info .btn-group .download-btn {
-                font-size: 0.65rem;
-                padding: 3px 10px;
-            }
-            .modal-overlay {
-                padding: 0 !important;
-            }
-            .modal-box {
-                max-width: 100%;
-                max-height: 100vh !important;
-                height: 100vh !important;
-                margin: 0 !important;
-                border-radius: 0 !important;
-                display: flex;
-                flex-direction: column;
-            }
-            .modal-image {
-                flex: 1;
-                aspect-ratio: unset !important;
-                width: 100%;
-                height: 100%;
-            }
-            .modal-image img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                background: #000;
-            }
-            .modal-content {
-                padding: 10px 14px 14px;
-                max-height: 50%;
-            }
-            .modal-scroll-desc {
-                max-height: 25vh;
-            }
-            .modal-title {
-                font-size: 1rem;
-            }
-            .modal-desc {
-                font-size: 0.8rem;
-                line-height: 1.6;
-            }
-            .modal-image::after {
-                height: 70%;
-            }
-            .modal-close {
-                top: 8px;
-                right: 8px;
-                width: 32px;
-                height: 32px;
-                font-size: 1rem;
-                z-index: 12 !important;
-            }
-            .date-popup {
-                width: 95%;
-                left: 2.5% !important;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <div class="top-bar">
-        <a href="/" class="btn-home">🏠 返回首页</a>
-        <div class="filters">
-            <div class="filter-item">
-                <span class="filter-label">选择年月：</span>
-                <input class="filter-input" id="monthInput" placeholder="请选择" readonly>
-                <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置筛选</button>
-            </div>
-            <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
-        </div>
-    </div>
-
-    <div class="grid" id="grid">
-        <div class="loading">加载壁纸数据中...</div>
-    </div>
-
-    <footer>
-        <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
-    </footer>
-
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-box">
-            <button class="modal-close" id="modalClose">&times;</button>
-            <div class="modal-image">
-                <img id="modalImg" src="" alt="壁纸大图" />
-            </div>
-            <div class="modal-content">
-                <div class="modal-title" id="modalTitle"></div>
-                <div class="modal-scroll-desc">
-                    <div class="modal-subtitle" id="modalSubtitle"></div>
-                    <div class="modal-desc" id="modalDesc"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="date-mask" id="mask">
-        <div class="date-popup" id="popup"></div>
-    </div>
-
-    <script>
-        // ============================================================
-        // 1. URL 处理工具
-        // ============================================================
-        
-        /**
-         * 判断是否是 juemeibizhi.com（低分辨率，不做转换）
-         */
-        function isJuemeiUrl(url) {
-            if (!url) return false;
-            return url.includes('juemeibizhi.com');
-        }
-
-        /**
-         * 判断是否是 Bing CDN
-         */
-        function isBingCdnUrl(url) {
-            if (!url) return false;
-            return url.includes('cn.bing.com') || url.includes('bing.com') || url.includes('cdn.bimg.cc');
-        }
-
-        /**
-         * 获取图片 URL（juemeibizhi.com 优先 bing_url，失败用本地缓存）
-         */
-        function getImageUrl(item) {
-            var bingUrl = item.bing_url || '';
-            var localPath = item.local_path || '';
-            
-            // juemeibizhi.com：优先 bing_url
-            if (isJuemeiUrl(bingUrl)) {
-                return bingUrl;
-            }
-            
-            // 其他：直接返回 bing_url
-            return bingUrl;
-        }
-
-        /**
-         * 获取 4K/UHD URL（仅 Bing CDN）
-         */
-        function get4kUrl(item) {
-            var bingUrl = item.bing_url || '';
-            
-            // juemeibizhi.com：不转换，返回原图
-            if (isJuemeiUrl(bingUrl)) {
-                return bingUrl;
-            }
-            
-            // Bing CDN：已有 _UHD 或尝试替换
-            if (isBingCdnUrl(bingUrl)) {
-                if (bingUrl.includes('_UHD')) return bingUrl;
-                if (bingUrl.includes('_1920x1080')) {
-                    return bingUrl.replace('_1920x1080', '_UHD');
-                }
-                if (bingUrl.includes('_1366x768')) {
-                    return bingUrl.replace('_1366x768', '_UHD');
-                }
-                // 尝试在扩展名前插入 _UHD
-                var lastDot = bingUrl.lastIndexOf('.');
-                if (lastDot > 0) {
-                    var testUrl = bingUrl.substring(0, lastDot) + '_UHD' + bingUrl.substring(lastDot);
-                    return testUrl;
-                }
-            }
-            
-            return bingUrl;
-        }
-
-        /**
-         * 获取 1080P URL
-         */
-        function get1080pUrl(item) {
-            var bingUrl = item.bing_url || '';
-            
-            // juemeibizhi.com：不转换，返回原图
-            if (isJuemeiUrl(bingUrl)) {
-                return bingUrl;
-            }
-            
-            // Bing CDN：已有 1920x1080 或尝试替换
-            if (isBingCdnUrl(bingUrl)) {
-                if (bingUrl.includes('_1920x1080')) return bingUrl;
-                if (bingUrl.includes('_UHD')) {
-                    return bingUrl.replace('_UHD', '_1920x1080');
-                }
-                if (bingUrl.includes('_1366x768')) {
-                    return bingUrl.replace('_1366x768', '_1920x1080');
-                }
-                // 尝试在扩展名前插入 _1920x1080
-                var lastDot = bingUrl.lastIndexOf('.');
-                if (lastDot > 0) {
-                    var testUrl = bingUrl.substring(0, lastDot) + '_1920x1080' + bingUrl.substring(lastDot);
-                    return testUrl;
-                }
-            }
-            
-            return bingUrl;
-        }
-
-        /**
-         * 获取 720P URL
-         */
-        function get720pUrl(item) {
-            var bingUrl = item.bing_url || '';
-            
-            // juemeibizhi.com：不转换
-            if (isJuemeiUrl(bingUrl)) {
-                return bingUrl;
-            }
-            
-            // Bing CDN
-            if (isBingCdnUrl(bingUrl)) {
-                if (bingUrl.includes('_1366x768')) return bingUrl;
-                if (bingUrl.includes('_UHD')) {
-                    return bingUrl.replace('_UHD', '_1366x768');
-                }
-                if (bingUrl.includes('_1920x1080')) {
-                    return bingUrl.replace('_1920x1080', '_1366x768');
-                }
-                var lastDot = bingUrl.lastIndexOf('.');
-                if (lastDot > 0) {
-                    var testUrl = bingUrl.substring(0, lastDot) + '_1366x768' + bingUrl.substring(lastDot);
-                    return testUrl;
-                }
-            }
-            
-            return bingUrl;
-        }
-
-        /**
-         * 获取竖版 URL（从 _UHD 或 _1920x1080 转换）
-         */
-        function getVerticalUrl(item) {
-            var bingUrl = item.bing_url || '';
-            
-            // juemeibizhi.com：不转换
-            if (isJuemeiUrl(bingUrl)) {
-                return bingUrl;
-            }
-            
-            // Bing CDN：尝试从 UHD 或 1080P 转竖版
-            if (isBingCdnUrl(bingUrl)) {
-                if (bingUrl.includes('_UHD')) {
-                    return bingUrl.replace('_UHD', '_vertical');
-                }
-                if (bingUrl.includes('_1920x1080')) {
-                    return bingUrl.replace('_1920x1080', '_vertical');
-                }
-                if (bingUrl.includes('_1366x768')) {
-                    return bingUrl.replace('_1366x768', '_vertical');
-                }
-                var lastDot = bingUrl.lastIndexOf('.');
-                if (lastDot > 0) {
-                    var testUrl = bingUrl.substring(0, lastDot) + '_vertical' + bingUrl.substring(lastDot);
-                    return testUrl;
-                }
-            }
-            
-            return bingUrl;
-        }
-
-        /**
-         * 判断图片类型
-         */
-        function getImageType(item) {
-            var url = item.bing_url || '';
-            
-            // juemeibizhi.com：低分辨率，不转换
-            if (isJuemeiUrl(url)) {
-                return 'normal';
-            }
-            
-            // Bing CDN
-            if (isBingCdnUrl(url)) {
-                if (url.includes('_UHD')) return 'uhd';
-                if (url.includes('_1920x1080')) return 'fhd';
-                if (url.includes('_1366x768')) return 'hd';
-            }
-            
-            return 'normal';
-        }
-
-        // ============================================================
-        // 2. 月份控件
-        // ============================================================
-        (function() {
-            var today = new Date();
-            var currentYear = today.getFullYear();
-            var currentMonth = today.getMonth() + 1;
-
-            var state = {
-                year: currentYear,
-                month: currentMonth
-            };
-
-            var mask = document.getElementById('mask');
-            var popup = document.getElementById('popup');
-            var monthInput = document.getElementById('monthInput');
-            var monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-
-            function closePopup() {
-                mask.classList.remove('show');
-            }
-
-            function openPopup() {
-                var rect = monthInput.getBoundingClientRect();
-                mask.classList.add('show');
-                popup.style.left = Math.max(0, rect.left) + 'px';
-                popup.style.top = (rect.bottom + 6 + window.scrollY) + 'px';
-                renderPopup();
-            }
-
-            function renderPopup() {
-                var html = '';
-                html += '<div class="popup-header">';
-                html += '<div class="popup-year-nav">';
-                html += '<button class="popup-year-btn" id="popupYearPrev">‹</button>';
-                html += '<span class="popup-year-text" id="popupYearText">' + state.year + '年</span>';
-                html += '<button class="popup-year-btn" id="popupYearNext">›</button>';
-                html += '</div>';
-                html += '</div>';
-                html += '<div class="month-grid">';
-                for (var i = 0; i < monthNames.length; i++) {
-                    var num = i + 1;
-                    var cls = (state.month === num) ? 'active' : '';
-                    html += '<div class="month-cell ' + cls + '" data-val="' + num + '">' + monthNames[i] + '</div>';
-                }
-                html += '</div>';
-                popup.innerHTML = html;
-
-                document.getElementById('popupYearPrev').onclick = function(e) {
-                    e.stopPropagation();
-                    state.year--;
-                    document.getElementById('popupYearText').textContent = state.year + '年';
-                    updateMonthInput();
-                };
-                document.getElementById('popupYearNext').onclick = function(e) {
-                    e.stopPropagation();
-                    state.year++;
-                    document.getElementById('popupYearText').textContent = state.year + '年';
-                    updateMonthInput();
-                };
-
-                popup.querySelectorAll('.month-cell').forEach(function(el) {
-                    el.onclick = function() {
-                        state.month = parseInt(el.dataset.val);
-                        popup.querySelectorAll('.month-cell').forEach(function(c) {
-                            c.classList.remove('active');
-                        });
-                        el.classList.add('active');
-                        updateMonthInput();
-                        loadData();
-                        closePopup();
-                    };
-                });
-            }
-
-            function updateMonthInput() {
-                var monthStr = String(state.month).padStart(2, '0');
-                monthInput.value = state.year + ' - ' + monthStr;
-            }
-
-            monthInput.onclick = function() { openPopup(); };
-            mask.onclick = function(e) { if (e.target === mask) closePopup(); };
-
-            window.resetAllFilters = function() {
-                var now = new Date();
-                state.year = now.getFullYear();
-                state.month = now.getMonth() + 1;
-                monthInput.value = '';
-                loadData();
-            };
-
-            function loadData() {
-                var year = state.year;
-                var month = String(state.month).padStart(2, '0');
-                loadMonthData(year, month);
-            }
-
-            monthInput.placeholder = '请选择';
-
-            window.addEventListener('DOMContentLoaded', function() {
-                setTimeout(function() {
-                    loadData();
-                }, 100);
+// ====================== Worker 主入口 ======================
+export default {
+    async fetch(request, env, ctx) {
+        const url = new URL(request.url);
+        const path = url.pathname;
+        const method = request.method;
+
+        // favicon 空响应
+        if (path === '/favicon.ico') {
+            return new Response(null, {
+                status: 204,
+                headers: { 'Cache-Control': 'public, max-age=86400' }
             });
-
-            window.filterState = {
-                getYear: function() { return state.year; },
-                getMonth: function() { return state.month; }
-            };
-        })();
-
-        // ============================================================
-        // 3. 工具函数
-        // ============================================================
-
-        function getMonthFromDate(dateStr) {
-            if (dateStr && dateStr.length >= 7) {
-                return dateStr.substring(5, 7);
-            }
-            return '未知';
         }
 
-        function formatTitle(item) {
-            var mainTitle = item.subtitle || '';
-            var subTitle = item.title || '';
-
-            if (mainTitle && subTitle && mainTitle !== subTitle) {
-                return mainTitle + ' | ' + subTitle;
+        // 触发青龙采集任务接口
+        if (path === '/api/trigger' && method === 'POST') {
+            if (!validateApiKey(request)) {
+                return Response.json({
+                    success: false,
+                    error: "无效访问密钥"
+                }, { status: 403 });
             }
-            if (mainTitle) {
-                return mainTitle;
-            }
-            if (subTitle) {
-                return subTitle;
-            }
-            return '壁纸';
+            const taskId = parseInt(url.searchParams.get('taskId')) || 10;
+            const result = await triggerQLTask(taskId);
+            return Response.json(result);
         }
 
-        var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-
-        // ============================================================
-        // 4. 数据加载
-        // ============================================================
-
-        var loadedData = {};
-        var allAvailableYears = [];
-
-        async function loadIndex() {
+        // 青龙提交壁纸数据接口
+        if (path === '/api/save' && method === 'POST') {
+            if (!validateApiKey(request)) {
+                return Response.json({
+                    success: false,
+                    error: "无效访问密钥"
+                }, { status: 403 });
+            }
             try {
-                var resp = await fetch('index.json');
-                if (!resp.ok) {
-                    console.warn('⚠️ 索引文件不存在');
-                    return false;
-                }
-                var index = await resp.json();
-                if (index && index.years && index.years.length > 0) {
-                    index.years.sort(function(a, b) { return parseInt(b.year) - parseInt(a.year); });
-                    allAvailableYears = index.years.map(function(item) { return item.year; });
-                    console.log('📅 从索引加载年份:', allAvailableYears);
-                    return true;
-                }
-                return false;
-            } catch (e) {
-                console.warn('⚠️ 加载索引失败:', e.message);
-                return false;
+                const data = await request.json();
+                const force = url.searchParams.get('force') === 'true';
+                const res = await saveBingData(env, data, force, true);
+                return Response.json(res, { status: res.success ? 200 : 400 });
+            } catch (err) {
+                return Response.json({ success: false, error: err.message }, { status: 500 });
             }
         }
 
-        async function loadYearData(year) {
-            if (loadedData[year]) {
-                return loadedData[year];
+        // 删除指定日期壁纸数据
+        if (path === '/api/delete' && method === 'DELETE') {
+            if (!validateApiKey(request)) {
+                return Response.json({
+                    success: false,
+                    error: "无效访问密钥"
+                }, { status: 403 });
             }
-
+            const date = url.searchParams.get('date');
+            if (!date) {
+                return Response.json({ success: false, error: "缺失date参数" }, { status: 400 });
+            }
             try {
-                var resp = await fetch('zh.' + year + '.json');
-                if (!resp.ok) {
-                    console.warn('⚠️ ' + year + ' 年文件不存在');
-                    return [];
+                const year = new Date(date).getFullYear();
+                const yearKey = `${KV_KEYS.YEAR_PREFIX}${year}`;
+                let list = await env.BING_DATA.get(yearKey, 'json');
+                if (!list || !Array.isArray(list)) list = [];
+                list = list.filter(item => item.date !== date);
+                await env.BING_DATA.put(yearKey, JSON.stringify(list));
+
+                // 同步清理今日缓存
+                const todayCache = await env.BING_DATA.get(KV_KEYS.TODAY, 'json');
+                if (todayCache && todayCache.date === date) {
+                    await env.BING_DATA.delete(KV_KEYS.TODAY);
                 }
-                var data = await resp.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    loadedData[year] = data;
-                    return data;
-                }
-                return [];
-            } catch (e) {
-                console.warn('加载 ' + year + ' 年数据失败:', e.message);
-                return [];
+                return Response.json({ success: true, msg: "数据删除完成", targetDate: date });
+            } catch (err) {
+                return Response.json({ success: false, error: err.message }, { status: 500 });
             }
         }
 
-        // ============================================================
-        // 5. 筛选与渲染
-        // ============================================================
+        // 获取当日壁纸
+        if (path === '/api/today') {
+            const res = await getTodayData(env);
+            return Response.json(res);
+        }
 
-        function filterImagesByMonth(images, month) {
-            if (!images || images.length === 0) return [];
-            return images.filter(function(img) {
-                var m = getMonthFromDate(img.date);
-                return m === month;
+        // 根据日期单条查询
+        if (path === '/api/date') {
+            const date = url.searchParams.get('date');
+            const res = await getDateData(env, date);
+            return Response.json(res);
+        }
+
+        // 获取整年全部数据
+        if (path === '/api/year') {
+            const year = url.searchParams.get('year');
+            const res = await getYearData(env, year);
+            return Response.json(res);
+        }
+
+        // 按年月筛选数据
+        if (path === '/api/month') {
+            const year = url.searchParams.get('year');
+            const month = url.searchParams.get('month');
+            if (!year || !month) {
+                return Response.json({ success: false, error: "缺失year/month参数" }, { status: 400 });
+            }
+            const raw = await getYearData(env, parseInt(year));
+            if (!raw.success) return Response.json(raw);
+            const targetMonth = String(month).padStart(2, '0');
+            const filterList = raw.data.filter(item => {
+                const d = new Date(item.date);
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                return m === targetMonth;
+            });
+            return Response.json({
+                success: true,
+                year: parseInt(year),
+                month: targetMonth,
+                count: filterList.length,
+                data: filterList
             });
         }
 
-        function renderGrid(images) {
-            var grid = document.getElementById('grid');
-            var totalCount = document.getElementById('totalCount');
+        // 分页全量历史
+        if (path === '/api/history') {
+            const limit = Number(url.searchParams.get('limit')) || 20;
+            const page = Number(url.searchParams.get('page')) || 1;
+            const year = url.searchParams.get('year') ? parseInt(url.searchParams.get('year')) : null;
+            const res = await getHistory(env, limit, page, year);
+            return Response.json(res);
+        }
 
-            if (!images || images.length === 0) {
-                grid.innerHTML = '<div class="empty">😅 没有找到匹配的壁纸</div>';
-                totalCount.textContent = '0';
-                return;
-            }
+        // 获取所有存在数据的年份列表
+        if (path === '/api/years') {
+            const res = await getAvailableYears(env);
+            return Response.json(res);
+        }
 
-            totalCount.textContent = images.length;
-
-            var html = '';
-            for (var i = 0; i < images.length; i++) {
-                var img = images[i];
-                var dateStr = img.date || '';
-                var displayTitle = formatTitle(img);
-                
-                // ===== 获取图片 URL =====
-                var imageUrl = getImageUrl(img);
-                // 缩略图：juemeibizhi 用原图，Bing CDN 用 720p
-                if (isBingCdnUrl(img.bing_url)) {
-                    imageUrl = get720pUrl(img);
+        // 首页渲染HTML页面
+        if (path === '/' || path === '') {
+            const html = generateHTMLPage();
+            return new Response(html, {
+                headers: {
+                    'Content-Type': 'text/html; charset=utf-8',
+                    'Cache-Control': 'public, max-age=300'
                 }
-                
-                // ===== 判断图片类型 =====
-                var imgType = getImageType(img);
-                var isUhd = (imgType === 'uhd');
-                var isFhd = (imgType === 'fhd');
-                var isHd = (imgType === 'hd');
-                var isNormal = (imgType === 'normal');
-
-                // ===== 生成各版本 URL =====
-                var uhdUrl = get4kUrl(img);
-                var fhdUrl = get1080pUrl(img);
-                var hdUrl = get720pUrl(img);
-                var verticalUrl = getVerticalUrl(img);
-
-                var escapedData = encodeURIComponent(JSON.stringify(img));
-
-                html += '<div class="card" data-item="' + escapedData + '">';
-                html += '<img src="' + imageUrl + '" alt="' + displayTitle + '" loading="lazy" onerror="this.style.display=\'none\'" />';
-                html += '<div class="info">';
-                html += '<div class="date">📅 ' + dateStr + '</div>';
-                html += '<div class="title">' + displayTitle + '</div>';
-                html += '<div class="btn-group">';
-                
-                // ===== 智能按钮逻辑 =====
-                if (isUhd) {
-                    // 有 _UHD：显示 4K/UHD + 1080P
-                    html += '<a href="' + uhdUrl + '" class="download-btn btn-4k" target="_blank" onclick="event.stopPropagation();">';
-                    html += DOWNLOAD_SVG + ' 4K/UHD</a>';
-                    html += '<a href="' + fhdUrl + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
-                    html += DOWNLOAD_SVG + ' 1080P</a>';
-                } else if (isFhd) {
-                    // 只有 _1920x1080：只显示 1080P
-                    html += '<a href="' + fhdUrl + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
-                    html += DOWNLOAD_SVG + ' 1080P</a>';
-                } else {
-                    // 普通图片或 _1366x768：只显示 下载图片
-                    var normalUrl = img.bing_url || img.local_path || '';
-                    if (normalUrl && !normalUrl.startsWith('http') && normalUrl.startsWith('/')) {
-                        normalUrl = window.location.origin + normalUrl;
-                    }
-                    html += '<a href="' + normalUrl + '" class="download-btn btn-download" target="_blank" onclick="event.stopPropagation();">';
-                    html += DOWNLOAD_SVG + ' 下载图片</a>';
-                }
-                
-                html += '</div></div></div>';
-            }
-            grid.innerHTML = html;
-
-            // ===== 卡片点击事件 =====
-            document.querySelectorAll('.card').forEach(function(el) {
-                el.addEventListener('click', function(e) {
-                    if (e.target.closest('a')) return;
-                    var encodedData = this.dataset.item;
-                    if (encodedData) {
-                        try {
-                            var jsonStr = decodeURIComponent(encodedData);
-                            var item = JSON.parse(jsonStr);
-                            openModal(item);
-                        } catch (e) {
-                            console.warn('解析数据失败:', e);
-                        }
-                    }
-                });
             });
         }
 
-        // ============================================================
-        // 6. 模态框
-        // ============================================================
-
-        function openModal(item) {
-            var overlay = document.getElementById('modalOverlay');
-            var displayTitle = formatTitle(item);
-            document.getElementById('modalTitle').textContent = displayTitle;
-
-            var img = document.getElementById('modalImg');
-            
-            // 模态框用 1080P 或原图
-            var modalUrl = get1080pUrl(item);
-            img.src = modalUrl;
-            img.alt = displayTitle;
-
-            document.getElementById('modalSubtitle').style.display = 'none';
-
-            var desc = item.description || '';
-            desc = desc.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/<br\s*\/?>/gi, '\n');
-            var paragraphs = desc.split('\n').map(function(p) { return p.trim(); }).filter(function(p) { return p !== ''; });
-            var descHtml = paragraphs.map(function(p) { return '<p>' + p + '</p>'; }).join('');
-            document.getElementById('modalDesc').innerHTML = descHtml;
-
-            overlay.classList.add('open');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal() {
-            var overlay = document.getElementById('modalOverlay');
-            if (overlay) {
-                overlay.classList.remove('open');
-                document.body.style.overflow = '';
-            }
-        }
-
-        document.getElementById('modalClose').addEventListener('click', closeModal);
-        document.getElementById('modalOverlay').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeModal();
-        });
-
-        // ============================================================
-        // 7. 加载数据
-        // ============================================================
-
-        async function loadMonthData(year, month) {
-            var grid = document.getElementById('grid');
-            grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
-
-            if (allAvailableYears.length === 0) {
-                await loadIndex();
-            }
-
-            var data = loadedData[year];
-            if (!data) {
-                data = await loadYearData(year);
-            }
-
-            if (!data || data.length === 0) {
-                grid.innerHTML = '<div class="empty">😅 ' + year + ' 年暂无壁纸数据</div>';
-                document.getElementById('totalCount').textContent = '0';
-                return;
-            }
-
-            var sortedData = data.slice().sort(function(a, b) {
-                var da = a.date || '';
-                var db = b.date || '';
-                return db.localeCompare(da);
-            });
-
-            var filtered = filterImagesByMonth(sortedData, month);
-
-            if (filtered.length === 0) {
-                grid.innerHTML = '<div class="empty">😅 ' + year + '年 ' + month + '月 暂无壁纸数据</div>';
-                document.getElementById('totalCount').textContent = '0';
-                return;
-            }
-
-            renderGrid(filtered);
-        }
-
-        // ============================================================
-        // 8. 主函数
-        // ============================================================
-
-        console.log('📚 壁纸归档已加载');
-        console.log('📌 规则: juemeibizhi.com 不转换, Bing CDN 智能转换');
-        console.log('   - _UHD → 4K/UHD + 1080P');
-        console.log('   - _1920x1080 → 1080P');
-        console.log('   - _1366x768 或普通 → 下载图片');
-    </script>
-</body>
-</html>
+        // 404兜底
+        return Response.json({
+            error: "接口不存在",
+            path: path
+        }, { status: 404 });
+    }
+};
