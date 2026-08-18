@@ -7,6 +7,7 @@
     <link rel="icon" href="https://bingimg.lei5214.cc.cd/logo.avif">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             color: #e0e0e0;
@@ -18,6 +19,7 @@
             background-attachment: fixed;
             background-repeat: no-repeat;
         }
+
         body::before {
             content: '';
             position: fixed;
@@ -29,6 +31,7 @@
             z-index: 0;
             pointer-events: none;
         }
+
         body > * {
             position: relative;
             z-index: 1;
@@ -131,7 +134,7 @@
             background: #4d96ff;
             color: #fff;
         }
-        /* ===== 月份选择弹窗 ===== */
+
         .date-mask {
             position: fixed;
             top: 0;
@@ -144,10 +147,8 @@
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
         }
-        .date-mask.show {
-            display: block;
-        }
-        
+        .date-mask.show { display: block; }
+
         .date-popup {
             position: absolute;
             background: #ffffff;
@@ -158,131 +159,71 @@
             animation: popupFade 0.2s ease;
             border: 1px solid #e8e8e8;
         }
-        
         @keyframes popupFade {
-            from {
-                opacity: 0;
-                transform: translateY(-8px) scale(0.97);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        
-        /* ===== 头部：月份、年份视图完全相同布局 ===== */
+
         .popup-header {
             display: flex;
-            justify-content: center;
             align-items: center;
-            gap: 16px;
-            padding: 8px 16px 6px 16px;
-            min-height: 42px;
+            justify-content: center;
+            padding: 14px 20px;
             border-bottom: 1px solid #f0f0f0;
             background: #fafafa;
+            gap: 16px;
         }
-        
-        .popup-header-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #333;
-        }
-        
         .popup-year-nav {
             display: flex;
             align-items: center;
             gap: 16px;
-            justify-content: center;
-            background: transparent;
-            padding: 0;
         }
-        
-        .popup-year-btn,
-        .popup-year-page-btn {
+        .popup-year-btn {
             background: transparent;
             border: none;
             color: #666;
             font-size: 20px;
             cursor: pointer;
-            padding: 0 10px;
+            padding: 0 30px;
             transition: color 0.2s;
             line-height: 1;
         }
-        .popup-year-page-btn:disabled{
-            color:#cccccc;
-            cursor:not-allowed;
-        }
-        
-        .popup-year-btn:hover,
-        .popup-year-page-btn:not(:disabled):hover {
+        .popup-year-btn:hover {
             color: #4d96ff;
         }
-        
         .popup-year-text {
-            font-size: 17px;
+            font-size: 18px;
             color: #333;
             font-weight: 600;
             min-width: 70px;
             text-align: center;
-            cursor: pointer;
-            padding: 2px 8px;
-            border-radius: 6px;
-            transition: background 0.2s;
         }
-        
-        .popup-year-text:hover {
-            background: #f0f5ff;
-        }
-        
-        /* ===== 网格容器：月份、年份完全相同参数 ===== */
-        .month-grid,
-        .year-grid-popup {
-            padding: 4px 14px 14px 14px;
+
+        .month-grid {
+            padding: 16px 20px 20px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(4, 1fr); /* 强制4行，每页12个年份 */
-            gap: 4px;
-            background: #ffffff;
-            height: 220px;
+            gap: 8px;
         }
-        
-        /* ===== 格子单元格：月份、年份样式完全统一 ===== */
-        .month-cell,
-        .year-cell {
+        .month-cell {
             text-align: center;
-            padding: 9px 0;
-            font-size: 14px;
+            padding: 10px 0;
+            font-size: 15px;
             color: #555;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 500;
-            background: transparent;
         }
-        
-        .month-cell:hover,
-        .year-cell:not(.disabled):hover {
+        .month-cell:hover {
             background: #f0f5ff;
             color: #4d96ff;
         }
-        
-        .month-cell.active,
-        .year-cell.active {
+        .month-cell.active {
             background: #4d96ff;
             color: #fff;
         }
-        
-        /* 无数据禁用年份 */
-        .year-cell.disabled {
-            opacity: 0.35;
-            cursor: default;
-            color: #999;
-        }
-        .year-cell.disabled:hover {
-            background: transparent;
-            color: #999;
-        }
-        
+
         .grid {
             max-width: 1400px;
             margin: 0 auto;
@@ -290,6 +231,7 @@
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 16px;
         }
+
         .card {
             background: rgba(22, 22, 22, 0.5);
             backdrop-filter: blur(4px);
@@ -300,10 +242,12 @@
             cursor: pointer;
             position: relative;
         }
+
         .card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         }
+
         .card img {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -311,14 +255,17 @@
             display: block;
             background: #111;
         }
+
         .card .info {
             padding: 10px 14px 14px;
         }
+
         .card .info .date {
             font-size: 0.8rem;
             color: #ffffff;
             font-weight: 500;
         }
+
         .card .info .title {
             font-size: 0.85rem;
             color: #ffffff;
@@ -328,12 +275,14 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         .card .info .btn-group {
             display: flex;
             gap: 8px;
             margin-top: 8px;
             flex-wrap: wrap;
         }
+
         .card .info .btn-group .download-btn {
             display: inline-flex;
             align-items: center;
@@ -348,39 +297,46 @@
             border: none;
             cursor: pointer;
         }
+
         .card .info .btn-group .download-btn svg {
             flex-shrink: 0;
         }
+
         .card .info .btn-group .btn-4k {
             background: #4d96ff;
         }
         .card .info .btn-group .btn-4k:hover {
             background: #3a7bd5;
         }
+
         .card .info .btn-group .btn-1080p {
             background: #6c757d;
         }
         .card .info .btn-group .btn-1080p:hover {
             background: #5a6268;
         }
+
         .card .info .btn-group .btn-720p {
             background: #17a2b8;
         }
         .card .info .btn-group .btn-720p:hover {
             background: #138496;
         }
+
         .card .info .btn-group .btn-vertical {
             background: #6c757d;
         }
         .card .info .btn-group .btn-vertical:hover {
             background: #5a6268;
         }
+
         .card .info .btn-group .btn-download {
             background: #6c757d;
         }
         .card .info .btn-group .btn-download:hover {
             background: #5a6268;
         }
+
         .loading,
         .empty {
             text-align: center;
@@ -389,6 +345,7 @@
             font-size: 1rem;
             grid-column: 1 / -1;
         }
+
         .loading::after {
             content: "";
             display: inline-block;
@@ -401,9 +358,11 @@
             animation: spin 0.8s linear infinite;
             vertical-align: middle;
         }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -418,10 +377,12 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
+
         .modal-overlay.open {
             display: flex;
             opacity: 1;
         }
+
         .modal-box {
             background: #1a1a1a;
             border-radius: 28px;
@@ -435,9 +396,11 @@
             transform: scale(0.95);
             transition: transform 0.3s ease;
         }
+
         .modal-overlay.open .modal-box {
             transform: scale(1);
         }
+
         .modal-image {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -445,12 +408,14 @@
             overflow: hidden;
             position: relative;
         }
+
         .modal-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
         }
+
         .modal-image::after {
             content: '';
             position: absolute;
@@ -467,6 +432,7 @@
             pointer-events: none;
             z-index: 1;
         }
+
         .modal-content {
             position: absolute;
             bottom: 0;
@@ -487,6 +453,7 @@
             width: 0;
             background: transparent;
         }
+
         .modal-title {
             font-size: 1.6rem;
             font-weight: 600;
@@ -494,9 +461,11 @@
             color: #fff;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         }
+
         .modal-subtitle {
             display: none !important;
         }
+
         .modal-desc {
             font-size: 0.95rem;
             line-height: 1.8;
@@ -506,15 +475,18 @@
             color: #f0f0f0;
             text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
         }
+
         .modal-desc p {
             text-indent: 2em;
             margin: 0;
             padding: 0;
             line-height: 1.8;
         }
+
         .modal-desc p + p {
             margin-top: 0;
         }
+
         .modal-close {
             position: absolute;
             top: 16px;
@@ -536,10 +508,12 @@
             z-index: 10;
             line-height: 1;
         }
+
         .modal-close:hover {
             background: rgba(255, 255, 255, 0.25);
             transform: scale(1.05);
         }
+
         footer {
             max-width: 1400px;
             margin: 40px auto 0;
@@ -549,6 +523,7 @@
             color: #ffffff;
             font-size: 0.85rem;
         }
+
         @media (max-width: 768px) {
             .top-bar {
                 flex-direction: column;
@@ -674,15 +649,8 @@
             .popup-year-nav {
                 gap: 12px;
             }
-            .year-grid-popup {
-                grid-template-columns: repeat(3, 1fr);
-                padding: 10px 12px 14px;
-            }
-            .year-cell {
-                font-size: 13px;
-                padding: 6px 0;
-            }
         }
+
         @media (max-width: 480px) {
             body {
                 padding: 10px;
@@ -757,18 +725,11 @@
                 width: 95%;
                 left: 2.5% !important;
             }
-            .year-grid-popup {
-                grid-template-columns: repeat(3, 1fr);
-                padding: 8px 10px 12px;
-            }
-            .year-cell {
-                font-size: 12px;
-                padding: 5px 0;
-            }
         }
     </style>
 </head>
 <body>
+
     <div class="top-bar">
         <a href="/" class="btn-home">🏠 返回首页</a>
         <div class="filters">
@@ -780,12 +741,15 @@
             <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
         </div>
     </div>
+
     <div class="grid" id="grid">
         <div class="loading">加载壁纸数据中...</div>
     </div>
+
     <footer>
         <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
     </footer>
+
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-box">
             <button class="modal-close" id="modalClose">&times;</button>
@@ -801,32 +765,60 @@
             </div>
         </div>
     </div>
+
     <div class="date-mask" id="mask">
         <div class="date-popup" id="popup"></div>
     </div>
+
     <script>
         // ============================================================
         // 1. URL 处理工具
         // ============================================================
         
+        /**
+         * 判断是否是 juemeibizhi.com（低分辨率，不做转换）
+         */
         function isJuemeiUrl(url) {
             if (!url) return false;
             return url.includes('juemeibizhi.com');
         }
+
+        /**
+         * 判断是否是 Bing CDN
+         */
         function isBingCdnUrl(url) {
             if (!url) return false;
             return url.includes('cn.bing.com') || url.includes('bing.com') || url.includes('cdn.bimg.cc');
         }
+
+        /**
+         * 获取图片 URL（juemeibizhi.com 优先 bing_url，失败用本地缓存）
+         */
         function getImageUrl(item) {
             var bingUrl = item.bing_url || '';
+            var localPath = item.local_path || '';
+            
+            // juemeibizhi.com：优先 bing_url
             if (isJuemeiUrl(bingUrl)) {
                 return bingUrl;
             }
+            
+            // 其他：直接返回 bing_url
             return bingUrl;
         }
+
+        /**
+         * 获取 4K/UHD URL（仅 Bing CDN）
+         */
         function get4kUrl(item) {
             var bingUrl = item.bing_url || '';
-            if (isJuemeiUrl(bingUrl)) return bingUrl;
+            
+            // juemeibizhi.com：不转换，返回原图
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN：已有 _UHD 或尝试替换
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_UHD')) return bingUrl;
                 if (bingUrl.includes('_1920x1080')) {
@@ -835,17 +827,29 @@
                 if (bingUrl.includes('_1366x768')) {
                     return bingUrl.replace('_1366x768', '_UHD');
                 }
+                // 尝试在扩展名前插入 _UHD
                 var lastDot = bingUrl.lastIndexOf('.');
                 if (lastDot > 0) {
                     var testUrl = bingUrl.substring(0, lastDot) + '_UHD' + bingUrl.substring(lastDot);
                     return testUrl;
                 }
             }
+            
             return bingUrl;
         }
+
+        /**
+         * 获取 1080P URL
+         */
         function get1080pUrl(item) {
             var bingUrl = item.bing_url || '';
-            if (isJuemeiUrl(bingUrl)) return bingUrl;
+            
+            // juemeibizhi.com：不转换，返回原图
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN：已有 1920x1080 或尝试替换
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_1920x1080')) return bingUrl;
                 if (bingUrl.includes('_UHD')) {
@@ -854,17 +858,29 @@
                 if (bingUrl.includes('_1366x768')) {
                     return bingUrl.replace('_1366x768', '_1920x1080');
                 }
+                // 尝试在扩展名前插入 _1920x1080
                 var lastDot = bingUrl.lastIndexOf('.');
                 if (lastDot > 0) {
                     var testUrl = bingUrl.substring(0, lastDot) + '_1920x1080' + bingUrl.substring(lastDot);
                     return testUrl;
                 }
             }
+            
             return bingUrl;
         }
+
+        /**
+         * 获取 720P URL
+         */
         function get720pUrl(item) {
             var bingUrl = item.bing_url || '';
-            if (isJuemeiUrl(bingUrl)) return bingUrl;
+            
+            // juemeibizhi.com：不转换
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_1366x768')) return bingUrl;
                 if (bingUrl.includes('_UHD')) {
@@ -879,11 +895,22 @@
                     return testUrl;
                 }
             }
+            
             return bingUrl;
         }
+
+        /**
+         * 获取竖版 URL（从 _UHD 或 _1920x1080 转换）
+         */
         function getVerticalUrl(item) {
             var bingUrl = item.bing_url || '';
-            if (isJuemeiUrl(bingUrl)) return bingUrl;
+            
+            // juemeibizhi.com：不转换
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN：尝试从 UHD 或 1080P 转竖版
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_UHD')) {
                     return bingUrl.replace('_UHD', '_vertical');
@@ -900,94 +927,65 @@
                     return testUrl;
                 }
             }
+            
             return bingUrl;
         }
+
+        /**
+         * 判断图片类型
+         */
         function getImageType(item) {
             var url = item.bing_url || '';
-            if (isJuemeiUrl(url)) return 'normal';
+            
+            // juemeibizhi.com：低分辨率，不转换
+            if (isJuemeiUrl(url)) {
+                return 'normal';
+            }
+            
+            // Bing CDN
             if (isBingCdnUrl(url)) {
                 if (url.includes('_UHD')) return 'uhd';
                 if (url.includes('_1920x1080')) return 'fhd';
                 if (url.includes('_1366x768')) return 'hd';
             }
+            
             return 'normal';
         }
+
         // ============================================================
-        // 2. 月份控件（年份选择器：每页12个年份）
+        // 2. 月份控件
         // ============================================================
         (function() {
             var today = new Date();
             var currentYear = today.getFullYear();
             var currentMonth = today.getMonth() + 1;
+
             var state = {
                 year: currentYear,
-                month: currentMonth,
-                view: 'month',
-                yearPage: 0
+                month: currentMonth
             };
+
             var mask = document.getElementById('mask');
             var popup = document.getElementById('popup');
             var monthInput = document.getElementById('monthInput');
             var monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+
             function closePopup() {
                 mask.classList.remove('show');
             }
+
             function openPopup() {
                 var rect = monthInput.getBoundingClientRect();
                 mask.classList.add('show');
-                state.view = 'month';
-                state.yearPage = 0;
                 popup.style.left = Math.max(0, rect.left) + 'px';
                 popup.style.top = (rect.bottom + 6 + window.scrollY) + 'px';
                 renderPopup();
             }
-        function renderPopup() {
-            var html = '';
-            // 基于索引拿到真实最大最小年份，自动生成完整年份区间
-            var minAvailableYear = allAvailableYears.length > 0 ? Math.min(...allAvailableYears) : 2010;
-            var maxAvailableYear = allAvailableYears.length > 0 ? Math.max(...allAvailableYears) : new Date().getFullYear();
-            var fullYearList = [];
-            for(var y = minAvailableYear; y <= maxAvailableYear; y++){
-                fullYearList.push(y);
-            }
-            const pageSize = 12; //每页固定12个年份，3列4行
-            
-            if (state.view === 'year') {
-                var totalPages = Math.ceil(fullYearList.length / pageSize);
-                var targetIndex = fullYearList.indexOf(state.year);
-                if(targetIndex !== -1){
-                    state.yearPage = Math.floor(targetIndex / pageSize);
-                }
-                var currentPage = state.yearPage;
-                if (currentPage >= totalPages) currentPage = totalPages - 1;
-                if (currentPage < 0) currentPage = 0;
-                state.yearPage = currentPage;
-        
-                var pageStart = currentPage * pageSize;
-                var pageEnd = Math.min(pageStart + pageSize, fullYearList.length);
-                var pageYears = fullYearList.slice(pageStart, pageEnd);
 
-                const canPrev = state.yearPage > 0;
-                const canNext = state.yearPage < totalPages - 1;
-        
+            function renderPopup() {
+                var html = '';
                 html += '<div class="popup-header">';
-                html += '<button class="popup-year-page-btn" id="yearPagePrev" '+(canPrev ? '' : 'disabled')+'>‹</button>';
-                html += '<span class="popup-header-title">选择年份</span>';
-                html += '<button class="popup-year-page-btn" id="yearPageNext" '+(canNext ? '' : 'disabled')+'>›</button>';
-                html += '</div>';
-                html += '<div class="year-grid-popup">';
-        
-                for (var i = 0; i < pageYears.length; i++) {
-                    var y = pageYears[i];
-                    var active = (y === state.year) ? 'active' : '';
-                    var hasRealData = allAvailableYears.includes(y);
-                    var disabledCls = hasRealData ? '' : 'disabled';
-                    html += '<div class="year-cell ' + active + ' ' + disabledCls + '" data-year="' + y + '">' + y + '年</div>';
-                }
-                html += '</div>';
-            } else {
-                html += '<div class="popup-header">';
-                html += '<div class="popup-year-nav" style="flex:1;justify-content:center;">';
+                html += '<div class="popup-year-nav">';
                 html += '<button class="popup-year-btn" id="popupYearPrev">‹</button>';
                 html += '<span class="popup-year-text" id="popupYearText">' + state.year + '年</span>';
                 html += '<button class="popup-year-btn" id="popupYearNext">›</button>';
@@ -1000,54 +998,21 @@
                     html += '<div class="month-cell ' + cls + '" data-val="' + num + '">' + monthNames[i] + '</div>';
                 }
                 html += '</div>';
-            }
-        
-            popup.innerHTML = html;
-            if (state.view === 'year') {
-                document.getElementById('yearPagePrev').onclick = function(e) {
-                    e.stopPropagation();
-                    state.yearPage--;
-                    renderPopup();
-                };
-                document.getElementById('yearPageNext').onclick = function(e) {
-                    e.stopPropagation();
-                    state.yearPage++;
-                    renderPopup();
-                };
-        
-                popup.querySelectorAll('.year-cell').forEach(function(el) {
-                    el.onclick = function() {
-                        if(this.classList.contains('disabled')){
-                            return;
-                        }
-                        var year = parseInt(this.dataset.year);
-                        state.year = year;
-                        state.view = 'month';
-                        renderPopup();
-                        updateMonthInput();
-                        loadData();
-                    };
-                });
-            } else {
-                document.getElementById('popupYearText').onclick = function() {
-                    state.view = 'year';
-                    renderPopup();
-                };
-        
+                popup.innerHTML = html;
+
                 document.getElementById('popupYearPrev').onclick = function(e) {
                     e.stopPropagation();
                     state.year--;
-                    renderPopup();
+                    document.getElementById('popupYearText').textContent = state.year + '年';
                     updateMonthInput();
-                    loadData();
                 };
                 document.getElementById('popupYearNext').onclick = function(e) {
                     e.stopPropagation();
                     state.year++;
-                    renderPopup();
+                    document.getElementById('popupYearText').textContent = state.year + '年';
                     updateMonthInput();
-                    loadData();
                 };
+
                 popup.querySelectorAll('.month-cell').forEach(function(el) {
                     el.onclick = function() {
                         state.month = parseInt(el.dataset.val);
@@ -1061,13 +1026,15 @@
                     };
                 });
             }
-        }
+
             function updateMonthInput() {
                 var monthStr = String(state.month).padStart(2, '0');
                 monthInput.value = state.year + ' - ' + monthStr;
             }
+
             monthInput.onclick = function() { openPopup(); };
             mask.onclick = function(e) { if (e.target === mask) closePopup(); };
+
             window.resetAllFilters = function() {
                 var now = new Date();
                 state.year = now.getFullYear();
@@ -1075,29 +1042,42 @@
                 monthInput.value = '';
                 loadData();
             };
+
             function loadData() {
                 var year = state.year;
                 var month = String(state.month).padStart(2, '0');
                 loadMonthData(year, month);
             }
+
             monthInput.placeholder = '请选择';
+
+            window.addEventListener('DOMContentLoaded', function() {
+                setTimeout(function() {
+                    loadData();
+                }, 100);
+            });
+
             window.filterState = {
                 getYear: function() { return state.year; },
                 getMonth: function() { return state.month; }
             };
         })();
+
         // ============================================================
         // 3. 工具函数
         // ============================================================
+
         function getMonthFromDate(dateStr) {
             if (dateStr && dateStr.length >= 7) {
                 return dateStr.substring(5, 7);
             }
             return '未知';
         }
+
         function formatTitle(item) {
             var mainTitle = item.subtitle || '';
             var subTitle = item.title || '';
+
             if (mainTitle && subTitle && mainTitle !== subTitle) {
                 return mainTitle + ' | ' + subTitle;
             }
@@ -1109,12 +1089,16 @@
             }
             return '壁纸';
         }
+
         var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
         // ============================================================
         // 4. 数据加载
         // ============================================================
+
         var loadedData = {};
         var allAvailableYears = [];
+
         async function loadIndex() {
             try {
                 var resp = await fetch('index.json');
@@ -1125,8 +1109,7 @@
                 var index = await resp.json();
                 if (index && index.years && index.years.length > 0) {
                     index.years.sort(function(a, b) { return parseInt(b.year) - parseInt(a.year); });
-                    // 统一转为数字，修复includes匹配bug
-                    allAvailableYears = index.years.map(function(item) { return Number(item.year); });
+                    allAvailableYears = index.years.map(function(item) { return item.year; });
                     console.log('📅 从索引加载年份:', allAvailableYears);
                     return true;
                 }
@@ -1136,10 +1119,12 @@
                 return false;
             }
         }
+
         async function loadYearData(year) {
             if (loadedData[year]) {
                 return loadedData[year];
             }
+
             try {
                 var resp = await fetch('zh.' + year + '.json');
                 if (!resp.ok) {
@@ -1157,9 +1142,11 @@
                 return [];
             }
         }
+
         // ============================================================
         // 5. 筛选与渲染
         // ============================================================
+
         function filterImagesByMonth(images, month) {
             if (!images || images.length === 0) return [];
             return images.filter(function(img) {
@@ -1167,36 +1154,47 @@
                 return m === month;
             });
         }
+
         function renderGrid(images) {
             var grid = document.getElementById('grid');
             var totalCount = document.getElementById('totalCount');
+
             if (!images || images.length === 0) {
                 grid.innerHTML = '<div class="empty">😅 没有找到匹配的壁纸</div>';
                 totalCount.textContent = '0';
                 return;
             }
+
             totalCount.textContent = images.length;
+
             var html = '';
             for (var i = 0; i < images.length; i++) {
                 var img = images[i];
                 var dateStr = img.date || '';
                 var displayTitle = formatTitle(img);
                 
+                // ===== 获取图片 URL =====
                 var imageUrl = getImageUrl(img);
+                // 缩略图：juemeibizhi 用原图，Bing CDN 用 720p
                 if (isBingCdnUrl(img.bing_url)) {
                     imageUrl = get720pUrl(img);
                 }
                 
+                // ===== 判断图片类型 =====
                 var imgType = getImageType(img);
                 var isUhd = (imgType === 'uhd');
                 var isFhd = (imgType === 'fhd');
+                var isHd = (imgType === 'hd');
+                var isNormal = (imgType === 'normal');
+
+                // ===== 生成各版本 URL =====
                 var uhdUrl = get4kUrl(img);
                 var fhdUrl = get1080pUrl(img);
-                var normalUrl = img.bing_url || img.local_path || '';
-                if (normalUrl && !normalUrl.startsWith('http') && normalUrl.startsWith('/')) {
-                    normalUrl = window.location.origin + normalUrl;
-                }
+                var hdUrl = get720pUrl(img);
+                var verticalUrl = getVerticalUrl(img);
+
                 var escapedData = encodeURIComponent(JSON.stringify(img));
+
                 html += '<div class="card" data-item="' + escapedData + '">';
                 html += '<img src="' + imageUrl + '" alt="' + displayTitle + '" loading="lazy" onerror="this.style.display=\'none\'" />';
                 html += '<div class="info">';
@@ -1204,15 +1202,23 @@
                 html += '<div class="title">' + displayTitle + '</div>';
                 html += '<div class="btn-group">';
                 
+                // ===== 智能按钮逻辑 =====
                 if (isUhd) {
+                    // 有 _UHD：显示 4K/UHD + 1080P
                     html += '<a href="' + uhdUrl + '" class="download-btn btn-4k" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 4K/UHD</a>';
                     html += '<a href="' + fhdUrl + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 1080P</a>';
                 } else if (isFhd) {
+                    // 只有 _1920x1080：只显示 1080P
                     html += '<a href="' + fhdUrl + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 1080P</a>';
                 } else {
+                    // 普通图片或 _1366x768：只显示 下载图片
+                    var normalUrl = img.bing_url || img.local_path || '';
+                    if (normalUrl && !normalUrl.startsWith('http') && normalUrl.startsWith('/')) {
+                        normalUrl = window.location.origin + normalUrl;
+                    }
                     html += '<a href="' + normalUrl + '" class="download-btn btn-download" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 下载图片</a>';
                 }
@@ -1220,6 +1226,8 @@
                 html += '</div></div></div>';
             }
             grid.innerHTML = html;
+
+            // ===== 卡片点击事件 =====
             document.querySelectorAll('.card').forEach(function(el) {
                 el.addEventListener('click', function(e) {
                     if (e.target.closest('a')) return;
@@ -1236,26 +1244,35 @@
                 });
             });
         }
+
         // ============================================================
         // 6. 模态框
         // ============================================================
+
         function openModal(item) {
             var overlay = document.getElementById('modalOverlay');
             var displayTitle = formatTitle(item);
             document.getElementById('modalTitle').textContent = displayTitle;
+
             var img = document.getElementById('modalImg');
+            
+            // 模态框用 1080P 或原图
             var modalUrl = get1080pUrl(item);
             img.src = modalUrl;
             img.alt = displayTitle;
+
             document.getElementById('modalSubtitle').style.display = 'none';
+
             var desc = item.description || '';
             desc = desc.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/<br\s*\/?>/gi, '\n');
             var paragraphs = desc.split('\n').map(function(p) { return p.trim(); }).filter(function(p) { return p !== ''; });
             var descHtml = paragraphs.map(function(p) { return '<p>' + p + '</p>'; }).join('');
             document.getElementById('modalDesc').innerHTML = descHtml;
+
             overlay.classList.add('open');
             document.body.style.overflow = 'hidden';
         }
+
         function closeModal() {
             var overlay = document.getElementById('modalOverlay');
             if (overlay) {
@@ -1263,6 +1280,7 @@
                 document.body.style.overflow = '';
             }
         }
+
         document.getElementById('modalClose').addEventListener('click', closeModal);
         document.getElementById('modalOverlay').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
@@ -1270,47 +1288,56 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeModal();
         });
+
         // ============================================================
         // 7. 加载数据
         // ============================================================
+
         async function loadMonthData(year, month) {
             var grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
+
             if (allAvailableYears.length === 0) {
                 await loadIndex();
             }
+
             var data = loadedData[year];
             if (!data) {
                 data = await loadYearData(year);
             }
+
             if (!data || data.length === 0) {
                 grid.innerHTML = '<div class="empty">😅 ' + year + ' 年暂无壁纸数据</div>';
                 document.getElementById('totalCount').textContent = '0';
                 return;
             }
+
             var sortedData = data.slice().sort(function(a, b) {
                 var da = a.date || '';
                 var db = b.date || '';
                 return db.localeCompare(da);
             });
+
             var filtered = filterImagesByMonth(sortedData, month);
+
             if (filtered.length === 0) {
                 grid.innerHTML = '<div class="empty">😅 ' + year + '年 ' + month + '月 暂无壁纸数据</div>';
                 document.getElementById('totalCount').textContent = '0';
                 return;
             }
+
             renderGrid(filtered);
         }
+
         // ============================================================
         // 8. 主函数
         // ============================================================
-        (async function initApp(){
-            console.log('📚 壁纸归档正在初始化...');
-            await loadIndex();
-            console.log('📌 点击年份文本切换年份选择视图，每页12个年份');
-            console.log('📌 规则: 索引不存在的年份置灰色不可点击');
-            loadData();
-        })();
+
+        console.log('📚 壁纸归档已加载');
+        console.log('📌 规则: juemeibizhi.com 不转换, Bing CDN 智能转换');
+        console.log('   - _UHD → 4K/UHD + 1080P');
+        console.log('   - _1920x1080 → 1080P');
+        console.log('   - _1366x768 或普通 → 下载图片');
     </script>
 </body>
 </html>
