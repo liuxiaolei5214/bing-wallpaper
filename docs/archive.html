@@ -6,7 +6,6 @@
     <title>壁纸归档 · 光影回顾</title>
     <link rel="icon" href="https://bingimg.lei5214.cc.cd/logo.avif">
     <style>
-        /* ========== 全局重置 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
@@ -21,7 +20,6 @@
             background-repeat: no-repeat;
         }
 
-        /* ===== 背景遮罩（透明度 0.1） ===== */
         body::before {
             content: '';
             position: fixed;
@@ -39,41 +37,26 @@
             z-index: 1;
         }
         
-        /* ========== 顶部外层容器（唯一控制左右两端对齐） ========== */
         .top-bar {
             max-width: 1400px;
             margin: 0 auto 30px;
             display: flex;
-            /* 核心：左右元素贴两端 */
             justify-content: space-between;
             align-items: center;
             padding: 12px 20px;
             gap: 20px;
-            /* 毛玻璃背景统一放外层，删除filters里的背景 */
             background: rgba(22, 22, 22, 0.3);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-radius: 12px;
         }
         
-        /* ========== 筛选器 .filters 只做内部横向排列，删除所有左右布局代码 ========== */
         .filters {
-            /* 删除 margin-left:auto / justify-content:space-between 等冲突代码 */
             display: flex;
             flex-wrap: nowrap;
             gap: 12px;
             align-items: center;
-            /* 禁止自动挤压，保证完整显示 */
             flex-shrink: 0;
-        }
-        
-        /* ===== 左侧：日历控件 + 重置筛选 + 统计 ===== */
-        .filter-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            flex: 1;
         }
         
         .filter-item {
@@ -104,7 +87,6 @@
         .filter-input:focus { border-color: #7abfff; box-shadow: 0 0 0 3px rgba(77,150,255,0.2); }
         .filter-input::placeholder { color: #666; }
         
-        /* ===== 重置筛选按钮 ===== */
         .btn-filter-reset {
             padding: 6px 16px;
             border: none;
@@ -122,7 +104,6 @@
             transform: translateY(-1px);
         }
         
-        /* ===== 统计 ===== */
         .stats {
             color: #ffffff;
             font-size: 0.9rem;
@@ -133,7 +114,6 @@
             font-weight: 600;
         }
         
-        /* ===== 返回首页（最左侧） ===== */
         .btn-home {
             padding: 6px 16px;
             border: 1px solid #4d96ff;
@@ -148,7 +128,6 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            /* 禁止被挤压 */
             flex-shrink: 0;
         }
         .btn-home:hover {
@@ -156,7 +135,6 @@
             color: #fff;
         }
 
-        /* ===== 月份选择弹窗 ===== */
         .date-mask {
             position: fixed;
             top: 0;
@@ -244,7 +222,6 @@
             color: #fff;
         }
 
-        /* ========== 网格 ========== */
         .grid {
             max-width: 1400px;
             margin: 0 auto;
@@ -337,7 +314,27 @@
             background: #5a6268;
         }
 
-        /* ========== 加载/空状态 ========== */
+        .card .info .btn-group .btn-720p {
+            background: #17a2b8;
+        }
+        .card .info .btn-group .btn-720p:hover {
+            background: #138496;
+        }
+
+        .card .info .btn-group .btn-vertical {
+            background: #fd7e14;
+        }
+        .card .info .btn-group .btn-vertical:hover {
+            background: #e06b0a;
+        }
+
+        .card .info .btn-group .btn-download {
+            background: #28a745;
+        }
+        .card .info .btn-group .btn-download:hover {
+            background: #218838;
+        }
+
         .loading,
         .empty {
             text-align: center;
@@ -364,7 +361,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ========== 模态框 ========== */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -516,7 +512,6 @@
             transform: scale(1.05);
         }
 
-        /* ========== 页脚 ========== */
         footer {
             max-width: 1400px;
             margin: 40px auto 0;
@@ -527,77 +522,56 @@
             font-size: 0.85rem;
         }
 
-        /* ========== 响应式 ========== */
         @media (max-width: 768px) {
-            /* 顶部容器改为纵向排列 */
             .top-bar {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 12px;
             }
-        
-            /* 返回首页单独一行，靠左 */
             .btn-home {
                 margin-right: auto;
                 justify-content: flex-start;
             }
-        
-            /* 筛选器区域改为纵向排列 */
             .filters {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 12px;
                 flex-shrink: 0;
             }
-        
-            /* ----------------------------------------- */
-            /* 重点修改：选择年月 和 重置 放在同一行      */
-            /* ----------------------------------------- */
             .filter-item {
-                display: flex;       /* 启用 flex */
-                flex-direction: row; /* 横向排列 */
-                align-items: center; /* 垂直居中 */
-                width: 100%;         /* 占满全宽 */
-                gap: 10px;           /* 文字、输入框、按钮之间的间距 */
-                justify-content: flex-start; /* 整体靠左排列 */
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                width: 100%;
+                gap: 10px;
+                justify-content: flex-start;
             }
-        
             .filter-label {
-                font-size: 16px;     /* 【修改点 1】选择年月字体放大 */
+                font-size: 16px;
                 white-space: nowrap;
-                flex-shrink: 0;      /* 防止文字被挤压 */
+                flex-shrink: 0;
             }
-        
             .filter-input {
-                flex: 1;             /* 输入框自动占据剩余空间 */
+                flex: 1;
                 width: auto;
                 min-width: 0;
             }
-        
             .btn-filter-reset {
-                width: auto !important; 
-                flex-shrink: 0;      /* 【修改点 2】按钮放置在输入框后方，宽度自适应 */
-                margin-top: 0;       /* 移除上边距 */
-                width: auto;         /* 移除原有的 100% 宽度 */
+                width: auto !important;
+                flex-shrink: 0;
+                margin-top: 0;
                 padding: 6px 14px;
             }
-        
-            /* ----------------------------------------- */
-            /* 统计数据单独排在下方                        */
-            /* ----------------------------------------- */
             .stats {
                 width: 100%;
-                text-align: left;    /* 或者是 center，看你喜好 */
+                text-align: left;
                 white-space: nowrap;
                 margin-top: 4px;
             }
-        
-            /* 卡片网格保持移动端适配 */
             .grid {
                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
                 gap: 12px;
             }
-        
             .modal-overlay {
                 padding: 0 !important;
             }
@@ -606,7 +580,7 @@
                 max-height: 100vh !important;
                 height: 100vh !important;
                 margin: 0 !important;
-                border-radius: 0 !important; 
+                border-radius: 0 !important;
                 display: flex;
                 flex-direction: column;
             }
@@ -620,7 +594,7 @@
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
-                background:#000;
+                background: #000;
             }
             .modal-content {
                 padding: 14px 20px 18px;
@@ -647,7 +621,6 @@
                 font-size: 1.2rem;
                 z-index: 12 !important;
             }
-        
             .date-popup {
                 width: 92%;
                 left: 4% !important;
@@ -697,7 +670,6 @@
                 font-size: 0.65rem;
                 padding: 3px 10px;
             }
-        
             .modal-overlay {
                 padding: 0 !important;
             }
@@ -720,7 +692,7 @@
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
-                background:#000;
+                background: #000;
             }
             .modal-content {
                 padding: 10px 14px 14px;
@@ -745,9 +717,8 @@
                 width: 32px;
                 height: 32px;
                 font-size: 1rem;
-                z-index:12 !important;
+                z-index: 12 !important;
             }
-        
             .date-popup {
                 width: 95%;
                 left: 2.5% !important;
@@ -757,34 +728,26 @@
 </head>
 <body>
 
-    <!-- ===== 筛选器 ===== -->
     <div class="top-bar">
-        <!-- 左侧：返回首页 -->
         <a href="/" class="btn-home">🏠 返回首页</a>
-    
-        <!-- 右侧：保留你原有的 .filters 容器，里面放着日历、重置、统计 -->
         <div class="filters">
             <div class="filter-item">
                 <span class="filter-label">选择年月：</span>
                 <input class="filter-input" id="monthInput" placeholder="请选择" readonly>
-            <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置筛选</button>
+                <button class="btn-filter-reset" onclick="resetAllFilters()">↺ 重置筛选</button>
             </div>
             <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
         </div>
     </div>
 
-
-    <!-- ===== 网格 ===== -->
     <div class="grid" id="grid">
         <div class="loading">加载壁纸数据中...</div>
     </div>
 
-    <!-- ===== 页脚 ===== -->
     <footer>
         <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
     </footer>
 
-    <!-- ===== 模态框 ===== -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-box">
             <button class="modal-close" id="modalClose">&times;</button>
@@ -801,17 +764,194 @@
         </div>
     </div>
 
-    <!-- ===== 月份选择弹窗遮罩 ===== -->
     <div class="date-mask" id="mask">
         <div class="date-popup" id="popup"></div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- JavaScript -->
-    <!-- ============================================================ -->
     <script>
         // ============================================================
-        // 1. 月份控件（独立模块）
+        // 1. URL 处理工具
+        // ============================================================
+        
+        /**
+         * 判断是否是 juemeibizhi.com（低分辨率，不做转换）
+         */
+        function isJuemeiUrl(url) {
+            if (!url) return false;
+            return url.includes('juemeibizhi.com');
+        }
+
+        /**
+         * 判断是否是 Bing CDN
+         */
+        function isBingCdnUrl(url) {
+            if (!url) return false;
+            return url.includes('cn.bing.com') || url.includes('bing.com') || url.includes('cdn.bimg.cc');
+        }
+
+        /**
+         * 获取图片 URL（juemeibizhi.com 优先 bing_url，失败用本地缓存）
+         */
+        function getImageUrl(item) {
+            var bingUrl = item.bing_url || '';
+            var localPath = item.local_path || '';
+            
+            // juemeibizhi.com：优先 bing_url
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // 其他：直接返回 bing_url
+            return bingUrl;
+        }
+
+        /**
+         * 获取 4K/UHD URL（仅 Bing CDN）
+         */
+        function get4kUrl(item) {
+            var bingUrl = item.bing_url || '';
+            
+            // juemeibizhi.com：不转换，返回原图
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN：已有 _UHD 或尝试替换
+            if (isBingCdnUrl(bingUrl)) {
+                if (bingUrl.includes('_UHD')) return bingUrl;
+                if (bingUrl.includes('_1920x1080')) {
+                    return bingUrl.replace('_1920x1080', '_UHD');
+                }
+                if (bingUrl.includes('_1366x768')) {
+                    return bingUrl.replace('_1366x768', '_UHD');
+                }
+                // 尝试在扩展名前插入 _UHD
+                var lastDot = bingUrl.lastIndexOf('.');
+                if (lastDot > 0) {
+                    var testUrl = bingUrl.substring(0, lastDot) + '_UHD' + bingUrl.substring(lastDot);
+                    return testUrl;
+                }
+            }
+            
+            return bingUrl;
+        }
+
+        /**
+         * 获取 1080P URL
+         */
+        function get1080pUrl(item) {
+            var bingUrl = item.bing_url || '';
+            
+            // juemeibizhi.com：不转换，返回原图
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN：已有 1920x1080 或尝试替换
+            if (isBingCdnUrl(bingUrl)) {
+                if (bingUrl.includes('_1920x1080')) return bingUrl;
+                if (bingUrl.includes('_UHD')) {
+                    return bingUrl.replace('_UHD', '_1920x1080');
+                }
+                if (bingUrl.includes('_1366x768')) {
+                    return bingUrl.replace('_1366x768', '_1920x1080');
+                }
+                // 尝试在扩展名前插入 _1920x1080
+                var lastDot = bingUrl.lastIndexOf('.');
+                if (lastDot > 0) {
+                    var testUrl = bingUrl.substring(0, lastDot) + '_1920x1080' + bingUrl.substring(lastDot);
+                    return testUrl;
+                }
+            }
+            
+            return bingUrl;
+        }
+
+        /**
+         * 获取 720P URL
+         */
+        function get720pUrl(item) {
+            var bingUrl = item.bing_url || '';
+            
+            // juemeibizhi.com：不转换
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN
+            if (isBingCdnUrl(bingUrl)) {
+                if (bingUrl.includes('_1366x768')) return bingUrl;
+                if (bingUrl.includes('_UHD')) {
+                    return bingUrl.replace('_UHD', '_1366x768');
+                }
+                if (bingUrl.includes('_1920x1080')) {
+                    return bingUrl.replace('_1920x1080', '_1366x768');
+                }
+                var lastDot = bingUrl.lastIndexOf('.');
+                if (lastDot > 0) {
+                    var testUrl = bingUrl.substring(0, lastDot) + '_1366x768' + bingUrl.substring(lastDot);
+                    return testUrl;
+                }
+            }
+            
+            return bingUrl;
+        }
+
+        /**
+         * 获取竖版 URL（从 _UHD 或 _1920x1080 转换）
+         */
+        function getVerticalUrl(item) {
+            var bingUrl = item.bing_url || '';
+            
+            // juemeibizhi.com：不转换
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN：尝试从 UHD 或 1080P 转竖版
+            if (isBingCdnUrl(bingUrl)) {
+                if (bingUrl.includes('_UHD')) {
+                    return bingUrl.replace('_UHD', '_vertical');
+                }
+                if (bingUrl.includes('_1920x1080')) {
+                    return bingUrl.replace('_1920x1080', '_vertical');
+                }
+                if (bingUrl.includes('_1366x768')) {
+                    return bingUrl.replace('_1366x768', '_vertical');
+                }
+                var lastDot = bingUrl.lastIndexOf('.');
+                if (lastDot > 0) {
+                    var testUrl = bingUrl.substring(0, lastDot) + '_vertical' + bingUrl.substring(lastDot);
+                    return testUrl;
+                }
+            }
+            
+            return bingUrl;
+        }
+
+        /**
+         * 判断图片类型
+         */
+        function getImageType(item) {
+            var url = item.bing_url || '';
+            
+            // juemeibizhi.com：低分辨率，不转换
+            if (isJuemeiUrl(url)) {
+                return 'normal';
+            }
+            
+            // Bing CDN
+            if (isBingCdnUrl(url)) {
+                if (url.includes('_UHD')) return 'uhd';
+                if (url.includes('_1920x1080')) return 'fhd';
+                if (url.includes('_1366x768')) return 'hd';
+            }
+            
+            return 'normal';
+        }
+
+        // ============================================================
+        // 2. 月份控件
         // ============================================================
         (function() {
             var today = new Date();
@@ -858,7 +998,6 @@
                 html += '</div>';
                 popup.innerHTML = html;
 
-                // 年份切换：只更新显示，不触发 API
                 document.getElementById('popupYearPrev').onclick = function(e) {
                     e.stopPropagation();
                     state.year--;
@@ -872,7 +1011,6 @@
                     updateMonthInput();
                 };
 
-                // 月份选择：点击后触发 API
                 popup.querySelectorAll('.month-cell').forEach(function(el) {
                     el.onclick = function() {
                         state.month = parseInt(el.dataset.val);
@@ -924,29 +1062,8 @@
         })();
 
         // ============================================================
-        // 2. 工具函数
+        // 3. 工具函数
         // ============================================================
-
-        function getBeijingTime() {
-            var now = new Date();
-            var beijingStr = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
-            return new Date(beijingStr);
-        }
-
-        function getCurrentYear() {
-            return String(getBeijingTime().getFullYear());
-        }
-
-        function getCurrentMonth() {
-            return String(getBeijingTime().getMonth() + 1).padStart(2, '0');
-        }
-
-        function getYearFromDate(dateStr) {
-            if (dateStr && dateStr.length >= 4) {
-                return dateStr.substring(0, 4);
-            }
-            return '未知';
-        }
 
         function getMonthFromDate(dateStr) {
             if (dateStr && dateStr.length >= 7) {
@@ -955,35 +1072,6 @@
             return '未知';
         }
 
-        function get4kUrl(url) {
-            if (!url) return '';
-            return url;
-        }
-
-        function get1080pUrl(url) {
-            if (!url) return '';
-            var result = url;
-            result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
-            result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
-            result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
-            if (result === url) {
-                result = url.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
-            }
-            return result;
-        }
-            
-        function get720pUrl(url) {
-            if (!url) return '';
-            let res = url;
-            res = res.replace(/_UHD\.jpg/g, '_1280x720.jpg');
-            return res;
-        }
-
-        function isUhdUrl(url) {
-            if (!url) return false;
-            return url.includes('_UHD.jpg') || url.includes('_UHD');
-        }
-        
         function formatTitle(item) {
             var mainTitle = item.subtitle || '';
             var subTitle = item.title || '';
@@ -991,22 +1079,19 @@
             if (mainTitle && subTitle && mainTitle !== subTitle) {
                 return mainTitle + ' | ' + subTitle;
             }
-            
             if (mainTitle) {
                 return mainTitle;
             }
-            
             if (subTitle) {
                 return subTitle;
             }
-            
             return '壁纸';
         }
 
         var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 
         // ============================================================
-        // 3. 数据加载
+        // 4. 数据加载
         // ============================================================
 
         var loadedData = {};
@@ -1057,7 +1142,7 @@
         }
 
         // ============================================================
-        // 4. 筛选与渲染
+        // 5. 筛选与渲染
         // ============================================================
 
         function filterImagesByMonth(images, month) {
@@ -1083,36 +1168,64 @@
             var html = '';
             for (var i = 0; i < images.length; i++) {
                 var img = images[i];
-                var url = img.bing_url || '';
                 var dateStr = img.date || '';
                 var displayTitle = formatTitle(img);
-                var displayUrl = get720pUrl(url);
-                var hd4kUrl = get4kUrl(url);
-                var hd1080Url = get1080pUrl(url);
-                var isUhd = isUhdUrl(url);
+                
+                // ===== 获取图片 URL =====
+                var imageUrl = getImageUrl(img);
+                // 缩略图：juemeibizhi 用原图，Bing CDN 用 720p
+                if (isBingCdnUrl(img.bing_url)) {
+                    imageUrl = get720pUrl(img);
+                }
+                
+                // ===== 判断图片类型 =====
+                var imgType = getImageType(img);
+                var isUhd = (imgType === 'uhd');
+                var isFhd = (imgType === 'fhd');
+                var isHd = (imgType === 'hd');
+                var isNormal = (imgType === 'normal');
+
+                // ===== 生成各版本 URL =====
+                var uhdUrl = get4kUrl(img);
+                var fhdUrl = get1080pUrl(img);
+                var hdUrl = get720pUrl(img);
+                var verticalUrl = getVerticalUrl(img);
+
                 var escapedData = encodeURIComponent(JSON.stringify(img));
 
                 html += '<div class="card" data-item="' + escapedData + '">';
-                html += '<img src="' + displayUrl + '" alt="' + displayTitle + '" loading="lazy" onerror="this.style.display=\'none\'" />';
+                html += '<img src="' + imageUrl + '" alt="' + displayTitle + '" loading="lazy" onerror="this.style.display=\'none\'" />';
                 html += '<div class="info">';
                 html += '<div class="date">📅 ' + dateStr + '</div>';
                 html += '<div class="title">' + displayTitle + '</div>';
                 html += '<div class="btn-group">';
                 
+                // ===== 智能按钮逻辑 =====
                 if (isUhd) {
-                    html += '<a href="' + hd4kUrl + '" class="download-btn btn-4k" target="_blank" onclick="event.stopPropagation();">';
-                    html += DOWNLOAD_SVG + ' UHD/4K</a>';
-                    html += '<a href="' + hd1080Url + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
+                    // 有 _UHD：显示 4K/UHD + 1080P
+                    html += '<a href="' + uhdUrl + '" class="download-btn btn-4k" target="_blank" onclick="event.stopPropagation();">';
+                    html += DOWNLOAD_SVG + ' 4K/UHD</a>';
+                    html += '<a href="' + fhdUrl + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
+                    html += DOWNLOAD_SVG + ' 1080P</a>';
+                } else if (isFhd) {
+                    // 只有 _1920x1080：只显示 1080P
+                    html += '<a href="' + fhdUrl + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 1080P</a>';
                 } else {
-                    html += '<a href="' + hd1080Url + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
-                    html += DOWNLOAD_SVG + ' 1080P</a>';
+                    // 普通图片或 _1366x768：只显示 下载图片
+                    var normalUrl = img.bing_url || img.local_path || '';
+                    if (normalUrl && !normalUrl.startsWith('http') && normalUrl.startsWith('/')) {
+                        normalUrl = window.location.origin + normalUrl;
+                    }
+                    html += '<a href="' + normalUrl + '" class="download-btn btn-download" target="_blank" onclick="event.stopPropagation();">';
+                    html += DOWNLOAD_SVG + ' 下载图片</a>';
                 }
                 
                 html += '</div></div></div>';
             }
             grid.innerHTML = html;
 
+            // ===== 卡片点击事件 =====
             document.querySelectorAll('.card').forEach(function(el) {
                 el.addEventListener('click', function(e) {
                     if (e.target.closest('a')) return;
@@ -1131,7 +1244,7 @@
         }
 
         // ============================================================
-        // 5. 模态框
+        // 6. 模态框
         // ============================================================
 
         function openModal(item) {
@@ -1140,8 +1253,10 @@
             document.getElementById('modalTitle').textContent = displayTitle;
 
             var img = document.getElementById('modalImg');
-            var imgUrl = get1080pUrl(item.bing_url || '');
-            img.src = imgUrl;
+            
+            // 模态框用 1080P 或原图
+            var modalUrl = get1080pUrl(item);
+            img.src = modalUrl;
             img.alt = displayTitle;
 
             document.getElementById('modalSubtitle').style.display = 'none';
@@ -1173,7 +1288,7 @@
         });
 
         // ============================================================
-        // 6. 加载数据
+        // 7. 加载数据
         // ============================================================
 
         async function loadMonthData(year, month) {
@@ -1213,10 +1328,14 @@
         }
 
         // ============================================================
-        // 7. 主函数
+        // 8. 主函数
         // ============================================================
 
         console.log('📚 壁纸归档已加载');
+        console.log('📌 规则: juemeibizhi.com 不转换, Bing CDN 智能转换');
+        console.log('   - _UHD → 4K/UHD + 1080P');
+        console.log('   - _1920x1080 → 1080P');
+        console.log('   - _1366x768 或普通 → 下载图片');
     </script>
 </body>
 </html>
