@@ -1251,7 +1251,7 @@
 
             document.getElementById('modalSubtitle').style.display = 'none';
 
-            var desc = item.description || '暂无详细介绍';
+            var desc = item.description || '';
             desc = desc.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/<br\s*\/?>/gi, '\n');
             var paragraphs = desc.split('\n').map(function(p) { return p.trim(); }).filter(function(p) { return p !== ''; });
             var descHtml = paragraphs.map(function(p) { return '<p>' + p + '</p>'; }).join('');
