@@ -10,26 +10,15 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            color: #e0e0e0;
+            color: #333;
             min-height: 100vh;
             padding: 20px;
-            background-image: url('https://image.lei5214.cc.cd/img/2026/08/10.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
+            background: #f0f2f5;
         }
 
+        /* ===== 移除背景遮罩 ===== */
         body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 10, 0.1);
-            z-index: 0;
-            pointer-events: none;
+            display: none;
         }
 
         body > * {
@@ -45,10 +34,9 @@
             align-items: center;
             padding: 12px 20px;
             gap: 20px;
-            background: rgba(22, 22, 22, 0.3);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: #ffffff;
             border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
         
         .filters {
@@ -66,7 +54,7 @@
         }
         .filter-label {
             font-size: 16px;
-            color: #ffffff;
+            color: #333;
             font-weight: 500;
             white-space: nowrap;
         }
@@ -79,13 +67,13 @@
             font-size: 14px;
             outline: none;
             cursor: pointer;
-            background: #4a4a4a; 
-            color: #ffffff;
+            background: #ffffff;
+            color: #333;
             transition: border-color 0.3s;
         }
         .filter-input:hover { border-color: #6aafff; }
         .filter-input:focus { border-color: #7abfff; box-shadow: 0 0 0 3px rgba(77,150,255,0.2); }
-        .filter-input::placeholder { color: #666; }
+        .filter-input::placeholder { color: #999; }
         
         .btn-filter-reset {
             padding: 6px 16px;
@@ -105,12 +93,12 @@
         }
         
         .stats {
-            color: #ffffff;
+            color: #333;
             font-size: 0.9rem;
             white-space: nowrap;
         }
         .stats span {
-            color: #ffffff;
+            color: #333;
             font-weight: 600;
         }
         
@@ -141,21 +129,23 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.4);
             display: none;
             z-index: 999;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
         .date-mask.show { display: block; }
 
         .date-popup {
             position: absolute;
-            background: #1a1a1a;
+            background: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             width: 360px;
             overflow: hidden;
             animation: popupFade 0.2s ease;
-            border: 1px solid #2a2a2a;
+            border: 1px solid #e8e8e8;
         }
         @keyframes popupFade {
             from { opacity: 0; transform: translateY(-8px) scale(0.97); }
@@ -167,8 +157,8 @@
             align-items: center;
             justify-content: center;
             padding: 14px 20px;
-            border-bottom: 1px solid #2a2a2a;
-            background: #111;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
             gap: 16px;
         }
         .popup-year-nav {
@@ -179,7 +169,7 @@
         .popup-year-btn {
             background: transparent;
             border: none;
-            color: #ffffff;
+            color: #666;
             font-size: 20px;
             cursor: pointer;
             padding: 0 30px;
@@ -187,11 +177,11 @@
             line-height: 1;
         }
         .popup-year-btn:hover {
-            color: #e0e0e0;
+            color: #4d96ff;
         }
         .popup-year-text {
             font-size: 18px;
-            color: #e0e0e0;
+            color: #333;
             font-weight: 600;
             min-width: 70px;
             text-align: center;
@@ -207,15 +197,15 @@
             text-align: center;
             padding: 10px 0;
             font-size: 15px;
-            color: #aaa;
+            color: #555;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 500;
         }
         .month-cell:hover {
-            background: #2a2a2a;
-            color: #fff;
+            background: #f0f5ff;
+            color: #4d96ff;
         }
         .month-cell.active {
             background: #4d96ff;
@@ -231,19 +221,18 @@
         }
 
         .card {
-            background: rgba(22, 22, 22, 0.5);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            background: #ffffff;
             border-radius: 12px;
             overflow: hidden;
             transition: transform 0.25s ease, box-shadow 0.25s ease;
             cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             position: relative;
         }
 
         .card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         }
 
         .card img {
@@ -251,7 +240,7 @@
             aspect-ratio: 16 / 9;
             object-fit: cover;
             display: block;
-            background: #111;
+            background: #f0f0f0;
         }
 
         .card .info {
@@ -260,13 +249,13 @@
 
         .card .info .date {
             font-size: 0.8rem;
-            color: #ffffff;
+            color: #888;
             font-weight: 500;
         }
 
         .card .info .title {
             font-size: 0.85rem;
-            color: #ffffff;
+            color: #333;
             font-weight: 600;
             margin-top: 2px;
             white-space: nowrap;
@@ -339,7 +328,7 @@
         .empty {
             text-align: center;
             padding: 60px 0;
-            color: #666;
+            color: #999;
             font-size: 1rem;
             grid-column: 1 / -1;
         }
@@ -350,7 +339,7 @@
             width: 20px;
             height: 20px;
             margin-left: 10px;
-            border: 3px solid #2a2a2a;
+            border: 3px solid #e0e0e0;
             border-top-color: #4d96ff;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -517,8 +506,8 @@
             margin: 40px auto 0;
             text-align: center;
             padding: 20px 0 10px;
-            border-top: 1px solid rgba(26, 26, 26, 0.8);
-            color: #ffffff;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            color: #999;
             font-size: 0.85rem;
         }
 
@@ -773,50 +762,28 @@
         // 1. URL 处理工具
         // ============================================================
         
-        /**
-         * 判断是否是 juemeibizhi.com（低分辨率，不做转换）
-         */
         function isJuemeiUrl(url) {
             if (!url) return false;
             return url.includes('juemeibizhi.com');
         }
 
-        /**
-         * 判断是否是 Bing CDN
-         */
         function isBingCdnUrl(url) {
             if (!url) return false;
             return url.includes('cn.bing.com') || url.includes('bing.com') || url.includes('cdn.bimg.cc');
         }
 
-        /**
-         * 获取图片 URL（juemeibizhi.com 优先 bing_url，失败用本地缓存）
-         */
         function getImageUrl(item) {
             var bingUrl = item.bing_url || '';
             var localPath = item.local_path || '';
-            
-            // juemeibizhi.com：优先 bing_url
             if (isJuemeiUrl(bingUrl)) {
                 return bingUrl;
             }
-            
-            // 其他：直接返回 bing_url
             return bingUrl;
         }
 
-        /**
-         * 获取 4K/UHD URL（仅 Bing CDN）
-         */
         function get4kUrl(item) {
             var bingUrl = item.bing_url || '';
-            
-            // juemeibizhi.com：不转换，返回原图
-            if (isJuemeiUrl(bingUrl)) {
-                return bingUrl;
-            }
-            
-            // Bing CDN：已有 _UHD 或尝试替换
+            if (isJuemeiUrl(bingUrl)) return bingUrl;
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_UHD')) return bingUrl;
                 if (bingUrl.includes('_1920x1080')) {
@@ -825,29 +792,18 @@
                 if (bingUrl.includes('_1366x768')) {
                     return bingUrl.replace('_1366x768', '_UHD');
                 }
-                // 尝试在扩展名前插入 _UHD
                 var lastDot = bingUrl.lastIndexOf('.');
                 if (lastDot > 0) {
                     var testUrl = bingUrl.substring(0, lastDot) + '_UHD' + bingUrl.substring(lastDot);
                     return testUrl;
                 }
             }
-            
             return bingUrl;
         }
 
-        /**
-         * 获取 1080P URL
-         */
         function get1080pUrl(item) {
             var bingUrl = item.bing_url || '';
-            
-            // juemeibizhi.com：不转换，返回原图
-            if (isJuemeiUrl(bingUrl)) {
-                return bingUrl;
-            }
-            
-            // Bing CDN：已有 1920x1080 或尝试替换
+            if (isJuemeiUrl(bingUrl)) return bingUrl;
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_1920x1080')) return bingUrl;
                 if (bingUrl.includes('_UHD')) {
@@ -856,29 +812,18 @@
                 if (bingUrl.includes('_1366x768')) {
                     return bingUrl.replace('_1366x768', '_1920x1080');
                 }
-                // 尝试在扩展名前插入 _1920x1080
                 var lastDot = bingUrl.lastIndexOf('.');
                 if (lastDot > 0) {
                     var testUrl = bingUrl.substring(0, lastDot) + '_1920x1080' + bingUrl.substring(lastDot);
                     return testUrl;
                 }
             }
-            
             return bingUrl;
         }
 
-        /**
-         * 获取 720P URL
-         */
         function get720pUrl(item) {
             var bingUrl = item.bing_url || '';
-            
-            // juemeibizhi.com：不转换
-            if (isJuemeiUrl(bingUrl)) {
-                return bingUrl;
-            }
-            
-            // Bing CDN
+            if (isJuemeiUrl(bingUrl)) return bingUrl;
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_1366x768')) return bingUrl;
                 if (bingUrl.includes('_UHD')) {
@@ -893,22 +838,12 @@
                     return testUrl;
                 }
             }
-            
             return bingUrl;
         }
 
-        /**
-         * 获取竖版 URL（从 _UHD 或 _1920x1080 转换）
-         */
         function getVerticalUrl(item) {
             var bingUrl = item.bing_url || '';
-            
-            // juemeibizhi.com：不转换
-            if (isJuemeiUrl(bingUrl)) {
-                return bingUrl;
-            }
-            
-            // Bing CDN：尝试从 UHD 或 1080P 转竖版
+            if (isJuemeiUrl(bingUrl)) return bingUrl;
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_UHD')) {
                     return bingUrl.replace('_UHD', '_vertical');
@@ -925,28 +860,17 @@
                     return testUrl;
                 }
             }
-            
             return bingUrl;
         }
 
-        /**
-         * 判断图片类型
-         */
         function getImageType(item) {
             var url = item.bing_url || '';
-            
-            // juemeibizhi.com：低分辨率，不转换
-            if (isJuemeiUrl(url)) {
-                return 'normal';
-            }
-            
-            // Bing CDN
+            if (isJuemeiUrl(url)) return 'normal';
             if (isBingCdnUrl(url)) {
                 if (url.includes('_UHD')) return 'uhd';
                 if (url.includes('_1920x1080')) return 'fhd';
                 if (url.includes('_1366x768')) return 'hd';
             }
-            
             return 'normal';
         }
 
@@ -1171,21 +1095,17 @@
                 var dateStr = img.date || '';
                 var displayTitle = formatTitle(img);
                 
-                // ===== 获取图片 URL =====
                 var imageUrl = getImageUrl(img);
-                // 缩略图：juemeibizhi 用原图，Bing CDN 用 720p
                 if (isBingCdnUrl(img.bing_url)) {
                     imageUrl = get720pUrl(img);
                 }
                 
-                // ===== 判断图片类型 =====
                 var imgType = getImageType(img);
                 var isUhd = (imgType === 'uhd');
                 var isFhd = (imgType === 'fhd');
                 var isHd = (imgType === 'hd');
                 var isNormal = (imgType === 'normal');
 
-                // ===== 生成各版本 URL =====
                 var uhdUrl = get4kUrl(img);
                 var fhdUrl = get1080pUrl(img);
                 var hdUrl = get720pUrl(img);
@@ -1200,19 +1120,15 @@
                 html += '<div class="title">' + displayTitle + '</div>';
                 html += '<div class="btn-group">';
                 
-                // ===== 智能按钮逻辑 =====
                 if (isUhd) {
-                    // 有 _UHD：显示 4K/UHD + 1080P
                     html += '<a href="' + uhdUrl + '" class="download-btn btn-4k" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 4K/UHD</a>';
                     html += '<a href="' + fhdUrl + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 1080P</a>';
                 } else if (isFhd) {
-                    // 只有 _1920x1080：只显示 1080P
                     html += '<a href="' + fhdUrl + '" class="download-btn btn-1080p" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 1080P</a>';
                 } else {
-                    // 普通图片或 _1366x768：只显示 下载图片
                     var normalUrl = img.bing_url || img.local_path || '';
                     if (normalUrl && !normalUrl.startsWith('http') && normalUrl.startsWith('/')) {
                         normalUrl = window.location.origin + normalUrl;
@@ -1225,7 +1141,6 @@
             }
             grid.innerHTML = html;
 
-            // ===== 卡片点击事件 =====
             document.querySelectorAll('.card').forEach(function(el) {
                 el.addEventListener('click', function(e) {
                     if (e.target.closest('a')) return;
@@ -1253,15 +1168,13 @@
             document.getElementById('modalTitle').textContent = displayTitle;
 
             var img = document.getElementById('modalImg');
-            
-            // 模态框用 1080P 或原图
             var modalUrl = get1080pUrl(item);
             img.src = modalUrl;
             img.alt = displayTitle;
 
             document.getElementById('modalSubtitle').style.display = 'none';
 
-            var desc = item.description || '暂无详细介绍';
+            var desc = item.description || '';
             desc = desc.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/<br\s*\/?>/gi, '\n');
             var paragraphs = desc.split('\n').map(function(p) { return p.trim(); }).filter(function(p) { return p !== ''; });
             var descHtml = paragraphs.map(function(p) { return '<p>' + p + '</p>'; }).join('');
@@ -1331,7 +1244,7 @@
         // 8. 主函数
         // ============================================================
 
-        console.log('📚 壁纸归档已加载');
+        console.log('📚 壁纸归档已加载 - 淡色主题');
         console.log('📌 规则: juemeibizhi.com 不转换, Bing CDN 智能转换');
         console.log('   - _UHD → 4K/UHD + 1080P');
         console.log('   - _1920x1080 → 1080P');
