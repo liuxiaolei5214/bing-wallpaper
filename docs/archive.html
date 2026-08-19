@@ -811,24 +811,50 @@
         // 1. URL 处理工具
         // ============================================================
         
+        /**
+         * 判断是否是 juemeibizhi.com（低分辨率，不做转换）
+         */
         function isJuemeiUrl(url) {
             if (!url) return false;
             return url.includes('juemeibizhi.com');
         }
+
+        /**
+         * 判断是否是 Bing CDN
+         */
         function isBingCdnUrl(url) {
             if (!url) return false;
             return url.includes('cn.bing.com') || url.includes('bing.com') || url.includes('cdn.bimg.cc');
         }
+
+        /**
+         * 获取图片 URL（juemeibizhi.com 优先 bing_url，失败用本地缓存）
+         */
         function getImageUrl(item) {
             var bingUrl = item.bing_url || '';
+            var localPath = item.local_path || '';
+            
+            // juemeibizhi.com：优先 bing_url
             if (isJuemeiUrl(bingUrl)) {
                 return bingUrl;
             }
+            
+            // 其他：直接返回 bing_url
             return bingUrl;
         }
+
+        /**
+         * 获取 4K/UHD URL（仅 Bing CDN）
+         */
         function get4kUrl(item) {
             var bingUrl = item.bing_url || '';
-            if (isJuemeiUrl(bingUrl)) return bingUrl;
+            
+            // juemeibizhi.com：不转换，返回原图
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN：已有 _UHD 或尝试替换
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_UHD')) return bingUrl;
                 if (bingUrl.includes('_1920x1080')) {
@@ -837,17 +863,29 @@
                 if (bingUrl.includes('_1366x768')) {
                     return bingUrl.replace('_1366x768', '_UHD');
                 }
+                // 尝试在扩展名前插入 _UHD
                 var lastDot = bingUrl.lastIndexOf('.');
                 if (lastDot > 0) {
                     var testUrl = bingUrl.substring(0, lastDot) + '_UHD' + bingUrl.substring(lastDot);
                     return testUrl;
                 }
             }
+            
             return bingUrl;
         }
+
+        /**
+         * 获取 1080P URL
+         */
         function get1080pUrl(item) {
             var bingUrl = item.bing_url || '';
-            if (isJuemeiUrl(bingUrl)) return bingUrl;
+            
+            // juemeibizhi.com：不转换，返回原图
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN：已有 1920x1080 或尝试替换
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_1920x1080')) return bingUrl;
                 if (bingUrl.includes('_UHD')) {
@@ -856,17 +894,29 @@
                 if (bingUrl.includes('_1366x768')) {
                     return bingUrl.replace('_1366x768', '_1920x1080');
                 }
+                // 尝试在扩展名前插入 _1920x1080
                 var lastDot = bingUrl.lastIndexOf('.');
                 if (lastDot > 0) {
                     var testUrl = bingUrl.substring(0, lastDot) + '_1920x1080' + bingUrl.substring(lastDot);
                     return testUrl;
                 }
             }
+            
             return bingUrl;
         }
+
+        /**
+         * 获取 720P URL
+         */
         function get720pUrl(item) {
             var bingUrl = item.bing_url || '';
-            if (isJuemeiUrl(bingUrl)) return bingUrl;
+            
+            // juemeibizhi.com：不转换
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_1366x768')) return bingUrl;
                 if (bingUrl.includes('_UHD')) {
@@ -881,11 +931,22 @@
                     return testUrl;
                 }
             }
+            
             return bingUrl;
         }
+
+        /**
+         * 获取竖版 URL（从 _UHD 或 _1920x1080 转换）
+         */
         function getVerticalUrl(item) {
             var bingUrl = item.bing_url || '';
-            if (isJuemeiUrl(bingUrl)) return bingUrl;
+            
+            // juemeibizhi.com：不转换
+            if (isJuemeiUrl(bingUrl)) {
+                return bingUrl;
+            }
+            
+            // Bing CDN：尝试从 UHD 或 1080P 转竖版
             if (isBingCdnUrl(bingUrl)) {
                 if (bingUrl.includes('_UHD')) {
                     return bingUrl.replace('_UHD', '_vertical');
@@ -902,18 +963,31 @@
                     return testUrl;
                 }
             }
+            
             return bingUrl;
         }
+
+        /**
+         * 判断图片类型
+         */
         function getImageType(item) {
             var url = item.bing_url || '';
-            if (isJuemeiUrl(url)) return 'normal';
+            
+            // juemeibizhi.com：低分辨率，不转换
+            if (isJuemeiUrl(url)) {
+                return 'normal';
+            }
+            
+            // Bing CDN
             if (isBingCdnUrl(url)) {
                 if (url.includes('_UHD')) return 'uhd';
                 if (url.includes('_1920x1080')) return 'fhd';
                 if (url.includes('_1366x768')) return 'hd';
             }
+            
             return 'normal';
         }
+
         // ============================================================
         // 2. 月份控件（支持年份选择器 - 分页版）
         // ============================================================
