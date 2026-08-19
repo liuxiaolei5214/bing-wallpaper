@@ -870,7 +870,7 @@
 
     <script>
         // ============================================================
-        // 0. 图片加载管理器（串行加载 + 取消旧请求）
+        // 0. 图片加载管理器（优化版 - 区分跨域处理）
         // ============================================================
         var imageLoader = {
             controller: null,
@@ -881,12 +881,11 @@
             loaded: 0,
             progressEl: null,
             isCancelled: false,
-
+        
             init: function() {
                 this.progressEl = document.getElementById('loadProgress');
             },
-
-            // 取消所有正在加载的图片
+        
             cancelAll: function() {
                 this.isCancelled = true;
                 if (this.controller) {
@@ -898,100 +897,136 @@
                 this.isLoading = false;
                 this.hideProgress();
             },
-
-            // 显示进度
+        
             showProgress: function() {
                 if (this.progressEl) {
                     this.progressEl.classList.remove('hidden');
                 }
             },
-
-            // 隐藏进度
+        
             hideProgress: function() {
                 if (this.progressEl) {
                     this.progressEl.classList.add('hidden');
                 }
             },
-
-            // 更新进度
+        
             updateProgress: function(loaded, total) {
                 if (this.progressEl) {
                     this.progressEl.textContent = '加载图片 ' + loaded + '/' + total;
                     if (loaded === total) {
+                        var that = this;
                         setTimeout(function() {
-                            this.hideProgress();
-                        }.bind(this), 800);
+                            that.hideProgress();
+                        }, 800);
                     }
                 }
             },
-
+        
+            // 判断是否需要代理加载（直接使用 img 标签，不经过 fetch）
+            needProxy: function(url) {
+                if (!url) return false;
+                // cdn.bimg.cc 和 juemeibizhi.com 不支持 CORS，需要用 img 直接加载
+                return url.includes('cdn.bimg.cc') || url.includes('juemeibizhi.com');
+            },
+        
             // 加载单张图片
             loadImage: function(imgElement, url) {
                 var that = this;
                 return new Promise(function(resolve, reject) {
-                    // 如果已取消，直接拒绝
                     if (that.isCancelled) {
                         reject(new Error('已取消'));
                         return;
                     }
-
+        
+                    // ===== 不支持 CORS 的图片：直接用 img 标签加载 =====
+                    if (that.needProxy(url)) {
+                        imgElement.crossOrigin = 'anonymous';
+                        imgElement.src = url;
+                        imgElement.onload = function() {
+                            imgElement.classList.add('loaded');
+                            var wrapper = imgElement.closest('.img-wrapper');
+                            if (wrapper) {
+                                var placeholder = wrapper.querySelector('.placeholder');
+                                if (placeholder) placeholder.style.display = 'none';
+                            }
+                            resolve();
+                        };
+                        imgElement.onerror = function() {
+                            imgElement.style.display = 'none';
+                            var wrapper = imgElement.closest('.img-wrapper');
+                            if (wrapper) {
+                                var placeholder = wrapper.querySelector('.placeholder');
+                                if (placeholder) {
+                                    placeholder.innerHTML = '<span class="error-text">❌ 加载失败</span>';
+                                }
+                            }
+                            reject(new Error('img加载失败'));
+                        };
+                        return;
+                    }
+        
+                    // ===== 支持 CORS 的图片：使用 fetch 加载 =====
                     var controller = new AbortController();
                     that.controller = controller;
                     var signal = controller.signal;
-
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('GET', url, true);
-                    xhr.responseType = 'blob';
-
-                    xhr.onload = function() {
+        
+                    var timeoutId = setTimeout(function() {
+                        controller.abort();
+                        reject(new Error('超时'));
+                    }, 15000);
+        
+                    fetch(url, {
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit',
+                        signal: signal,
+                        headers: {
+                            'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+                            'Cache-Control': 'no-cache'
+                        }
+                    })
+                    .then(function(response) {
+                        clearTimeout(timeoutId);
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+                        return response.blob();
+                    })
+                    .then(function(blob) {
                         if (that.isCancelled) {
                             reject(new Error('已取消'));
                             return;
                         }
-                        if (xhr.status === 200) {
-                            var blob = xhr.response;
-                            var reader = new FileReader();
-                            reader.onload = function() {
-                                imgElement.src = reader.result;
-                                imgElement.classList.add('loaded');
-                                // 隐藏占位
-                                var wrapper = imgElement.closest('.img-wrapper');
-                                if (wrapper) {
-                                    var placeholder = wrapper.querySelector('.placeholder');
-                                    if (placeholder) placeholder.style.display = 'none';
-                                }
-                                resolve();
-                            };
-                            reader.onerror = function() {
-                                reject(new Error('读取图片失败'));
-                            };
-                            reader.readAsDataURL(blob);
-                        } else {
-                            reject(new Error('HTTP ' + xhr.status));
+                        if (!blob.type.startsWith('image/')) {
+                            throw new Error('非图片格式: ' + blob.type);
                         }
-                    };
-                    xhr.onerror = function() {
-                        reject(new Error('网络错误'));
-                    };
-                    xhr.onabort = function() {
-                        reject(new Error('已取消'));
-                    };
-                    xhr.signal = signal;
-
-                    // 超时处理（15秒）
-                    var timeoutId = setTimeout(function() {
-                        xhr.abort();
-                        reject(new Error('超时'));
-                    }, 15000);
-
-                    signal.addEventListener('abort', function() {
+                        var reader = new FileReader();
+                        reader.onload = function() {
+                            imgElement.src = reader.result;
+                            imgElement.classList.add('loaded');
+                            var wrapper = imgElement.closest('.img-wrapper');
+                            if (wrapper) {
+                                var placeholder = wrapper.querySelector('.placeholder');
+                                if (placeholder) placeholder.style.display = 'none';
+                            }
+                            resolve();
+                        };
+                        reader.onerror = function() {
+                            reject(new Error('读取图片失败'));
+                        };
+                        reader.readAsDataURL(blob);
+                    })
+                    .catch(function(err) {
                         clearTimeout(timeoutId);
+                        if (err.name === 'AbortError') {
+                            reject(new Error('已取消'));
+                        } else {
+                            reject(err);
+                        }
                     });
-
-                    xhr.send();
                 });
             },
-
+        
             // 串行加载图片列表
             loadImagesSequential: function(imgList, onProgress) {
                 var that = this;
@@ -1002,10 +1037,10 @@
                 this.total = imgList.length;
                 this.loaded = 0;
                 this.currentIndex = 0;
-
+        
                 this.showProgress();
                 this.updateProgress(0, this.total);
-
+        
                 return new Promise(function(resolve) {
                     function loadNext() {
                         if (that.isCancelled || !that.isLoading) {
@@ -1019,27 +1054,24 @@
                             resolve({ loaded: that.loaded, total: that.total });
                             return;
                         }
-
+        
                         var item = that.imgElements[that.currentIndex];
                         var img = item.element;
                         var url = item.url;
-
+        
                         that.loadImage(img, url).then(function() {
                             that.loaded++;
                             that.currentIndex++;
                             that.updateProgress(that.loaded, that.total);
                             if (onProgress) onProgress(that.loaded, that.total);
-                            // 延迟80ms再加载下一张
                             setTimeout(function() {
                                 loadNext();
                             }, 80);
                         }).catch(function(err) {
-                            // 加载失败，显示错误占位
-                            img.style.display = 'none';
                             var wrapper = img.closest('.img-wrapper');
                             if (wrapper) {
                                 var placeholder = wrapper.querySelector('.placeholder');
-                                if (placeholder) {
+                                if (placeholder && !img.classList.contains('loaded')) {
                                     placeholder.innerHTML = '<span class="error-text">❌ 加载失败</span>';
                                 }
                             }
@@ -1050,14 +1082,12 @@
                             }, 50);
                         });
                     }
-
+        
                     loadNext();
                 });
             }
         };
 
-        // 初始化加载管理器
-        imageLoader.init();
 
         // ============================================================
         // 1. URL 处理工具
