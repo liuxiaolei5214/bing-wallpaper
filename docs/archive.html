@@ -870,7 +870,7 @@
 
     <script>
         // ============================================================
-        // 0. 图片加载管理器（并发模式 - 每批6张）
+        // 0. 图片加载管理器（并发模式 - 每批6张 + 重试）
         // ============================================================
         var imageLoader = {
             imgElements: [],
@@ -878,9 +878,11 @@
             loaded: 0,
             progressEl: null,
             isCancelled: false,
-            isLoading: false,    // ⭐ 添加这行，默认 false
+            isLoading: false,
             loadTimeoutIds: [],
             concurrency: 6,
+            maxRetries: 3,        // 最大重试次数
+            retryDelay: 1000,     // 重试延迟（毫秒）
         
             init: function() {
                 this.progressEl = document.getElementById('loadProgress');
@@ -888,7 +890,7 @@
         
             cancelAll: function() {
                 this.isCancelled = true;
-                this.isLoading = false;  // ⭐ 取消时设为 false
+                this.isLoading = false;
                 this.loadTimeoutIds.forEach(function(id) {
                     clearTimeout(id);
                 });
@@ -920,9 +922,11 @@
                 }
             },
         
-            // 加载单张图片
-            loadImage: function(imgElement, url) {
+            // 加载单张图片（含重试）
+            loadImageWithRetry: function(imgElement, url, retryCount) {
                 var that = this;
+                retryCount = retryCount || 0;
+        
                 return new Promise(function(resolve, reject) {
                     if (that.isCancelled) {
                         reject(new Error('已取消'));
@@ -947,34 +951,68 @@
                     };
                     imgElement.onerror = function() {
                         clearTimeout(timeoutId);
-                        imgElement.style.display = 'none';
-                        var wrapper = imgElement.closest('.img-wrapper');
-                        if (wrapper) {
-                            var placeholder = wrapper.querySelector('.placeholder');
-                            if (placeholder) {
-                                placeholder.innerHTML = '<span class="error-text">❌ 加载失败</span>';
+                        // 如果还有重试次数，重试
+                        if (retryCount < that.maxRetries) {
+                            var nextRetry = retryCount + 1;
+                            var delay = that.retryDelay * (retryCount + 1);
+                            // 显示重试状态
+                            var wrapper = imgElement.closest('.img-wrapper');
+                            if (wrapper) {
+                                var placeholder = wrapper.querySelector('.placeholder');
+                                if (placeholder) {
+                                    placeholder.innerHTML = '<div style="text-align:center;color:#f39c12;font-size:12px;">🔄 重试 ' + nextRetry + '/' + that.maxRetries + '...</div>';
+                                }
                             }
+                            // 延迟后重试
+                            setTimeout(function() {
+                                that.loadImageWithRetry(imgElement, url, nextRetry)
+                                    .then(resolve)
+                                    .catch(reject);
+                            }, delay);
+                        } else {
+                            // 所有重试都失败
+                            imgElement.style.display = 'none';
+                            var wrapper = imgElement.closest('.img-wrapper');
+                            if (wrapper) {
+                                var placeholder = wrapper.querySelector('.placeholder');
+                                if (placeholder) {
+                                    placeholder.innerHTML = '<span class="error-text">❌ 加载失败</span>';
+                                }
+                            }
+                            reject(new Error('加载失败（已重试 ' + that.maxRetries + ' 次）'));
                         }
-                        reject(new Error('加载失败'));
                     };
                 });
+            },
+        
+            // 加载单张图片（入口）
+            loadImage: function(imgElement, url) {
+                return this.loadImageWithRetry(imgElement, url, 0);
+            },
+        
+            // 保留旧方法名（兼容）
+            loadImagesSequential: function(imgList, onProgress) {
+                return this.loadImagesBatch(imgList, onProgress);
             },
         
             // 分批并发加载图片列表
             loadImagesBatch: function(imgList, onProgress) {
                 var that = this;
                 
-                // ⭐ 先取消旧请求
                 this.cancelAll();
-                
-                // ⭐ 重置状态
                 this.isCancelled = false;
-                this.isLoading = true;   // ⭐ 设为 true
+                this.isLoading = true;
                 this.imgElements = imgList;
                 this.total = imgList.length;
                 this.loaded = 0;
                 this.loadTimeoutIds = [];
                 var concurrency = this.concurrency;
+        
+                if (this.total === 0) {
+                    this.isLoading = false;
+                    this.hideProgress();
+                    return Promise.resolve({ loaded: 0, total: 0 });
+                }
         
                 this.showProgress();
                 this.updateProgress(0, this.total);
@@ -985,12 +1023,10 @@
                     var completed = false;
         
                     function loadNext() {
-                        // ⭐ 检查是否被取消或已完成
                         if (that.isCancelled || completed || !that.isLoading) {
                             return;
                         }
         
-                        // 所有图片已加载完成
                         if (that.loaded >= that.total) {
                             completed = true;
                             that.isLoading = false;
@@ -999,12 +1035,10 @@
                             return;
                         }
         
-                        // 没有更多图片或已达到并发上限
                         if (index >= that.total || activeCount >= concurrency) {
                             return;
                         }
         
-                        // 取下一张图片
                         var item = that.imgElements[index];
                         var img = item.element;
                         var url = item.url;
@@ -1018,19 +1052,18 @@
                             if (onProgress) onProgress(that.loaded, that.total);
                             loadNext();
                         }).catch(function() {
+                            // 加载失败，但不用额外处理（loadImage 已处理重试）
                             activeCount--;
                             that.updateProgress(that.loaded, that.total);
                             if (onProgress) onProgress(that.loaded, that.total);
                             loadNext();
                         });
         
-                        // 如果还有剩余图片且未达到并发上限，继续启动
                         if (index < that.total && activeCount < concurrency) {
                             loadNext();
                         }
                     }
         
-                    // ⭐ 启动第一批（最多6张）
                     var batchSize = Math.min(concurrency, imgList.length);
                     for (var i = 0; i < batchSize; i++) {
                         loadNext();
