@@ -870,27 +870,23 @@
 
     <script>
         // ============================================================
-        // 0. 图片加载管理器（混合模式）
-        // - 所有图片都用 img 直接加载（保持原有兼容性）
-        // - 保留取消功能，切换月份时取消旧请求
+        // 0. 图片加载管理器（并发模式 - 每批6张）
         // ============================================================
         var imageLoader = {
             imgElements: [],
-            currentIndex: 0,
             total: 0,
             loaded: 0,
             progressEl: null,
             isCancelled: false,
             loadTimeoutIds: [],
+            concurrency: 6,  // 并发数
         
             init: function() {
                 this.progressEl = document.getElementById('loadProgress');
             },
         
-            // 取消所有正在加载的图片
             cancelAll: function() {
                 this.isCancelled = true;
-                // 清除所有超时
                 this.loadTimeoutIds.forEach(function(id) {
                     clearTimeout(id);
                 });
@@ -922,7 +918,7 @@
                 }
             },
         
-            // 加载单张图片（使用 img 直接加载）
+            // 加载单张图片
             loadImage: function(imgElement, url) {
                 var that = this;
                 return new Promise(function(resolve, reject) {
@@ -931,7 +927,6 @@
                         return;
                     }
         
-                    // 设置超时（15秒）
                     var timeoutId = setTimeout(function() {
                         reject(new Error('超时'));
                     }, 15000);
@@ -963,62 +958,80 @@
                 });
             },
         
-            // 串行加载图片列表
-            loadImagesSequential: function(imgList, onProgress) {
+            // 分批并发加载图片列表
+            loadImagesBatch: function(imgList, onProgress) {
                 var that = this;
                 this.cancelAll();
                 this.isCancelled = false;
                 this.imgElements = imgList;
                 this.total = imgList.length;
                 this.loaded = 0;
-                this.currentIndex = 0;
                 this.loadTimeoutIds = [];
+                var concurrency = this.concurrency;
         
                 this.showProgress();
                 this.updateProgress(0, this.total);
         
                 return new Promise(function(resolve) {
+                    var index = 0;
+                    var activeCount = 0;
+                    var completed = false;
+        
                     function loadNext() {
-                        if (that.isCancelled || !that.isLoading) {
-                            that.hideProgress();
-                            resolve({ loaded: that.loaded, total: that.total });
+                        if (that.isCancelled || completed) {
                             return;
                         }
-                        if (that.currentIndex >= that.total) {
+        
+                        // 所有图片已加载完成
+                        if (that.loaded >= that.total) {
+                            completed = true;
                             that.isLoading = false;
                             that.updateProgress(that.total, that.total);
                             resolve({ loaded: that.loaded, total: that.total });
                             return;
                         }
         
-                        var item = that.imgElements[that.currentIndex];
+                        // 没有更多图片或已达到并发上限
+                        if (index >= that.total || activeCount >= concurrency) {
+                            return;
+                        }
+        
+                        // 取下一张图片
+                        var item = that.imgElements[index];
                         var img = item.element;
                         var url = item.url;
+                        index++;
+                        activeCount++;
         
                         that.loadImage(img, url).then(function() {
                             that.loaded++;
-                            that.currentIndex++;
+                            activeCount--;
                             that.updateProgress(that.loaded, that.total);
                             if (onProgress) onProgress(that.loaded, that.total);
-                            setTimeout(function() {
-                                loadNext();
-                            }, 80);
+                            // 继续加载下一张
+                            loadNext();
                         }).catch(function() {
-                            // 加载失败，继续下一张
-                            that.currentIndex++;
+                            activeCount--;
+                            that.updateProgress(that.loaded, that.total);
                             if (onProgress) onProgress(that.loaded, that.total);
-                            setTimeout(function() {
-                                loadNext();
-                            }, 50);
+                            loadNext();
                         });
+        
+                        // 如果还有剩余图片且未达到并发上限，继续启动
+                        if (index < that.total && activeCount < concurrency) {
+                            loadNext();
+                        }
                     }
         
-                    // 标记正在加载
                     that.isLoading = true;
-                    loadNext();
+                    // 启动第一批
+                    for (var i = 0; i < Math.min(concurrency, imgList.length); i++) {
+                        loadNext();
+                    }
                 });
             }
         };
+
 
         // ============================================================
         // 1. URL 处理工具
