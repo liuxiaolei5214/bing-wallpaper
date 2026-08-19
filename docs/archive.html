@@ -878,8 +878,9 @@
             loaded: 0,
             progressEl: null,
             isCancelled: false,
+            isLoading: false,    // ⭐ 添加这行，默认 false
             loadTimeoutIds: [],
-            concurrency: 6,  // 并发数
+            concurrency: 6,
         
             init: function() {
                 this.progressEl = document.getElementById('loadProgress');
@@ -887,6 +888,7 @@
         
             cancelAll: function() {
                 this.isCancelled = true;
+                this.isLoading = false;  // ⭐ 取消时设为 false
                 this.loadTimeoutIds.forEach(function(id) {
                     clearTimeout(id);
                 });
@@ -961,8 +963,13 @@
             // 分批并发加载图片列表
             loadImagesBatch: function(imgList, onProgress) {
                 var that = this;
+                
+                // ⭐ 先取消旧请求
                 this.cancelAll();
+                
+                // ⭐ 重置状态
                 this.isCancelled = false;
+                this.isLoading = true;   // ⭐ 设为 true
                 this.imgElements = imgList;
                 this.total = imgList.length;
                 this.loaded = 0;
@@ -978,7 +985,8 @@
                     var completed = false;
         
                     function loadNext() {
-                        if (that.isCancelled || completed) {
+                        // ⭐ 检查是否被取消或已完成
+                        if (that.isCancelled || completed || !that.isLoading) {
                             return;
                         }
         
@@ -1008,7 +1016,6 @@
                             activeCount--;
                             that.updateProgress(that.loaded, that.total);
                             if (onProgress) onProgress(that.loaded, that.total);
-                            // 继续加载下一张
                             loadNext();
                         }).catch(function() {
                             activeCount--;
@@ -1023,15 +1030,14 @@
                         }
                     }
         
-                    that.isLoading = true;
-                    // 启动第一批
-                    for (var i = 0; i < Math.min(concurrency, imgList.length); i++) {
+                    // ⭐ 启动第一批（最多6张）
+                    var batchSize = Math.min(concurrency, imgList.length);
+                    for (var i = 0; i < batchSize; i++) {
                         loadNext();
                     }
                 });
             }
         };
-
 
         // ============================================================
         // 1. URL 处理工具
