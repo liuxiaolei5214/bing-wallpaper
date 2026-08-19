@@ -7,6 +7,7 @@
     <link rel="icon" href="https://bingimg.lei5214.cc.cd/logo.avif">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             color: #e0e0e0;
@@ -18,6 +19,7 @@
             background-attachment: fixed;
             background-repeat: no-repeat;
         }
+
         body::before {
             content: '';
             position: fixed;
@@ -29,6 +31,7 @@
             z-index: 0;
             pointer-events: none;
         }
+
         body > * {
             position: relative;
             z-index: 1;
@@ -131,6 +134,7 @@
             background: #4d96ff;
             color: #fff;
         }
+
         /* ===== 月份选择弹窗 ===== */
         .date-mask {
             position: fixed;
@@ -144,61 +148,73 @@
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
         }
-        .date-mask.show {
-            display: block;
-        }
-        
+        .date-mask.show { display: block; }
+
         .date-popup {
             position: absolute;
             background: #ffffff;
             border-radius: 12px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            width: 340px;
+            width: 360px;
             overflow: hidden;
             animation: popupFade 0.2s ease;
             border: 1px solid #e8e8e8;
         }
-        
         @keyframes popupFade {
-            from {
-                opacity: 0;
-                transform: translateY(-8px) scale(0.97);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
-        
-        /* ===== 头部：月份、年份视图完全相同布局 ===== */
+
         .popup-header {
             display: flex;
-            /* 关键：改为整体居中，不再space‑between两端靠边 */
-            justify-content: center;
             align-items: center;
-            gap: 50px;
+            justify-content: space-between;
             padding: 8px 16px 6px 16px;
-            min-height: 42px;
             border-bottom: 1px solid #f0f0f0;
             background: #fafafa;
         }
-        
         .popup-header-title {
             font-size: 15px;
             font-weight: 600;
             color: #333;
         }
-        
+
         .popup-year-nav {
             display: flex;
             align-items: center;
-            gap: 50px;
+            gap: 16px;
             justify-content: center;
             background: transparent;
             padding: 0;
         }
-        
-        .popup-year-btn,
+        .popup-year-btn {
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 10px;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .popup-year-btn:hover {
+            color: #4d96ff;
+        }
+        .popup-year-text {
+            font-size: 17px;
+            color: #333;
+            font-weight: 600;
+            min-width: 70px;
+            text-align: center;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .popup-year-text:hover {
+            background: #f0f5ff;
+        }
+
         .popup-year-page-btn {
             background: transparent;
             border: none;
@@ -209,43 +225,23 @@
             transition: color 0.2s;
             line-height: 1;
         }
-        
-        .popup-year-btn:hover,
         .popup-year-page-btn:hover {
             color: #4d96ff;
         }
-        
-        .popup-year-text {
-            font-size: 17px;
-            color: #333;
-            font-weight: 600;
-            min-width: 70px;
-            text-align: center;
-            cursor: pointer;
-            padding: 2px 8px;
-            border-radius: 6px;
-            transition: background 0.2s;
-        }
-        
-        .popup-year-text:hover {
-            background: #f0f5ff;
-        }
-        
-        /* ===== 网格容器：月份、年份完全相同参数 ===== */
+
         .month-grid,
         .year-grid-popup {
-            padding: 4px 10px 8px 10px;
+            padding: 4px 14px 14px 14px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 4px;
             background: #ffffff;
         }
-        
-        /* ===== 格子单元格：月份、年份样式完全统一 ===== */
+
         .month-cell,
         .year-cell {
             text-align: center;
-            padding: 16px 0;
+            padding: 9px 0;
             font-size: 14px;
             color: #555;
             border-radius: 6px;
@@ -254,35 +250,24 @@
             font-weight: 500;
             background: transparent;
         }
-        
         .month-cell:hover,
         .year-cell:hover {
             background: #f0f5ff;
             color: #4d96ff;
         }
-        
         .month-cell.active,
         .year-cell.active {
             background: #4d96ff;
             color: #fff;
         }
-        
-        /* 无数据禁用年份 */
         .year-cell.disabled {
-            opacity: 0.35;
-            cursor: default;
+            opacity: 0.3;
+            cursor: not-allowed;
             color: #999;
         }
         .year-cell.disabled:hover {
             background: transparent;
             color: #999;
-        }
-        
-        /* 空白占位格子，维持4行高度 */
-        .year-cell.empty {
-            cursor: default;
-            opacity: 0;
-            pointer-events: none;
         }
 
         .grid {
@@ -292,6 +277,7 @@
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 16px;
         }
+
         .card {
             background: rgba(22, 22, 22, 0.5);
             backdrop-filter: blur(4px);
@@ -302,25 +288,62 @@
             cursor: pointer;
             position: relative;
         }
+
         .card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         }
-        .card img {
+
+        .card .img-wrapper {
+            position: relative;
             width: 100%;
             aspect-ratio: 16 / 9;
+            background: #1a1a1a;
+            overflow: hidden;
+        }
+        .card .img-wrapper img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             display: block;
-            background: #111;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
+        .card .img-wrapper img.loaded {
+            opacity: 1;
+        }
+        .card .img-wrapper .placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 14px;
+            background: #1a1a1a;
+        }
+        .card .img-wrapper .placeholder .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #333;
+            border-top-color: #4d96ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .card .info {
             padding: 10px 14px 14px;
         }
+
         .card .info .date {
             font-size: 0.8rem;
             color: #ffffff;
             font-weight: 500;
         }
+
         .card .info .title {
             font-size: 0.85rem;
             color: #ffffff;
@@ -330,12 +353,14 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         .card .info .btn-group {
             display: flex;
             gap: 8px;
             margin-top: 8px;
             flex-wrap: wrap;
         }
+
         .card .info .btn-group .download-btn {
             display: inline-flex;
             align-items: center;
@@ -350,39 +375,32 @@
             border: none;
             cursor: pointer;
         }
+
         .card .info .btn-group .download-btn svg {
             flex-shrink: 0;
         }
+
         .card .info .btn-group .btn-4k {
             background: #4d96ff;
         }
         .card .info .btn-group .btn-4k:hover {
             background: #3a7bd5;
         }
+
         .card .info .btn-group .btn-1080p {
             background: #6c757d;
         }
         .card .info .btn-group .btn-1080p:hover {
             background: #5a6268;
         }
-        .card .info .btn-group .btn-720p {
-            background: #17a2b8;
-        }
-        .card .info .btn-group .btn-720p:hover {
-            background: #138496;
-        }
-        .card .info .btn-group .btn-vertical {
-            background: #6c757d;
-        }
-        .card .info .btn-group .btn-vertical:hover {
-            background: #5a6268;
-        }
+
         .card .info .btn-group .btn-download {
             background: #6c757d;
         }
         .card .info .btn-group .btn-download:hover {
             background: #5a6268;
         }
+
         .loading,
         .empty {
             text-align: center;
@@ -391,6 +409,7 @@
             font-size: 1rem;
             grid-column: 1 / -1;
         }
+
         .loading::after {
             content: "";
             display: inline-block;
@@ -403,9 +422,7 @@
             animation: spin 0.8s linear infinite;
             vertical-align: middle;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -420,10 +437,12 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
+
         .modal-overlay.open {
             display: flex;
             opacity: 1;
         }
+
         .modal-box {
             background: #1a1a1a;
             border-radius: 28px;
@@ -437,9 +456,11 @@
             transform: scale(0.95);
             transition: transform 0.3s ease;
         }
+
         .modal-overlay.open .modal-box {
             transform: scale(1);
         }
+
         .modal-image {
             width: 100%;
             aspect-ratio: 16 / 9;
@@ -447,12 +468,14 @@
             overflow: hidden;
             position: relative;
         }
+
         .modal-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
         }
+
         .modal-image::after {
             content: '';
             position: absolute;
@@ -469,6 +492,7 @@
             pointer-events: none;
             z-index: 1;
         }
+
         .modal-content {
             position: absolute;
             bottom: 0;
@@ -489,6 +513,7 @@
             width: 0;
             background: transparent;
         }
+
         .modal-title {
             font-size: 1.6rem;
             font-weight: 600;
@@ -496,9 +521,11 @@
             color: #fff;
             text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         }
+
         .modal-subtitle {
             display: none !important;
         }
+
         .modal-desc {
             font-size: 0.95rem;
             line-height: 1.8;
@@ -508,15 +535,18 @@
             color: #f0f0f0;
             text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
         }
+
         .modal-desc p {
             text-indent: 2em;
             margin: 0;
             padding: 0;
             line-height: 1.8;
         }
+
         .modal-desc p + p {
             margin-top: 0;
         }
+
         .modal-close {
             position: absolute;
             top: 16px;
@@ -538,10 +568,12 @@
             z-index: 10;
             line-height: 1;
         }
+
         .modal-close:hover {
             background: rgba(255, 255, 255, 0.25);
             transform: scale(1.05);
         }
+
         footer {
             max-width: 1400px;
             margin: 40px auto 0;
@@ -551,6 +583,7 @@
             color: #ffffff;
             font-size: 0.85rem;
         }
+
         @media (max-width: 768px) {
             .top-bar {
                 flex-direction: column;
@@ -685,6 +718,7 @@
                 padding: 6px 0;
             }
         }
+
         @media (max-width: 480px) {
             body {
                 padding: 10px;
@@ -771,6 +805,7 @@
     </style>
 </head>
 <body>
+
     <div class="top-bar">
         <a href="/" class="btn-home">🏠 返回首页</a>
         <div class="filters">
@@ -782,12 +817,15 @@
             <div class="stats">共 <span id="totalCount">0</span> 张壁纸</div>
         </div>
     </div>
+
     <div class="grid" id="grid">
         <div class="loading">加载壁纸数据中...</div>
     </div>
+
     <footer>
         <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
     </footer>
+
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-box">
             <button class="modal-close" id="modalClose">&times;</button>
@@ -803,42 +841,31 @@
             </div>
         </div>
     </div>
+
     <div class="date-mask" id="mask">
         <div class="date-popup" id="popup"></div>
     </div>
+
     <script>
         // ============================================================
         // 1. URL 处理工具
         // ============================================================
         
-        /**
-         * 判断是否是 juemeibizhi.com（低分辨率，不做转换）
-         */
         function isJuemeiUrl(url) {
             if (!url) return false;
             return url.includes('juemeibizhi.com');
         }
-        
-        /**
-         * 判断是否是 Bing CDN（cn.bing.com / bing.com）
-         * 注意：cdn.bimg.cc 不做转换，单独判断
-         */
+
         function isBingCdnUrl(url) {
             if (!url) return false;
             return url.includes('cn.bing.com') || url.includes('bing.com');
         }
-        
-        /**
-         * 判断是否是 cdn.bimg.cc（所有图片不做转换）
-         */
+
         function isCdnBimgUrl(url) {
             if (!url) return false;
             return url.includes('cdn.bimg.cc');
         }
-        
-        /**
-         * 获取图片 URL
-         */
+
         function getImageUrl(item) {
             var bingUrl = item.bing_url || '';
             if (isJuemeiUrl(bingUrl)) {
@@ -846,15 +873,9 @@
             }
             return bingUrl;
         }
-        
-        /**
-         * 获取 4K/UHD URL
-         * - _UHD → 返回原图
-         * - 其他 → 返回原图（不转换）
-         */
+
         function get4kUrl(item) {
             var bingUrl = item.bing_url || '';
-            
             if (isJuemeiUrl(bingUrl)) return bingUrl;
             if (isCdnBimgUrl(bingUrl)) return bingUrl;
             if (isBingCdnUrl(bingUrl) && bingUrl.includes('_UHD')) {
@@ -862,16 +883,9 @@
             }
             return bingUrl;
         }
-        
-        /**
-         * 获取 1080P URL
-         * - _UHD → 转 _1920x1080
-         * - _1920x1080 → 返回原图
-         * - 其他 → 返回原图
-         */
+
         function get1080pUrl(item) {
             var bingUrl = item.bing_url || '';
-            
             if (isJuemeiUrl(bingUrl)) return bingUrl;
             if (isCdnBimgUrl(bingUrl)) return bingUrl;
             if (isBingCdnUrl(bingUrl)) {
@@ -884,16 +898,9 @@
             }
             return bingUrl;
         }
-        
-        /**
-         * 获取 720P URL（1280x720）
-         * - _UHD → 转 _1280x720
-         * - _1920x1080 → 转 _1280x720
-         * - 其他 → 返回原图
-         */
+
         function get720pUrl(item) {
             var bingUrl = item.bing_url || '';
-            
             if (isJuemeiUrl(bingUrl)) return bingUrl;
             if (isCdnBimgUrl(bingUrl)) return bingUrl;
             if (isBingCdnUrl(bingUrl)) {
@@ -906,16 +913,9 @@
             }
             return bingUrl;
         }
-        
-        /**
-         * 获取竖版 URL
-         * - _UHD → 转 _vertical
-         * - _1920x1080 → 转 _vertical
-         * - 其他 → 返回原图
-         */
+
         function getVerticalUrl(item) {
             var bingUrl = item.bing_url || '';
-            
             if (isJuemeiUrl(bingUrl)) return bingUrl;
             if (isCdnBimgUrl(bingUrl)) return bingUrl;
             if (isBingCdnUrl(bingUrl)) {
@@ -928,13 +928,9 @@
             }
             return bingUrl;
         }
-        
-        /**
-         * 判断图片类型
-         */
+
         function getImageType(item) {
             var url = item.bing_url || '';
-            
             if (isJuemeiUrl(url)) return 'normal';
             if (isCdnBimgUrl(url)) return 'normal';
             if (isBingCdnUrl(url)) {
@@ -945,30 +941,163 @@
         }
 
         // ============================================================
-        // 2. 月份控件（支持年份选择器 - 分页版）
+        // 2. 图片加载管理器（支持取消旧请求）
+        // ============================================================
+        var imageLoader = {
+            controllers: [],
+            isLoading: false,
+            
+            // 取消所有正在加载的图片
+            cancelAll: function() {
+                this.controllers.forEach(function(controller) {
+                    try {
+                        controller.abort();
+                    } catch(e) {}
+                });
+                this.controllers = [];
+                this.isLoading = false;
+            },
+            
+            // 加载一张图片
+            loadImage: function(imgElement, url) {
+                var that = this;
+                return new Promise(function(resolve, reject) {
+                    var controller = new AbortController();
+                    that.controllers.push(controller);
+                    
+                    var signal = controller.signal;
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', url, true);
+                    xhr.responseType = 'blob';
+                    
+                    xhr.onload = function() {
+                        if (xhr.status === 200) {
+                            var blob = xhr.response;
+                            var reader = new FileReader();
+                            reader.onload = function() {
+                                imgElement.src = reader.result;
+                                imgElement.classList.add('loaded');
+                                // 隐藏占位
+                                var wrapper = imgElement.closest('.img-wrapper');
+                                if (wrapper) {
+                                    var placeholder = wrapper.querySelector('.placeholder');
+                                    if (placeholder) placeholder.style.display = 'none';
+                                }
+                                resolve();
+                            };
+                            reader.readAsDataURL(blob);
+                        } else {
+                            reject(new Error('HTTP ' + xhr.status));
+                        }
+                    };
+                    xhr.onerror = function() {
+                        reject(new Error('网络错误'));
+                    };
+                    xhr.onabort = function() {
+                        reject(new Error('已取消'));
+                    };
+                    xhr.signal = signal;
+                    xhr.send();
+                    
+                    // 超时处理（15秒）
+                    var timeoutId = setTimeout(function() {
+                        xhr.abort();
+                        reject(new Error('超时'));
+                    }, 15000);
+                    
+                    // 取消时清理超时
+                    signal.addEventListener('abort', function() {
+                        clearTimeout(timeoutId);
+                    });
+                });
+            },
+            
+            // 串行加载图片列表（每次只加载一张）
+            loadImagesSequential: function(images, onProgress) {
+                var that = this;
+                this.cancelAll();
+                this.isLoading = true;
+                
+                var total = images.length;
+                var loaded = 0;
+                var failed = 0;
+                
+                return new Promise(function(resolve) {
+                    function loadNext(index) {
+                        if (!that.isLoading) {
+                            resolve({ loaded: loaded, failed: failed });
+                            return;
+                        }
+                        if (index >= images.length) {
+                            that.isLoading = false;
+                            resolve({ loaded: loaded, failed: failed });
+                            return;
+                        }
+                        
+                        var item = images[index];
+                        var img = item.element;
+                        var url = item.url;
+                        
+                        that.loadImage(img, url).then(function() {
+                            loaded++;
+                            if (onProgress) onProgress(loaded, total);
+                            // 延迟100ms再加载下一张，避免并发过多
+                            setTimeout(function() {
+                                loadNext(index + 1);
+                            }, 80);
+                        }).catch(function(err) {
+                            failed++;
+                            // 显示错误占位
+                            img.style.display = 'none';
+                            var wrapper = img.closest('.img-wrapper');
+                            if (wrapper) {
+                                var placeholder = wrapper.querySelector('.placeholder');
+                                if (placeholder) {
+                                    placeholder.innerHTML = '❌ 加载失败';
+                                    placeholder.style.display = 'flex';
+                                }
+                            }
+                            if (onProgress) onProgress(loaded, total);
+                            setTimeout(function() {
+                                loadNext(index + 1);
+                            }, 50);
+                        });
+                    }
+                    
+                    loadNext(0);
+                });
+            }
+        };
+
+        // ============================================================
+        // 3. 月份控件（支持年份选择器 - 分页版）
         // ============================================================
         (function() {
             var today = new Date();
             var currentYear = today.getFullYear();
             var currentMonth = today.getMonth() + 1;
+
             var state = {
                 year: currentYear,
                 month: currentMonth,
                 view: 'month',
                 yearPage: 0
             };
+
             var mask = document.getElementById('mask');
             var popup = document.getElementById('popup');
             var monthInput = document.getElementById('monthInput');
             var monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+            var allAvailableYears = [];
+
             function closePopup() {
                 mask.classList.remove('show');
             }
+
             function openPopup() {
                 var rect = monthInput.getBoundingClientRect();
                 mask.classList.add('show');
                 state.view = 'month';
-                // 打开年份视图默认跳转到当前年份所在分页
                 var startYear = 2010;
                 var targetIdx = currentYear - startYear;
                 state.yearPage = Math.floor(targetIdx / 12);
@@ -976,6 +1105,7 @@
                 popup.style.top = (rect.bottom + 6 + window.scrollY) + 'px';
                 renderPopup();
             }
+
             function renderPopup() {
                 var html = '';
                 
@@ -983,7 +1113,7 @@
                     // ===== 年份选择器视图（分页） =====
                     var allYears = [];
                     var startYear = 2010;
-                    var endYear = new Date().getFullYear() + 100;
+                    var endYear = new Date().getFullYear() + 10;
                     for (var y = startYear; y <= endYear; y++) {
                         allYears.push(y);
                     }
@@ -1005,11 +1135,20 @@
                     html += '</div>';
                     html += '<div class="year-grid-popup">';
                     
-                    for (var i = 0; i < pageYears.length; i++) {
-                        var y = pageYears[i];
-                        var active = (y === state.year) ? 'active' : '';
-                        var disabledCls = (y > currentYear) ? 'disabled' : '';
-                        html += '<div class="year-cell ' + active + ' ' + disabledCls + '" data-year="' + y + '">' + y + '年</div>';
+                    // 固定12个格子
+                    var totalCells = 12;
+                    for (var i = 0; i < totalCells; i++) {
+                        if (i < pageYears.length) {
+                            var y = pageYears[i];
+                            var active = (y === state.year) ? 'active' : '';
+                            var disabledCls = (y > currentYear) ? 'disabled' : '';
+                            var hasData = (allAvailableYears.indexOf(String(y)) !== -1);
+                            // 如果没有数据且年份小于等于当前年，也显示为disabled
+                            var noDataCls = (!hasData && y <= currentYear) ? 'disabled' : '';
+                            html += '<div class="year-cell ' + active + ' ' + disabledCls + ' ' + noDataCls + '" data-year="' + y + '">' + y + '年</div>';
+                        } else {
+                            html += '<div class="year-cell empty" style="opacity:0;pointer-events:none;">&nbsp;</div>';
+                        }
                     }
                     html += '</div>';
                 } else {
@@ -1031,6 +1170,7 @@
                 }
                 
                 popup.innerHTML = html;
+
                 if (state.view === 'year') {
                     // ===== 年份选择器事件 =====
                     document.getElementById('yearPagePrev').onclick = function(e) {
@@ -1042,7 +1182,7 @@
                     };
                     document.getElementById('yearPageNext').onclick = function(e) {
                         e.stopPropagation();
-                        var totalYears = new Date().getFullYear() + 100 - 2010 + 1;
+                        var totalYears = new Date().getFullYear() + 10 - 2010 + 1;
                         var totalPages = Math.ceil(totalYears / 12);
                         if (state.yearPage < totalPages - 1) {
                             state.yearPage++;
@@ -1050,23 +1190,20 @@
                         }
                     };
                     
-                    popup.querySelectorAll('.year-cell').forEach(function(el) {
+                    popup.querySelectorAll('.year-cell:not(.disabled)').forEach(function(el) {
                         el.onclick = function() {
-                            // 禁用项直接返回
-                            if(this.classList.contains('disabled')) return;
                             var year = parseInt(this.dataset.year);
                             state.year = year;
                             state.view = 'month';
                             renderPopup();
                             updateMonthInput();
-
+                            // 不加载数据，等待点击月份
                         };
                     });
                 } else {
                     // ===== 月份选择器事件 =====
                     document.getElementById('popupYearText').onclick = function() {
                         state.view = 'year';
-                        // 点击标题切到年份视图，定位当前年份所在分页
                         var startYear = 2010;
                         var targetIdx = state.year - startYear;
                         state.yearPage = Math.floor(targetIdx / 12);
@@ -1082,13 +1219,13 @@
                     };
                     document.getElementById('popupYearNext').onclick = function(e) {
                         e.stopPropagation();
-                        // 月份视图不允许切到大于当前年份
-                        if((state.year + 1) > currentYear) return;
+                        if ((state.year + 1) > currentYear) return;
                         state.year++;
                         document.getElementById('popupYearText').textContent = state.year + '年';
                         updateMonthInput();
                         renderPopup();
                     };
+
                     popup.querySelectorAll('.month-cell').forEach(function(el) {
                         el.onclick = function() {
                             state.month = parseInt(el.dataset.val);
@@ -1097,18 +1234,22 @@
                             });
                             el.classList.add('active');
                             updateMonthInput();
+                            // 只有点击月份才加载数据
                             loadData();
                             closePopup();
                         };
                     });
                 }
             }
+
             function updateMonthInput() {
                 var monthStr = String(state.month).padStart(2, '0');
                 monthInput.value = state.year + ' - ' + monthStr;
             }
+
             monthInput.onclick = function() { openPopup(); };
             mask.onclick = function(e) { if (e.target === mask) closePopup(); };
+
             window.resetAllFilters = function() {
                 var now = new Date();
                 state.year = now.getFullYear();
@@ -1116,34 +1257,42 @@
                 monthInput.value = '';
                 loadData();
             };
+
             function loadData() {
                 var year = state.year;
                 var month = String(state.month).padStart(2, '0');
                 loadMonthData(year, month);
             }
+
             monthInput.placeholder = '请选择';
+
             window.addEventListener('DOMContentLoaded', function() {
                 setTimeout(function() {
                     loadData();
                 }, 100);
             });
+
             window.filterState = {
                 getYear: function() { return state.year; },
                 getMonth: function() { return state.month; }
             };
         })();
+
         // ============================================================
-        // 3. 工具函数
+        // 4. 工具函数
         // ============================================================
+
         function getMonthFromDate(dateStr) {
             if (dateStr && dateStr.length >= 7) {
                 return dateStr.substring(5, 7);
             }
             return '未知';
         }
+
         function formatTitle(item) {
             var mainTitle = item.subtitle || '';
             var subTitle = item.title || '';
+
             if (mainTitle && subTitle && mainTitle !== subTitle) {
                 return mainTitle + ' | ' + subTitle;
             }
@@ -1155,12 +1304,16 @@
             }
             return '壁纸';
         }
+
         var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+
         // ============================================================
-        // 4. 数据加载
+        // 5. 数据加载
         // ============================================================
+
         var loadedData = {};
-        var allAvailableYears = [];
+        var allAvailableYearsGlobal = [];
+
         async function loadIndex() {
             try {
                 var resp = await fetch('index.json');
@@ -1171,8 +1324,12 @@
                 var index = await resp.json();
                 if (index && index.years && index.years.length > 0) {
                     index.years.sort(function(a, b) { return parseInt(b.year) - parseInt(a.year); });
-                    allAvailableYears = index.years.map(function(item) { return item.year; });
-                    console.log('📅 从索引加载年份:', allAvailableYears);
+                    allAvailableYearsGlobal = index.years.map(function(item) { return item.year; });
+                    // 同步到月份控件
+                    if (window.filterState) {
+                        window.allAvailableYearsGlobal = allAvailableYearsGlobal;
+                    }
+                    console.log('📅 从索引加载年份:', allAvailableYearsGlobal);
                     return true;
                 }
                 return false;
@@ -1181,10 +1338,12 @@
                 return false;
             }
         }
+
         async function loadYearData(year) {
             if (loadedData[year]) {
                 return loadedData[year];
             }
+
             try {
                 var resp = await fetch('zh.' + year + '.json');
                 if (!resp.ok) {
@@ -1202,9 +1361,11 @@
                 return [];
             }
         }
+
         // ============================================================
-        // 5. 筛选与渲染
+        // 6. 筛选与渲染（优化版 - 串行加载）
         // ============================================================
+
         function filterImagesByMonth(images, month) {
             if (!images || images.length === 0) return [];
             return images.filter(function(img) {
@@ -1212,16 +1373,25 @@
                 return m === month;
             });
         }
+
         function renderGrid(images) {
             var grid = document.getElementById('grid');
             var totalCount = document.getElementById('totalCount');
+
             if (!images || images.length === 0) {
                 grid.innerHTML = '<div class="empty">😅 没有找到匹配的壁纸</div>';
                 totalCount.textContent = '0';
                 return;
             }
+
             totalCount.textContent = images.length;
+
+            // 先取消所有正在加载的图片
+            imageLoader.cancelAll();
+
             var html = '';
+            var loadQueue = [];
+
             for (var i = 0; i < images.length; i++) {
                 var img = images[i];
                 var dateStr = img.date || '';
@@ -1235,15 +1405,22 @@
                 var imgType = getImageType(img);
                 var isUhd = (imgType === 'uhd');
                 var isFhd = (imgType === 'fhd');
+
                 var uhdUrl = get4kUrl(img);
                 var fhdUrl = get1080pUrl(img);
                 var normalUrl = img.bing_url || img.local_path || '';
                 if (normalUrl && !normalUrl.startsWith('http') && normalUrl.startsWith('/')) {
                     normalUrl = window.location.origin + normalUrl;
                 }
+
                 var escapedData = encodeURIComponent(JSON.stringify(img));
+                var imgId = 'img-' + i + '-' + Date.now();
+
                 html += '<div class="card" data-item="' + escapedData + '">';
-                html += '<img src="' + imageUrl + '" alt="' + displayTitle + '" loading="lazy" onerror="this.style.display=\'none\'" />';
+                html += '<div class="img-wrapper" id="wrapper-' + imgId + '">';
+                html += '<div class="placeholder"><div class="spinner"></div></div>';
+                html += '<img id="' + imgId + '" data-src="' + imageUrl + '" alt="' + displayTitle + '" loading="lazy" />';
+                html += '</div>';
                 html += '<div class="info">';
                 html += '<div class="date">📅 ' + dateStr + '</div>';
                 html += '<div class="title">' + displayTitle + '</div>';
@@ -1263,8 +1440,52 @@
                 }
                 
                 html += '</div></div></div>';
+                
+                // 收集需要加载的图片
+                loadQueue.push({
+                    id: imgId,
+                    url: imageUrl
+                });
             }
             grid.innerHTML = html;
+
+            // ===== 串行加载图片 =====
+            var imgElements = [];
+            loadQueue.forEach(function(item) {
+                var el = document.getElementById(item.id);
+                if (el) {
+                    imgElements.push({
+                        element: el,
+                        url: item.url
+                    });
+                }
+            });
+
+            if (imgElements.length > 0) {
+                // 显示进度
+                var progressBar = document.createElement('div');
+                progressBar.style.cssText = 'position:fixed;bottom:20px;right:20px;background:rgba(0,0,0,0.7);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:1000;backdrop-filter:blur(8px);';
+                progressBar.id = 'loadProgress';
+                progressBar.textContent = '加载图片 0/' + imgElements.length;
+                document.body.appendChild(progressBar);
+
+                imageLoader.loadImagesSequential(imgElements, function(loaded, total) {
+                    var pb = document.getElementById('loadProgress');
+                    if (pb) {
+                        pb.textContent = '加载图片 ' + loaded + '/' + total;
+                        if (loaded === total) {
+                            setTimeout(function() {
+                                if (pb) pb.remove();
+                            }, 1000);
+                        }
+                    }
+                }).then(function() {
+                    var pb = document.getElementById('loadProgress');
+                    if (pb) pb.remove();
+                });
+            }
+
+            // ===== 卡片点击事件 =====
             document.querySelectorAll('.card').forEach(function(el) {
                 el.addEventListener('click', function(e) {
                     if (e.target.closest('a')) return;
@@ -1281,27 +1502,33 @@
                 });
             });
         }
+
         // ============================================================
-        // 6. 模态框
+        // 7. 模态框
         // ============================================================
+
         function openModal(item) {
             var overlay = document.getElementById('modalOverlay');
             var displayTitle = formatTitle(item);
             document.getElementById('modalTitle').textContent = displayTitle;
+
             var img = document.getElementById('modalImg');
             var modalUrl = get1080pUrl(item);
             img.src = modalUrl;
             img.alt = displayTitle;
+
             document.getElementById('modalSubtitle').style.display = 'none';
+
             var desc = item.description || '';
             desc = desc.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/<br\s*\/?>/gi, '\n');
             var paragraphs = desc.split('\n').map(function(p) { return p.trim(); }).filter(function(p) { return p !== ''; });
             var descHtml = paragraphs.map(function(p) { return '<p>' + p + '</p>'; }).join('');
             document.getElementById('modalDesc').innerHTML = descHtml;
+
             overlay.classList.add('open');
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeModal() {
             var overlay = document.getElementById('modalOverlay');
             if (overlay) {
@@ -1309,48 +1536,69 @@
                 document.body.style.overflow = '';
             }
         }
-        
+
         document.getElementById('modalClose').addEventListener('click', closeModal);
-        document.getElementById('modalOverlay').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeModal();
-            }
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
         });
-        
-        // ESC关闭弹窗
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                var mask = document.getElementById('mask');
-                if(mask.classList.contains('show')){
-                    mask.classList.remove('show');
-                }
-            }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
         });
-        
+
         // ============================================================
-        // 7. 加载指定年月数据
+        // 8. 加载数据
         // ============================================================
-        async function loadMonthData(year, monthStr) {
-            const grid = document.getElementById('grid');
+
+        async function loadMonthData(year, month) {
+            var grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
-        
-            await loadIndex();
-            const yearData = await loadYearData(year);
-            if (!yearData || yearData.length === 0) {
-                renderGrid([]);
+
+            // 取消所有正在加载的图片
+            imageLoader.cancelAll();
+
+            if (allAvailableYearsGlobal.length === 0) {
+                await loadIndex();
+            }
+
+            var data = loadedData[year];
+            if (!data) {
+                data = await loadYearData(year);
+            }
+
+            if (!data || data.length === 0) {
+                grid.innerHTML = '<div class="empty">😅 ' + year + ' 年暂无壁纸数据</div>';
+                document.getElementById('totalCount').textContent = '0';
                 return;
             }
-            const filtered = filterImagesByMonth(yearData, monthStr);
+
+            var sortedData = data.slice().sort(function(a, b) {
+                var da = a.date || '';
+                var db = b.date || '';
+                return db.localeCompare(da);
+            });
+
+            var filtered = filterImagesByMonth(sortedData, month);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="empty">😅 ' + year + '年 ' + month + '月 暂无壁纸数据</div>';
+                document.getElementById('totalCount').textContent = '0';
+                return;
+            }
+
             renderGrid(filtered);
         }
-        
+
         // ============================================================
-        // 8. 页面初始化
+        // 9. 主函数
         // ============================================================
-        window.addEventListener('DOMContentLoaded', async function () {
-            await loadIndex();
-        });
+
+        // 初始化加载索引
+        loadIndex();
+
+        console.log('📚 壁纸归档已加载 - 优化串行加载');
+        console.log('📌 点击年份切换后，点击月份才加载图片');
+        console.log('📌 图片采用串行加载，避免浏览器并发限制');
+        console.log('📌 切换月份会自动取消旧图片请求');
     </script>
 </body>
 </html>
