@@ -1048,7 +1048,6 @@
                         state.year--;
                         document.getElementById('popupYearText').textContent = state.year + '年';
                         updateMonthInput();
-                        loadData();
                         renderPopup();
                     };
                     document.getElementById('popupYearNext').onclick = function(e) {
@@ -1058,7 +1057,6 @@
                         state.year++;
                         document.getElementById('popupYearText').textContent = state.year + '年';
                         updateMonthInput();
-                        loadData();
                         renderPopup();
                     };
                     popup.querySelectorAll('.month-cell').forEach(function(el) {
@@ -1069,7 +1067,6 @@
                             });
                             el.classList.add('active');
                             updateMonthInput();
-                            loadData();
                             closePopup();
                         };
                     });
