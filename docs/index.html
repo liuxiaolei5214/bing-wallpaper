@@ -907,6 +907,9 @@
                         current = addDays(current, 1);
                     }
 
+                    // ✅ 按日期降序排序（从大到小，最新在前）
+                    result.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+                    
                     allData = result;
                     currentIndex = 0;
 
