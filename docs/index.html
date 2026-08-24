@@ -292,7 +292,7 @@
         }
 
         /* ============================================================
-               电影感轮播 - 新布局：缩略图在上方，标题/按钮/遮罩在下方
+               电影感轮播 - 新布局：标题+按钮同一行，无顶部遮罩
                ============================================================ */
         #movieCarouselSection {
             height: 100vh;
@@ -332,66 +332,66 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 50%;
+            height: 35%;
             z-index: 12;
             background: linear-gradient(to top, 
-                rgba(0, 0, 0, 0.92) 0%, 
-                rgba(0, 0, 0, 0.6) 40%,
-                rgba(0, 0, 0, 0.2) 70%,
+                rgba(0, 0, 0, 0.85) 0%, 
+                rgba(0, 0, 0, 0.4) 50%,
                 transparent 100%
             );
             pointer-events: none;
         }
 
-        /* ===== 【新增】顶部保护遮罩（缩略图区域） ===== */
-        .movie-top-safe-overlay {
+        /* ===== 【取消】顶部遮罩 - 已移除 ===== */
+        /* .movie-top-safe-overlay 已删除 */
+
+        /* ===== 【修改】标题 + 按钮同行，固定在底部 ===== */
+        .movie-bottom-bar {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 120px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
-            z-index: 11;
+            bottom: 40px;
+            left: 2.5rem;
+            right: 2.5rem;
+            z-index: 15;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             pointer-events: none;
+            gap: 20px;
         }
 
-        /* ===== 标题 - 移到左下角 ===== */
         .movie-title-bar {
-            position: absolute;
-            bottom: 120px;
-            left: 2.5rem;
-            z-index: 15;
-            pointer-events: none;
+            pointer-events: auto;
+            flex-shrink: 1;
+            min-width: 0;
         }
 
         .movie-title-bar .movie-info {
             color: #f0f0ea;
             text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
-            pointer-events: auto;
         }
 
         .movie-title-bar .movie-title {
-            font-size: 1.5rem !important;
+            font-size: 1.3rem !important;
             font-weight: 300;
-            letter-spacing: 2px;
-            margin-bottom: 0.1rem;
+            letter-spacing: 1px;
             line-height: 1.4;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .movie-title-bar .movie-date {
             display: none !important;
         }
 
-        /* ===== 按钮 - 移到右下角 ===== */
+        /* ===== 按钮组 - 在同行右侧 ===== */
         .movie-actions {
-            position: absolute;
-            bottom: 60px;
-            right: 1.2rem;
             display: flex;
             flex-wrap: wrap;
             gap: 0.6rem;
             align-items: center;
-            z-index: 20;
+            pointer-events: auto;
+            flex-shrink: 0;
         }
 
         .movie-actions .btn {
@@ -463,7 +463,7 @@
             right: 1.2rem;
         }
 
-        /* ===== 【修改】缩略图导航 - 移到顶部 ===== */
+        /* ===== 缩略图导航 - 在顶部 ===== */
         .movie-thumbnails {
             position: absolute;
             top: 1.2rem;
@@ -537,22 +537,20 @@
             }
 
             /* ========== 轮播页面移动端 ========== */
-            /* 标题移到左下角，靠底部 */
-            .movie-title-bar {
-                top: auto;
+            /* 底部栏变为上下排列 */
+            .movie-bottom-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
                 left: 1.2rem;
-                transform: none;
-                bottom: 100px;
-                text-align: left;
+                right: 1.2rem;
+                bottom: 30px;
             }
             .movie-title-bar .movie-title {
                 font-size: 0.88rem !important;
+                white-space: normal;
             }
-            /* 右上角按钮移到右下角 */
             .movie-actions {
-                top: auto;
-                bottom: 50px;
-                right: 0.8rem;
                 gap: 0.3rem;
             }
             .movie-actions .btn {
@@ -591,10 +589,6 @@
                 width: 2.4rem;
                 height: 1.6rem;
             }
-            /* 顶部遮罩适配移动端 */
-            .movie-top-safe-overlay {
-                height: 100px;
-            }
             /* 底部遮罩适配 */
             .movie-bottom-overlay {
                 height: 45%;
@@ -619,6 +613,14 @@
                 line-height: 1.6;
                 max-height: 25vh;
             }
+            /* 移动端底部栏进一步调整 */
+            .movie-bottom-bar {
+                bottom: 20px;
+                gap: 8px;
+            }
+            .movie-bottom-overlay {
+                height: 50%;
+            }
         }
     </style>
 </head>
@@ -640,26 +642,26 @@
         <section id="movieCarouselSection" class="fullscreen-section">
             <div class="carousel-movie">
                 <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
-                    <!-- 【修改】顶部保护遮罩（缩略图区域） -->
-                    <div class="movie-top-safe-overlay"></div>
+                    <!-- 【取消】顶部遮罩已移除 -->
                     <!-- 【修改】底部渐变遮罩 -->
                     <div class="movie-bottom-overlay"></div>
                     
-                    <!-- 【修改】标题移到左下角 -->
-                    <div class="movie-title-bar">
-                        <div class="movie-info">
-                            <div class="movie-title" id="movieTitle"></div>
-                            <div class="movie-date" id="movieDate"></div>
+                    <!-- 【修改】标题 + 按钮同行底部栏 -->
+                    <div class="movie-bottom-bar">
+                        <div class="movie-title-bar">
+                            <div class="movie-info">
+                                <div class="movie-title" id="movieTitle"></div>
+                                <div class="movie-date" id="movieDate"></div>
+                            </div>
+                        </div>
+                        <div class="movie-actions" id="movieActions">
+                            <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank"></a>
+                            <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank"></a>
+                            <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank"></a>
+                            <a href="/archive.html" class="btn btn-secondary" id="archiveBtn"></a>
                         </div>
                     </div>
-                    <!-- 【修改】按钮移到右下角 -->
-                    <div class="movie-actions" id="movieActions">
-                        <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank"></a>
-                        <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank"></a>
-                        <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank"></a>
-                        <a href="/archive.html" class="btn btn-secondary" id="archiveBtn"></a>
-                    </div>
-                    <!-- 【修改】缩略图移到顶部 -->
+                    <!-- 缩略图在顶部 -->
                     <div class="movie-thumbnails" id="movieThumbnails"></div>
                     <button class="movie-btn prev" id="moviePrev">
                         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
