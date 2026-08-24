@@ -509,10 +509,11 @@
             overflow: hidden;
             position: relative;
         }
+        /* ===== 关键修改：图片铺满全屏 ===== */
         .modal-image img {
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover;
             display: block;
             background: #000;
         }
@@ -523,11 +524,11 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 55%;
+            height: 50%;
             background: linear-gradient(to top, 
-                rgba(0, 0, 0, 0.95) 0%, 
-                rgba(0, 0, 0, 0.7) 35%,
-                rgba(0, 0, 0, 0.3) 65%,
+                rgba(0, 0, 0, 0.92) 0%, 
+                rgba(0, 0, 0, 0.6) 30%,
+                rgba(0, 0, 0, 0.2) 60%,
                 transparent 100%
             );
             pointer-events: none;
@@ -540,7 +541,7 @@
             right: 0;
             padding: 30px 48px 40px;
             z-index: 2;
-            max-height: 55%;
+            max-height: 50%;
             pointer-events: none;
         }
         .modal-content > * {
@@ -707,7 +708,7 @@
             .modal-image img {
                 width: 100%;
                 height: 100%;
-                object-fit: contain;
+                object-fit: cover;
                 background: #000;
             }
             .modal-content {
@@ -725,7 +726,7 @@
                 line-height: 1.7;
             }
             .modal-image::after {
-                height: 60%;
+                height: 55%;
             }
             .modal-close {
                 top: 16px;
@@ -806,7 +807,7 @@
                 line-height: 1.6;
             }
             .modal-image::after {
-                height: 65%;
+                height: 60%;
             }
             .modal-close {
                 top: 12px;
