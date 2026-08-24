@@ -12,7 +12,6 @@
             color: #e0e0e0;
             min-height: 100vh;
             padding: 20px;
-            background-image: url('https://image.lei5214.cc.cd/img/2026/08/10.jpg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -875,6 +874,53 @@
     <div id="loadProgress" class="hidden">加载图片 0/0</div>
 
     <script>
+        // ===== 背景图控制 =====
+        // ✅ 手动控制：true = 使用当天壁纸，false = 使用固定壁纸
+        var USE_TODAY_BG = true;  // 改这里控制
+        
+        // 固定壁纸 URL（备用）
+        var FIXED_BG = 'https://image.lei5214.cc.cd/img/2026/08/10.jpg';
+        
+        // 设置背景图
+        function setBackground(url) {
+            document.body.style.backgroundImage = 'url(' + url + ')';
+            console.log('🖼️ 背景图已切换:', url);
+        }
+        
+        // 从 today.json 读取当天壁纸
+        async function loadTodayBg() {
+            try {
+                var resp = await fetch('today.json');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                var data = await resp.json();
+                
+                var item = null;
+                if (Array.isArray(data) && data.length > 0) {
+                    item = data[0];
+                } else if (typeof data === 'object' && data !== null) {
+                    item = data;
+                }
+                
+                if (item && item.bing_url) {
+                    // 转换为 1920x1080 背景图
+                    var bgUrl = item.bing_url.replace('_UHD.jpg', '_1920x1080.jpg');
+                    setBackground(bgUrl);
+                } else {
+                    setBackground(FIXED_BG);
+                }
+            } catch (e) {
+                console.warn('⚠️ 加载 today.json 失败，使用固定壁纸:', e.message);
+                setBackground(FIXED_BG);
+            }
+        }
+        
+        // 初始化背景
+        if (USE_TODAY_BG) {
+            loadTodayBg();
+        } else {
+            setBackground(FIXED_BG);
+        }
+
         // ============================================================
         // 0. 图片加载管理器（并发模式 - 每批6张 + 重试）
         // ============================================================
