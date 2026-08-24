@@ -291,7 +291,9 @@
             text-align: center;
         }
 
-        /* ===== 电影感轮播 ===== */
+        /* ============================================================
+               电影感轮播 - 新布局：缩略图在上方，标题/按钮/遮罩在下方
+               ============================================================ */
         #movieCarouselSection {
             height: 100vh;
             width: 100vw;
@@ -324,38 +326,39 @@
             position: relative;
         }
 
-        /* ===== 轮播顶部渐变遮层 ===== */
-        .movie-title-overlay-top {
+        /* ===== 【修改】底部渐变遮罩 - 从底部向上渐变 ===== */
+        .movie-bottom-overlay {
             position: absolute;
-            top: 0;
+            bottom: 0;
             left: 0;
             right: 0;
-            height: 40%;
+            height: 50%;
             z-index: 12;
-            background: linear-gradient(to bottom, 
-                rgba(0, 0, 0, 0.8) 0%, 
-                rgba(0, 0, 0, 0.4) 40%,
+            background: linear-gradient(to top, 
+                rgba(0, 0, 0, 0.92) 0%, 
+                rgba(0, 0, 0, 0.6) 40%,
+                rgba(0, 0, 0, 0.2) 70%,
                 transparent 100%
             );
             pointer-events: none;
         }
-        /* =====【新增】移动端标题+缩略图底部区域遮罩 ===== */
-        .movie-bottom-safe-overlay {
-            display: none;
+
+        /* ===== 【新增】顶部保护遮罩（缩略图区域） ===== */
+        .movie-top-safe-overlay {
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 220px;
-            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+            height: 120px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
             z-index: 11;
             pointer-events: none;
         }
 
-        /* ===== 标题 - 独立在左上角 ===== */
+        /* ===== 标题 - 移到左下角 ===== */
         .movie-title-bar {
             position: absolute;
-            top: 1.2rem;
+            bottom: 120px;
             left: 2.5rem;
             z-index: 15;
             pointer-events: none;
@@ -379,10 +382,10 @@
             display: none !important;
         }
 
-        /* ===== 按钮 - 独立在右上角 ===== */
+        /* ===== 按钮 - 移到右下角 ===== */
         .movie-actions {
             position: absolute;
-            top: 1.2rem;
+            bottom: 60px;
             right: 1.2rem;
             display: flex;
             flex-wrap: wrap;
@@ -413,7 +416,7 @@
             margin-right: 4px;
         }
 
-        /* ===== 轮播控制按钮【默认隐藏，点击图片切换显示】 ===== */
+        /* ===== 轮播控制按钮 ===== */
         .movie-btn {
             position: absolute;
             top: 50%;
@@ -460,10 +463,10 @@
             right: 1.2rem;
         }
 
-        /* ===== 缩略图导航 - 在底部 ===== */
+        /* ===== 【修改】缩略图导航 - 移到顶部 ===== */
         .movie-thumbnails {
             position: absolute;
-            bottom: 1.2rem;
+            top: 1.2rem;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -505,7 +508,6 @@
         /* ===== 移动端样式 ===== */
         @media (max-width: 640px) {
             /* ========== 今日页面移动端 ========== */
-            /* 切换显示移动端悬浮按钮 */
             #todayCard .today-overlay .today-actions-pc {
                 display: none;
             }
@@ -515,7 +517,6 @@
             #todayCard .today-gradient {
                 height: 38%;
             }
-            /* overlay贴底，内容整体向上偏移 */
             #todayCard .today-overlay {
                 padding: 16px 18px 14px;
                 min-height: 35%;
@@ -530,32 +531,27 @@
                 line-height: 1.7;
                 max-height: 30vh;
             }
-            /* 移动端悬浮按钮缩小 */
             #todayCard .today-actions-mobile .btn {
                 font-size: 0.5rem;
                 padding: 3px 8px;
             }
 
             /* ========== 轮播页面移动端 ========== */
-            /* 启用底部安全遮罩，保护标题和缩略图 */
-            .movie-bottom-safe-overlay {
-                display: block;
-            }
-            /* 标题移动到缩略图上方靠左 */
+            /* 标题移到左下角，靠底部 */
             .movie-title-bar {
                 top: auto;
                 left: 1.2rem;
                 transform: none;
-                bottom: calc(1.2rem + 54px);
-                text-align:left;
+                bottom: 100px;
+                text-align: left;
             }
-            /* 标题字体进一步缩小 */
             .movie-title-bar .movie-title {
-                font-size:0.88rem !important;
+                font-size: 0.88rem !important;
             }
-            /* 右上角按钮缩小 */
+            /* 右上角按钮移到右下角 */
             .movie-actions {
-                top: 0.6rem;
+                top: auto;
+                bottom: 50px;
                 right: 0.8rem;
                 gap: 0.3rem;
             }
@@ -578,22 +574,30 @@
             .movie-btn.next {
                 right: 0.4rem;
             }
-            /* 缩略图单行横向滚动 */
+            /* 缩略图在顶部单行横向滚动 */
             .movie-thumbnails {
                 max-width: calc(100% - 24px);
                 flex-wrap: nowrap;
                 overflow-x: auto;
                 justify-content: flex-start;
                 transform: translateX(-50%);
-                bottom: 1.2rem;
-                scrollbar-width:none;
+                top: 1.2rem;
+                scrollbar-width: none;
             }
             .movie-thumbnails::-webkit-scrollbar {
-                display:none;
+                display: none;
             }
             .movie-thumbnails .thumb-item {
                 width: 2.4rem;
                 height: 1.6rem;
+            }
+            /* 顶部遮罩适配移动端 */
+            .movie-top-safe-overlay {
+                height: 100px;
+            }
+            /* 底部遮罩适配 */
+            .movie-bottom-overlay {
+                height: 45%;
             }
         }
 
@@ -604,7 +608,7 @@
             #todayCard .today-overlay {
                 padding: 12px 14px 12px;
                 min-height: 30%;
-                bottom:10px;
+                bottom: 10px;
                 transform: translateY(-24px);
             }
             #todayCard .today-overlay .today-title {
@@ -636,22 +640,26 @@
         <section id="movieCarouselSection" class="fullscreen-section">
             <div class="carousel-movie">
                 <div class="movie-slide active" id="movieSlide" style="background-image: url('');">
-                    <div class="movie-title-overlay-top"></div>
-                    <!-- 新增底部保护遮罩 -->
-                    <div class="movie-bottom-safe-overlay"></div>
+                    <!-- 【修改】顶部保护遮罩（缩略图区域） -->
+                    <div class="movie-top-safe-overlay"></div>
+                    <!-- 【修改】底部渐变遮罩 -->
+                    <div class="movie-bottom-overlay"></div>
                     
+                    <!-- 【修改】标题移到左下角 -->
                     <div class="movie-title-bar">
                         <div class="movie-info">
                             <div class="movie-title" id="movieTitle"></div>
                             <div class="movie-date" id="movieDate"></div>
                         </div>
                     </div>
+                    <!-- 【修改】按钮移到右下角 -->
                     <div class="movie-actions" id="movieActions">
                         <a href="#" class="btn btn-primary" id="movieDownloadBtn" target="_blank"></a>
                         <a href="#" class="btn btn-secondary" id="movieViewBtn" target="_blank"></a>
                         <a href="#" class="btn btn-secondary" id="movieDetailBtn" target="_blank"></a>
                         <a href="/archive.html" class="btn btn-secondary" id="archiveBtn"></a>
                     </div>
+                    <!-- 【修改】缩略图移到顶部 -->
                     <div class="movie-thumbnails" id="movieThumbnails"></div>
                     <button class="movie-btn prev" id="moviePrev">
                         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
@@ -778,7 +786,7 @@
                             <a href="${get1080pUrl(item.bing_url || item.url || '')}" class="btn btn-secondary" target="_blank">${ICONS.download} 1080P</a>
                             <a href="${detailUrl}" class="btn btn-secondary" target="_blank">${ICONS.book} 光影回顾</a>
                             <a href="/archive.html" class="btn btn-secondary">${ICONS.archive} 壁纸归档</a>
-                            <span class="today-scroll-hint"><span>⬇ 滚动 · 查看更多</span></span>
+                            <span class="today-scroll-hint"><span>⬇ 滚动 · 查看历史</span></span>
                         </div>
                     `;
                     // 移动端右上角悬浮按钮
@@ -794,12 +802,12 @@
                         <div class="today-gradient"></div>
                         <div class="today-overlay">
                             <div class="today-title">${title}</div>
-                            <div class="today-desc">${descHtml || ''}</div>
+                            <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
                             ${htmlPcActions}
                         </div>
                         <!-- 全局共用滚动提示，PC+移动端同时显示 -->
                         <div class="global-scroll-hint today-scroll-hint">
-                            <span>滚动 · 查看更多</span>
+                            <span>滚动 · 查看历史</span>
                         </div>
                         <div class="today-actions-mobile">${mobileBtnWrap.innerHTML}</div>
                     `;
@@ -811,7 +819,7 @@
             }
 
             // ============================================================
-            // ===== 轮播功能（修改版：当天 + 前6天 + 后7天 = 14条） =====
+            // ===== 轮播功能（当天 + 前6天 + 后7天 = 14条） =====
             // ============================================================
             let allData = [];
             let currentIndex = 0;
@@ -909,13 +917,13 @@
 
                     // ✅ 按日期降序排序（从大到小，最新在前）
                     result.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-                    
+
                     allData = result;
                     currentIndex = 0;
 
                     console.log(`📊 轮播数据: ${allData.length}/${MAX_SLIDES} 条`);
                     if (allData.length > 0) {
-                        console.log(`📌 范围: ${allData[0]?.date} ~ ${allData[allData.length-1]?.date}`);
+                        console.log(`📌 播放顺序: ${allData[0]?.date} → ${allData[allData.length-1]?.date}`);
                     }
 
                     // 生成缩略图
