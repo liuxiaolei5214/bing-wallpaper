@@ -815,8 +815,8 @@
             let currentIndex = 0;
             let autoPlayTimer = null;
             const AUTOPLAY_INTERVAL = 6000;
-            const MAX_SLIDES = 10;
-
+            const MAX_SLIDES = 14;  // ✅ 改为14条
+            
             const slide = document.getElementById('movieSlide');
             const titleEl = document.getElementById('movieTitle');
             const dateEl = document.getElementById('movieDate');
@@ -826,25 +826,100 @@
             const thumbnails = document.getElementById('movieThumbnails');
             const prevBtn = document.getElementById('moviePrev');
             const nextBtn = document.getElementById('movieNext');
-
+            
+            // ===== 获取当前年份 =====
+            function getCurrentYear() {
+                const now = new Date();
+                // 如果当前日期是12月25日之后，可能应该显示下一年的数据？
+                // 取决于你的数据写入逻辑，这里简单返回当前年份
+                return now.getFullYear();
+            }
+            
+            // ===== 获取年份数据文件（支持跨年） =====
+            async function fetchYearData(year) {
+                try {
+                    const resp = await fetch(`zh.${year}.json`);
+                    if (!resp.ok) return null;
+                    return await resp.json();
+                } catch (e) {
+                    return null;
+                }
+            }
+            
+            // ===== 加载多年度数据（跨年支持） =====
+            async function fetchMultiYearData() {
+                const currentYear = getCurrentYear();
+                let allData = [];
+                
+                // 尝试加载当前年份数据
+                const data = await fetchYearData(currentYear);
+                if (data && Array.isArray(data)) {
+                    allData = allData.concat(data);
+                }
+                
+                // ✅ 如果当前年份数据不足14条，尝试加载上一年数据
+                if (allData.length < MAX_SLIDES) {
+                    const prevYear = currentYear - 1;
+                    const prevData = await fetchYearData(prevYear);
+                    if (prevData && Array.isArray(prevData)) {
+                        // 只取最新的几条补足
+                        const sortedPrev = [...prevData].sort((a, b) => 
+                            (b.date || '').localeCompare(a.date || '')
+                        );
+                        const needed = MAX_SLIDES - allData.length;
+                        allData = allData.concat(sortedPrev.slice(0, needed));
+                    }
+                }
+                
+                return allData;
+            }
+            
+            // ===== 获取今日日期字符串 =====
+            function getTodayStr() {
+                const now = new Date();
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+            
+            // ===== 获取1080P图片URL =====
+            function get1080pUrl(url) {
+                if (!url) return '';
+                // 将 _UHD.jpg 替换为 _1920x1080.jpg
+                return url.replace(/_UHD\.jpg$/, '_1920x1080.jpg');
+            }
+            
+            // ===== 获取4K图片URL =====
+            function get4kUrl(url) {
+                if (!url) return '';
+                return url;
+            }
+            
+            // ===== 获取详情页URL =====
+            function getDetailUrl(title, date) {
+                const query = encodeURIComponent(title || '壁纸');
+                return `https://www.bing.com/search?q=${query}&form=HPCAPT`;
+            }
+            
             slide.addEventListener("click", function(e){
                 if(!e.target.closest(".movie-btn") && !e.target.closest(".thumb-item") && !e.target.closest(".movie-actions")){
                     slide.classList.toggle("show-nav");
                 }
-            })
-
+            });
+            
             function updateSlide(index) {
                 if (!allData || allData.length === 0) return;
                 const item = allData[index];
                 if (!item) return;
-
+            
                 const imgUrl = get1080pUrl(item.bing_url || item.url || '');
                 const title = item.title || '壁纸';
-
+            
                 slide.style.backgroundImage = `url('${imgUrl}')`;
                 titleEl.textContent = title;
-                dateEl.textContent = '';
-
+                dateEl.textContent = item.date || '';
+            
                 const hd4k = get4kUrl(item.bing_url || item.url || '');
                 const hd1080 = get1080pUrl(item.bing_url || item.url || '');
                 downloadBtn.innerHTML = `${ICONS.download} UHD/4K`;
@@ -852,32 +927,32 @@
                 document.getElementById('archiveBtn').innerHTML = `${ICONS.archive} 壁纸归档`;
                 viewBtn.innerHTML = `${ICONS.download} 1080P`;
                 viewBtn.href = hd1080;
-
+            
                 const detailUrl = getDetailUrl(item.title || item.subtitle || '', item.date);
                 detailBtn.innerHTML = `${ICONS.book} 光影回顾`;
                 detailBtn.href = detailUrl;
-
+            
                 document.querySelectorAll('.thumb-item').forEach((el, i) => {
                     el.classList.toggle('active', i === index);
                 });
-
+            
                 prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
                 nextBtn.style.visibility = index >= allData.length - 1 ? 'hidden' : 'visible';
             }
-
+            
             function nextSlide() {
                 if (!allData || allData.length === 0) return;
                 const maxIndex = Math.min(allData.length, MAX_SLIDES) - 1;
                 currentIndex = currentIndex >= maxIndex ? 0 : currentIndex + 1;
                 updateSlide(currentIndex);
             }
-
+            
             function prevSlide() {
                 if (!allData || allData.length === 0) return;
                 currentIndex = currentIndex <= 0 ? Math.min(allData.length, MAX_SLIDES) - 1 : currentIndex - 1;
                 updateSlide(currentIndex);
             }
-
+            
             function goToSlide(index) {
                 if (!allData || allData.length === 0) return;
                 const maxIndex = Math.min(allData.length, MAX_SLIDES) - 1;
@@ -886,7 +961,7 @@
                 updateSlide(currentIndex);
                 resetAutoPlay();
             }
-
+            
             function resetAutoPlay() {
                 if (autoPlayTimer) {
                     clearInterval(autoPlayTimer);
@@ -897,33 +972,36 @@
                     autoPlayTimer = setInterval(nextSlide, AUTOPLAY_INTERVAL);
                 }
             }
-
+            
             async function loadCarousel() {
                 try {
-                    const resp = await fetch('zh.2026.json');
-                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                    const data = await resp.json();
+                    // ✅ 1. 加载多年度数据
+                    let data = await fetchMultiYearData();
+                    if (!data || data.length === 0) {
+                        // 降级：尝试加载固定文件
+                        const resp = await fetch('zh.2026.json');
+                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                        data = await resp.json();
+                    }
+                    
                     if (!Array.isArray(data) || data.length === 0) {
                         throw new Error('数据为空');
                     }
-
+            
+                    // ✅ 2. 按日期降序排序（最新在前）
                     data.sort((a, b) => {
                         const da = a.date || '';
                         const db = b.date || '';
                         return db.localeCompare(da);
                     });
-
-                    const todayStr = getTodayStr();
-                    const filteredData = data.filter(item => {
-                        const date = item.date ? item.date.trim() : '';
-                        return date !== todayStr;
-                    });
-
-                    allData = filteredData.slice(0, MAX_SLIDES);
+            
+                    // ✅ 3. 不再过滤今日数据，直接取前14条
+                    allData = data.slice(0, MAX_SLIDES);
                     currentIndex = 0;
-
+            
                     console.log(`📅 轮播数据: ${allData.length} 条，从 ${allData[0]?.date} 开始`);
-
+            
+                    // ✅ 4. 生成缩略图
                     thumbnails.innerHTML = '';
                     allData.forEach((item, idx) => {
                         const thumb = document.createElement('div');
@@ -933,25 +1011,26 @@
                         thumb.addEventListener('click', () => goToSlide(idx));
                         thumbnails.appendChild(thumb);
                     });
-
+            
                     updateSlide(0);
                     resetAutoPlay();
-
+            
                 } catch (e) {
                     console.warn('轮播加载失败:', e);
                     slide.style.backgroundImage = '';
                     titleEl.textContent = '加载失败';
                 }
             }
-
+            
+            // ===== 事件监听 =====
             prevBtn.addEventListener('click', () => { prevSlide(); resetAutoPlay(); });
             nextBtn.addEventListener('click', () => { nextSlide(); resetAutoPlay(); });
-
+            
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'ArrowLeft') { prevSlide(); resetAutoPlay(); e.preventDefault(); }
                 if (e.key === 'ArrowRight') { nextSlide(); resetAutoPlay(); e.preventDefault(); }
             });
-
+            
             let touchStartX = 0;
             let touchEndX = 0;
             slide.addEventListener('touchstart', (e) => {
@@ -964,8 +1043,9 @@
                     if (diff > 0) { nextSlide(); resetAutoPlay(); } else { prevSlide(); resetAutoPlay(); }
                 }
             }, { passive: true });
-
-            loadToday();
+            
+            // ===== 启动 =====
+            loadToday();  // 假设这是另一个函数
             loadCarousel();
             console.log('✨ 整屏切换已启用');
         })();
