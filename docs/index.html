@@ -87,19 +87,6 @@
             display: block;
         }
 
-        /* 移动端顶部遮罩，保证右上角按钮可视 */
-        #todayCard::before {
-            content:"";
-            position:absolute;
-            top:0;
-            left:0;
-            width:100%;
-            height:160px;
-            background:linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
-            z-index:1;
-            pointer-events:none;
-        }
-
         /* 今日页面底部渐变遮罩：永远贴底，不随内容上移 */
         #todayCard .today-gradient {
             position: absolute;
@@ -291,9 +278,8 @@
             text-align: center;
         }
 
-        /* ============================================================
-               电影感轮播 - 新布局：标题+按钮同一行，无顶部遮罩
-               ============================================================ */
+        /*  电影感轮播 - 新布局：标题+按钮同一行，无顶部遮罩
+         ============================================================ */
         #movieCarouselSection {
             height: 100vh;
             width: 100vw;
@@ -341,9 +327,6 @@
             );
             pointer-events: none;
         }
-
-        /* ===== 【取消】顶部遮罩 - 已移除 ===== */
-        /* .movie-top-safe-overlay 已删除 */
 
         /* ===== 【修改】标题 + 按钮同行，固定在底部 ===== */
         .movie-bottom-bar {
@@ -535,10 +518,17 @@
                 font-size: 0.5rem;
                 padding: 3px 8px;
             }
-            /* PC端取消这个顶部遮罩 */
-            @media (min-width: 641px) {
+            /* 移动端顶部遮罩，保证右上角按钮可视 */
             #todayCard::before {
-            display:none;
+            content:"";
+            position:absolute;
+            top:0;
+            left:0;
+            width:100%;
+            height:160px;
+            background:linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+            z-index:1;
+            pointer-events:none;
             }
             /* ========== 轮播页面移动端 ========== */
             /* 底部栏变为上下排列 */
