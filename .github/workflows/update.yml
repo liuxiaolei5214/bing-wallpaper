@@ -70,7 +70,6 @@ jobs:
           today_str = f"{now_beijing.year}-{str(now_beijing.month).zfill(2)}-{str(now_beijing.day).zfill(2)}"
           print(f"📅 今日日期 (北京时间): {today_str}")
           
-          # ✅ 检查 today.json 是否存在且是当天数据
           if os.path.exists(today_file):
               print(f"✅ today.json 文件存在 (docs/today.json)")
               try:
@@ -84,8 +83,21 @@ jobs:
                       cache_preview = cache_preview[:500] + "..."
                   print(f"📄 today.json 内容预览: {cache_preview}")
           
-                  cache_date = cached_data.get('date')
-                  print(f"📅 缓存中的日期: {cache_date}")
+                  # ✅ 修复：判断是数组还是对象
+                  if isinstance(cached_data, list):
+                      if len(cached_data) > 0:
+                          cache_item = cached_data[0]
+                          cache_date = cache_item.get('date')
+                          print(f"📅 缓存中的日期: {cache_date}")
+                      else:
+                          cache_date = None
+                          print(f"⚠️ today.json 为空数组")
+                  elif isinstance(cached_data, dict):
+                      cache_date = cached_data.get('date')
+                      print(f"📅 缓存中的日期: {cache_date}")
+                  else:
+                      cache_date = None
+                      print(f"⚠️ today.json 格式未知: {type(cached_data)}")
           
                   if cache_date == today_str:
                       use_cache = True
@@ -107,24 +119,43 @@ jobs:
           print("📋 步骤2: 获取数据")
           print("=" * 60)
           
-          if use_cache and cached_data:
-              # 直接使用缓存数据
-              title = cached_data.get('title', '')
-              subtitle = cached_data.get('subtitle', '')
-              description = cached_data.get('description', '')
-              bing_url = cached_data.get('bing_url', '')
-              date_str = cached_data.get('date', today_str)
-              print(f"📦 使用缓存数据 (docs/today.json)")
-              print(f"  - title: {title}")
-              print(f"  - subtitle: {subtitle}")
-              print(f"  - date: {date_str}")
-              print(f"  - description 长度: {len(description)} 字符")
+          found_in_year_file = False
           
-          else:
+          if use_cache and cached_data:
+              # ✅ 修复：判断是数组还是对象
+              cache_valid = False
+              if isinstance(cached_data, list):
+                  if len(cached_data) > 0:
+                      cache_item = cached_data[0]
+                      title = cache_item.get('title', '')
+                      subtitle = cache_item.get('subtitle', '')
+                      description = cache_item.get('description', '')
+                      bing_url = cache_item.get('bing_url', '')
+                      date_str = cache_item.get('date', today_str)
+                      cache_valid = True
+              elif isinstance(cached_data, dict):
+                  title = cached_data.get('title', '')
+                  subtitle = cached_data.get('subtitle', '')
+                  description = cached_data.get('description', '')
+                  bing_url = cached_data.get('bing_url', '')
+                  date_str = cached_data.get('date', today_str)
+                  cache_valid = True
+              
+              if cache_valid:
+                  print(f"📦 使用缓存数据 (docs/today.json)")
+                  print(f"  - title: {title}")
+                  print(f"  - subtitle: {subtitle}")
+                  print(f"  - date: {date_str}")
+                  print(f"  - description 长度: {len(description)} 字符")
+              else:
+                  print(f"⚠️ today.json 数据无效，尝试从其他来源获取")
+                  use_cache = False
+          
+          # 如果缓存无效或不存在，从其他来源获取
+          if not use_cache:
               # ✅ 2a. 优先从 zh.{year}.json 读取当天数据
               year = today_str[:4]
               year_file = f"docs/zh.{year}.json"
-              found_in_year_file = False
               
               print(f"📂 尝试从 {year_file} 读取今日数据...")
               
@@ -136,7 +167,7 @@ jobs:
                       if isinstance(year_data, list) and len(year_data) > 0:
                           print(f"📊 {year_file} 共有 {len(year_data)} 条数据")
                           
-                          # ✅ 查找与 today_str 匹配的数据
+                          # 查找与 today_str 匹配的数据
                           for item in year_data:
                               if item.get('date') == today_str:
                                   title = item.get('title', '')
@@ -153,7 +184,6 @@ jobs:
                           
                           if not found_in_year_file:
                               print(f"⚠️ {year_file} 中未找到日期为 {today_str} 的数据")
-                              # 打印最近几条数据的日期供参考
                               print(f"📅 最近数据日期: {[item.get('date') for item in year_data[:3]]}")
                       else:
                           print(f"⚠️ {year_file} 为空或格式无效")
