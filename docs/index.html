@@ -535,7 +535,11 @@
                 font-size: 0.5rem;
                 padding: 3px 8px;
             }
-
+            /* PC端取消这个顶部遮罩 */
+            @media (min-width: 641px) {
+            #todayCard::before {
+            display:none;
+            }
             /* ========== 轮播页面移动端 ========== */
             /* 底部栏变为上下排列 */
             .movie-bottom-bar {
