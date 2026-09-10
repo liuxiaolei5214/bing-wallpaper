@@ -620,7 +620,7 @@
 </head>
 <body>
 
-<!-- ===== 整屏滚动容器 ===== -->
+    <!-- ===== 整屏滚动容器 ===== -->
     <div class="viewport" id="viewport">
 
         <!-- ===== 今日壁纸 - 全屏 ===== -->
@@ -1035,37 +1035,8 @@
 
             // ===== 启动 =====
             loadToday();
-
-            // ============================================================
-            // ===== 【修改】轮播页懒加载：滚动到轮播 section 才加载 =====
-            // ============================================================
-            let carouselLoaded = false;
-
-            function loadCarouselOnce() {
-                if (carouselLoaded) return;
-                carouselLoaded = true;
-                loadCarousel();
-            }
-
-            const carouselSection = document.getElementById('movieCarouselSection');
-
-            if ('IntersectionObserver' in window) {
-                const carouselObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            loadCarouselOnce();
-                            carouselObserver.disconnect(); // 只触发一次
-                        }
-                    });
-                }, { threshold: 0.1 }); // 轮播页露出 10% 就开始加载
-
-                carouselObserver.observe(carouselSection);
-            } else {
-                // 兜底：不支持 IntersectionObserver 的老浏览器，直接加载
-                loadCarouselOnce();
-            }
-
-            console.log('✨ 整屏切换已启用，14天轮播（前6天 + 当天 + 后7天）· 轮播页懒加载已开启');
+            loadCarousel();
+            console.log('✨ 整屏切换已启用，14天轮播（前6天 + 当天 + 后7天）');
         })();
     </script>
 </body>
