@@ -741,26 +741,50 @@
                 return `${y}-${m}-${d}`;
             }
 
-            // ===== 加载今日壁纸 =====
+            let wallpaperDataPromise = null;
+        
+            function fetchWallpaperData() {
+                if (!wallpaperDataPromise) {
+                    wallpaperDataPromise = fetch('bing_wallpaper.json')
+                        .then(resp => {
+                            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                            return resp.json();
+                        })
+                        .catch(err => {
+                            wallpaperDataPromise = null;   // 失败后允许重试
+                            throw err;
+                        });
+                }
+                return wallpaperDataPromise;
+            }
+            
+            // ===== 加载今日壁纸（直接读取 bing_wallpaper.json 中当天的数据） =====
             async function loadToday() {
                 const container = document.getElementById('todayCard');
                 const mobileBtnWrap = container.querySelector('.today-actions-mobile');
                 try {
-                    const resp = await fetch('today.json');
-                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                    const data = await resp.json();
-                    
-                    let item = null;
-                    if (Array.isArray(data) && data.length > 0) {
-                        item = data[0];
-                    } else if (typeof data === 'object' && data !== null) {
-                        item = data;
-                    } else {
-                        throw new Error('数据格式无效');
+                    const data = await fetchWallpaperData();
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        throw new Error('数据为空或格式无效');
+                    }
+
+                    // 取当天数据；若找不到，则退回取日期最新的一条
+                    const todayStr = getTodayStr();
+                    let item = data.find(d => d.date === todayStr);
+
+                    if (!item) {
+                        console.warn(`⚠️ bing_wallpaper.json 中没有 ${todayStr} 的数据，改用最新一条`);
+                        const sorted = [...data].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+                        item = sorted[0];
+                    }
+
+                    if (!item) {
+                        throw new Error('无可用数据');
                     }
 
                     if (!item.date) {
-                        item.date = getTodayStr();
+                        item.date = todayStr;
                     }
 
                     const imgUrl = get1080pUrl(item.bing_url || item.url || '');
@@ -845,9 +869,7 @@
             // ===== 加载轮播数据（直接读取 bing_wallpaper.json） =====
             async function loadCarousel() {
                 try {
-                    const resp = await fetch('bing_wallpaper.json');
-                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                    const data = await resp.json();
+                    const data = await fetchWallpaperData();
 
                     if (!Array.isArray(data) || data.length === 0) {
                         throw new Error('数据为空或格式无效');
