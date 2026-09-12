@@ -815,15 +815,12 @@
             }
 
             // ============================================================
-            // ===== 轮播功能（当天 + 前6天 + 后7天 = 14条） =====
+            // ===== 轮播功能（直接读取 bing_wallpaper.json，含14天数据） =====
             // ============================================================
             let allData = [];
             let currentIndex = 0;
             let autoPlayTimer = null;
             const AUTOPLAY_INTERVAL = 6000;
-            const DAYS_BEFORE = 6;   // 往前6天
-            const DAYS_AFTER = 7;    // 往后7天
-            const MAX_SLIDES = DAYS_BEFORE + 1 + DAYS_AFTER; // 14
 
             const slide = document.getElementById('movieSlide');
             const titleEl = document.getElementById('movieTitle');
@@ -845,79 +842,24 @@
                 return `${y}-${m}-${day}`;
             }
 
-            function getYearFromDate(dateStr) {
-                return parseInt(dateStr.substring(0, 4));
-            }
-
-            // ===== 获取年份数据文件 =====
-            async function fetchYearData(year) {
-                try {
-                    const resp = await fetch(`zh.${year}.json`);
-                    if (!resp.ok) return null;
-                    return await resp.json();
-                } catch (e) {
-                    return null;
-                }
-            }
-
-            // ===== 加载轮播数据（跨年自动补全） =====
+            // ===== 加载轮播数据（直接读取 bing_wallpaper.json） =====
             async function loadCarousel() {
                 try {
-                    const todayStr = getTodayStr();
-                    const startDate = addDays(todayStr, -DAYS_BEFORE);
-                    const endDate = addDays(todayStr, DAYS_AFTER);
-                    console.log(`📅 日期范围: ${startDate} ~ ${endDate} (${DAYS_BEFORE}天前 ~ ${DAYS_AFTER}天后)`);
+                    const resp = await fetch('bing_wallpaper.json');
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    const data = await resp.json();
 
-                    // 计算需要加载的年份
-                    const startYear = getYearFromDate(startDate);
-                    const endYear = getYearFromDate(endDate);
-                    const yearsToLoad = [];
-                    for (let y = startYear; y <= endYear; y++) {
-                        yearsToLoad.push(y);
-                    }
-                    console.log(`📁 需要加载年份: ${yearsToLoad.join(', ')}`);
-
-                    // 加载所有年份数据
-                    let allDataRaw = [];
-                    for (const year of yearsToLoad) {
-                        const data = await fetchYearData(year);
-                        if (data && Array.isArray(data)) {
-                            allDataRaw = allDataRaw.concat(data);
-                            console.log(`📂 加载 zh.${year}.json: ${data.length} 条`);
-                        }
+                    if (!Array.isArray(data) || data.length === 0) {
+                        throw new Error('数据为空或格式无效');
                     }
 
-                    if (allDataRaw.length === 0) {
-                        throw new Error('数据为空');
-                    }
+                    // 按日期降序排序（最新在前）
+                    data.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
-                    // 按日期建立索引
-                    const dataMap = {};
-                    allDataRaw.forEach(item => {
-                        if (item.date) {
-                            dataMap[item.date] = item;
-                        }
-                    });
-
-                    // 从 startDate 到 endDate 依次取出
-                    const result = [];
-                    let current = startDate;
-                    while (current <= endDate) {
-                        if (dataMap[current]) {
-                            result.push(dataMap[current]);
-                        } else {
-                            console.warn(`⚠️ 缺失数据: ${current}`);
-                        }
-                        current = addDays(current, 1);
-                    }
-
-                    // ✅ 按日期降序排序（从大到小，最新在前）
-                    result.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-
-                    allData = result;
+                    allData = data;
                     currentIndex = 0;
 
-                    console.log(`📊 轮播数据: ${allData.length}/${MAX_SLIDES} 条`);
+                    console.log(`📊 轮播数据: ${allData.length} 条`);
                     if (allData.length > 0) {
                         console.log(`📌 播放顺序: ${allData[0]?.date} → ${allData[allData.length-1]?.date}`);
                     }
@@ -1035,8 +977,34 @@
 
             // ===== 启动 =====
             loadToday();
-            loadCarousel();
-            console.log('✨ 整屏切换已启用，14天轮播（前6天 + 当天 + 后7天）');
+
+            // ===== 轮播页懒加载：滚动到轮播 section 才加载 =====
+            let carouselLoaded = false;
+
+            function loadCarouselOnce() {
+                if (carouselLoaded) return;
+                carouselLoaded = true;
+                loadCarousel();
+            }
+
+            const carouselSection = document.getElementById('movieCarouselSection');
+
+            if ('IntersectionObserver' in window) {
+                const carouselObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            loadCarouselOnce();
+                            carouselObserver.disconnect();
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                carouselObserver.observe(carouselSection);
+            } else {
+                loadCarouselOnce();
+            }
+
+            console.log('✨ 整屏切换已启用 · 轮播直接读取 bing_wallpaper.json · 懒加载已开启');
         })();
     </script>
 </body>
