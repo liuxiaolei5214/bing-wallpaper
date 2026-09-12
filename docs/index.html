@@ -977,34 +977,8 @@
 
             // ===== 启动 =====
             loadToday();
-
-            // ===== 轮播页懒加载：滚动到轮播 section 才加载 =====
-            let carouselLoaded = false;
-
-            function loadCarouselOnce() {
-                if (carouselLoaded) return;
-                carouselLoaded = true;
-                loadCarousel();
-            }
-
-            const carouselSection = document.getElementById('movieCarouselSection');
-
-            if ('IntersectionObserver' in window) {
-                const carouselObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            loadCarouselOnce();
-                            carouselObserver.disconnect();
-                        }
-                    });
-                }, { threshold: 0.1 });
-
-                carouselObserver.observe(carouselSection);
-            } else {
-                loadCarouselOnce();
-            }
-
-            console.log('✨ 整屏切换已启用 · 轮播直接读取 bing_wallpaper.json · 懒加载已开启');
+            loadCarousel();
+            console.log('✨ 整屏切换已启用');
         })();
     </script>
 </body>
