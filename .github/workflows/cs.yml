@@ -1,0 +1,104 @@
+name: Split Bing Wallpaper JSON
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'docs/zh.*.json'
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Split JSON by year and month
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          const DOCS_DIR = path.join(process.cwd(), 'docs');
+          const YEAR_DIR = path.join(DOCS_DIR, 'json', 'year');
+          const MONTH_DIR = path.join(DOCS_DIR, 'json', 'month');
+
+          function ensureDir(dir) {
+              if (!fs.existsSync(dir)) {
+                  fs.mkdirSync(dir, { recursive: true });
+              }
+          }
+
+          ensureDir(YEAR_DIR);
+          ensureDir(MONTH_DIR);
+
+          const files = fs.readdirSync(DOCS_DIR).filter(f => /^zh\.\d{4}\.json$/.test(f));
+
+          if (files.length === 0) {
+              console.log('没有找到 zh.*.json 文件');
+              process.exit(0);
+          }
+
+          for (const file of files) {
+              const srcPath = path.join(DOCS_DIR, file);
+              const year = file.match(/^zh\.(\d{4})\.json$/)[1];
+
+              console.log(`处理 ${file} (年份 ${year})`);
+
+              let data;
+              try {
+                  data = JSON.parse(fs.readFileSync(srcPath, 'utf8'));
+              } catch (e) {
+                  console.warn(`跳过 ${file}，JSON 解析失败: ${e.message}`);
+                  continue;
+              }
+
+              if (!Array.isArray(data)) {
+                  console.warn(`跳过 ${file}，不是数组`);
+                  continue;
+              }
+
+              // 按月份分组
+              const byMonth = {};
+              for (const item of data) {
+                  if (!item || !item.date) continue;
+                  const m = item.date.substring(5, 7); // "01" ~ "12"
+                  if (!byMonth[m]) byMonth[m] = [];
+                  byMonth[m].push(item);
+              }
+
+              // 写入 docs/json/month/<year>/<year>-<month>.json
+              for (const [month, items] of Object.entries(byMonth)) {
+                  const outDir = path.join(MONTH_DIR, year);
+                  ensureDir(outDir);
+                  const outFile = path.join(outDir, `${year}-${month}.json`);
+                  fs.writeFileSync(outFile, JSON.stringify(items, null, 2), 'utf8');
+                  console.log(`  写入 ${path.relative(process.cwd(), outFile)} (${items.length} 条)`);
+              }
+
+              // 移动原文件到 docs/json/year/
+              const destPath = path.join(YEAR_DIR, file);
+              fs.renameSync(srcPath, destPath);
+              console.log(`  移动 ${file} -> ${path.relative(process.cwd(), destPath)}`);
+          }
+
+          console.log('✅ 全部完成');
+          EOF
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          git diff --cached --quiet || git commit -m "chore: split zh.*.json into year/month"
+          git push
