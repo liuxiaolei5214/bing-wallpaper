@@ -898,6 +898,29 @@
             return JSON_BASE + '/month/' + year + '/' + year + '-' + month + '.json';
         };
 
+       // ===== 月份文件共享缓存（同一"年-月"只 fetch 一次） =====
+        var monthFileCache = {};   // { "2026-09": Promise<Array> }
+        
+        function fetchMonthFile(year, month) {
+            var key = year + '-' + month;
+            if (!monthFileCache[key]) {
+                var url = PATH_MONTH(year, month);
+                console.log('📥 请求月份文件:', url);
+                monthFileCache[key] = fetch(url)
+                    .then(function (resp) {
+                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                        return resp.json();
+                    })
+                    .catch(function (err) {
+                        delete monthFileCache[key];
+                        throw err;
+                    });
+            } else {
+                console.log('♻️ 复用月份文件缓存:', key);
+            }
+            return monthFileCache[key];
+        }
+
         // ===== 当前日期工具 =====
         function getTodayStr() {
             var now = new Date();
@@ -907,36 +930,30 @@
             return y + '-' + m + '-' + d;
         }
 
-        // ===== 根据日期找当天数据，从月份文件读 =====
         async function loadTodayBg() {
             try {
-                var todayStr = getTodayStr();          // "2026-09-18"
+                var todayStr = getTodayStr();
                 var year = todayStr.substring(0, 4);
                 var month = todayStr.substring(5, 7);
-
-                // 1) 优先读当月月份文件
-                var monthUrl = PATH_MONTH(year, month);
+        
                 var item = null;
+        
+                // 1) 优先读当月月份文件（共享缓存）
                 try {
-                    var resp = await fetch(monthUrl);
-                    if (resp.ok) {
-                        var monthData = await resp.json();
-                        if (Array.isArray(monthData) && monthData.length > 0) {
-                            item = monthData.find(function (d) { return d.date === todayStr; });
-                            if (item) {
-                                console.log('✅ 背景数据来源:', monthUrl, '(当天)');
-                            } else {
-                                console.warn('⚠️ 月份文件中没有当天数据:', todayStr);
-                            }
+                    var monthData = await fetchMonthFile(year, month);
+                    if (Array.isArray(monthData) && monthData.length > 0) {
+                        item = monthData.find(function (d) { return d.date === todayStr; });
+                        if (item) {
+                            console.log('✅ 背景数据来源: 月份文件 (当天)');
+                        } else {
+                            console.warn('⚠️ 月份文件中没有当天数据:', todayStr);
                         }
-                    } else {
-                        console.warn('⚠️ 月份文件不存在:', monthUrl, resp.status);
                     }
                 } catch (e) {
                     console.warn('⚠️ 读取月份文件失败:', e.message);
                 }
-
-                // 2) 回退：today.json
+        
+                // 2) 回退 today.json
                 if (!item) {
                     try {
                         var resp2 = await fetch(PATH_TODAY);
@@ -955,7 +972,7 @@
                         console.warn('⚠️ 读取 today.json 失败:', e.message);
                     }
                 }
-
+        
                 // 3) 设置背景
                 if (item && item.bing_url) {
                     var bgUrl = item.bing_url.replace('_UHD.jpg', '_1920x1080.jpg');
@@ -1691,27 +1708,22 @@
         async function loadMonthData(year, monthStr) {
             const grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
-
+        
             imageLoader.cancelAll();
-
-            // 1) 优先读月份文件 json/month/<年>/<年>-<月>.json
-            const monthUrl = PATH_MONTH(year, monthStr);
+        
             let monthData = null;
+        
+            // 1) 优先读月份文件（共享缓存，若背景已读过则直接命中）
             try {
-                const resp = await fetch(monthUrl);
-                if (resp.ok) {
-                    const data = await resp.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        monthData = data;
-                        console.log('✅ 月份数据来源:', monthUrl, '(' + data.length + ' 条)');
-                    }
-                } else {
-                    console.warn('⚠️ 月份文件不存在:', monthUrl, resp.status);
+                const data = await fetchMonthFile(year, monthStr);
+                if (Array.isArray(data) && data.length > 0) {
+                    monthData = data;
+                    console.log('✅ 月份数据来源: 月份文件 (' + data.length + ' 条)');
                 }
             } catch (e) {
-                console.warn('⚠️ 读取月份文件失败:', e.message);
+                console.warn('⚠️ 月份文件读取失败，尝试回退年份文件:', e.message);
             }
-
+        
             // 2) 回退：读年份文件再按月份筛选
             if (!monthData) {
                 console.log('↩️ 回退到年份文件筛选');
@@ -1722,7 +1734,7 @@
                 }
                 monthData = filterImagesByMonth(yearData, monthStr);
             }
-
+        
             renderGrid(monthData);
         }
 
