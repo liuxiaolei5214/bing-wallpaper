@@ -745,7 +745,7 @@
         
             function fetchWallpaperData() {
                 if (!wallpaperDataPromise) {
-                    wallpaperDataPromise = fetch('bing_wallpaper.json')
+                    wallpaperDataPromise = fetch('json/bing_wallpaper.json')
                         .then(resp => {
                             if (!resp.ok) throw new Error('HTTP ' + resp.status);
                             return resp.json();
