@@ -850,7 +850,7 @@
     <footer>
         <p>数据来源：Bing 每日壁纸 · 永久归档 · 仅供个人欣赏</p>
     </footer>
-    
+
     <!-- ===== 全屏模态框 ===== -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-box">
@@ -867,7 +867,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="date-mask" id="mask">
         <div class="date-popup" id="popup"></div>
     </div>
@@ -878,44 +878,98 @@
     <script>
         // ===== 背景图控制 =====
         // ✅ 手动控制：true = 使用当天壁纸，false = 使用固定壁纸
-        var USE_TODAY_BG = true;  // 改这里控制
-        
+        var USE_TODAY_BG = true;
+
         // 固定壁纸 URL（备用）
         var FIXED_BG = 'https://image.lei5214.cc.cd/img/2026/08/10.jpg';
-        
+
         // 设置背景图
         function setBackground(url) {
             document.body.style.backgroundImage = 'url(' + url + ')';
             console.log('🖼️ 背景图已切换:', url);
         }
-        
-        // 从 today.json 读取当天壁纸
+
+        // ===== 路径配置（统一管理，方便以后改） =====
+        var JSON_BASE = 'json';
+        var PATH_TODAY = JSON_BASE + '/today.json';
+        var PATH_INDEX = JSON_BASE + '/index.json';
+        var PATH_YEAR = function (year) { return JSON_BASE + '/year/zh.' + year + '.json'; };
+        var PATH_MONTH = function (year, month) {
+            return JSON_BASE + '/month/' + year + '/' + year + '-' + month + '.json';
+        };
+
+        // ===== 当前日期工具 =====
+        function getTodayStr() {
+            var now = new Date();
+            var y = now.getFullYear();
+            var m = String(now.getMonth() + 1).padStart(2, '0');
+            var d = String(now.getDate()).padStart(2, '0');
+            return y + '-' + m + '-' + d;
+        }
+
+        // ===== 根据日期找当天数据，从月份文件读 =====
         async function loadTodayBg() {
             try {
-                var resp = await fetch('today.json');
-                if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                var data = await resp.json();
-                
+                var todayStr = getTodayStr();          // "2026-09-18"
+                var year = todayStr.substring(0, 4);
+                var month = todayStr.substring(5, 7);
+
+                // 1) 优先读当月月份文件
+                var monthUrl = PATH_MONTH(year, month);
                 var item = null;
-                if (Array.isArray(data) && data.length > 0) {
-                    item = data[0];
-                } else if (typeof data === 'object' && data !== null) {
-                    item = data;
+                try {
+                    var resp = await fetch(monthUrl);
+                    if (resp.ok) {
+                        var monthData = await resp.json();
+                        if (Array.isArray(monthData) && monthData.length > 0) {
+                            item = monthData.find(function (d) { return d.date === todayStr; });
+                            if (item) {
+                                console.log('✅ 背景数据来源:', monthUrl, '(当天)');
+                            } else {
+                                console.warn('⚠️ 月份文件中没有当天数据:', todayStr);
+                            }
+                        }
+                    } else {
+                        console.warn('⚠️ 月份文件不存在:', monthUrl, resp.status);
+                    }
+                } catch (e) {
+                    console.warn('⚠️ 读取月份文件失败:', e.message);
                 }
-                
+
+                // 2) 回退：today.json
+                if (!item) {
+                    try {
+                        var resp2 = await fetch(PATH_TODAY);
+                        if (resp2.ok) {
+                            var todayData = await resp2.json();
+                            if (Array.isArray(todayData) && todayData.length > 0) {
+                                item = todayData[0];
+                            } else if (todayData && typeof todayData === 'object') {
+                                item = todayData;
+                            }
+                            if (item) {
+                                console.log('✅ 背景数据来源:', PATH_TODAY, '(兜底)');
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ 读取 today.json 失败:', e.message);
+                    }
+                }
+
+                // 3) 设置背景
                 if (item && item.bing_url) {
-                    // 转换为 1920x1080 背景图
                     var bgUrl = item.bing_url.replace('_UHD.jpg', '_1920x1080.jpg');
                     setBackground(bgUrl);
                 } else {
+                    console.warn('⚠️ 未找到当天数据，使用固定壁纸');
                     setBackground(FIXED_BG);
                 }
             } catch (e) {
-                console.warn('⚠️ 加载 today.json 失败，使用固定壁纸:', e.message);
+                console.warn('⚠️ 加载背景失败，使用固定壁纸:', e.message);
                 setBackground(FIXED_BG);
             }
         }
-        
+
         // 初始化背景
         if (USE_TODAY_BG) {
             loadTodayBg();
@@ -937,62 +991,62 @@
             concurrency: 6,
             maxRetries: 3,
             retryDelay: 1000,
-        
-            init: function() {
+
+            init: function () {
                 this.progressEl = document.getElementById('loadProgress');
             },
-        
-            cancelAll: function() {
+
+            cancelAll: function () {
                 this.isCancelled = true;
                 this.isLoading = false;
-                this.loadTimeoutIds.forEach(function(id) {
+                this.loadTimeoutIds.forEach(function (id) {
                     clearTimeout(id);
                 });
                 this.loadTimeoutIds = [];
                 this.hideProgress();
             },
-        
-            showProgress: function() {
+
+            showProgress: function () {
                 if (this.progressEl) {
                     this.progressEl.classList.remove('hidden');
                 }
             },
-        
-            hideProgress: function() {
+
+            hideProgress: function () {
                 if (this.progressEl) {
                     this.progressEl.classList.add('hidden');
                 }
             },
-        
-            updateProgress: function(loaded, total) {
+
+            updateProgress: function (loaded, total) {
                 if (this.progressEl) {
                     this.progressEl.textContent = '加载图片 ' + loaded + '/' + total;
                     if (loaded === total) {
                         var that = this;
-                        setTimeout(function() {
+                        setTimeout(function () {
                             that.hideProgress();
                         }, 800);
                     }
                 }
             },
-        
-            loadImageWithRetry: function(imgElement, url, retryCount) {
+
+            loadImageWithRetry: function (imgElement, url, retryCount) {
                 var that = this;
                 retryCount = retryCount || 0;
-        
-                return new Promise(function(resolve, reject) {
+
+                return new Promise(function (resolve, reject) {
                     if (that.isCancelled) {
                         reject(new Error('已取消'));
                         return;
                     }
-        
-                    var timeoutId = setTimeout(function() {
+
+                    var timeoutId = setTimeout(function () {
                         reject(new Error('超时'));
                     }, 15000);
                     that.loadTimeoutIds.push(timeoutId);
-        
+
                     imgElement.src = url;
-                    imgElement.onload = function() {
+                    imgElement.onload = function () {
                         clearTimeout(timeoutId);
                         imgElement.classList.add('loaded');
                         var wrapper = imgElement.closest('.img-wrapper');
@@ -1002,7 +1056,7 @@
                         }
                         resolve();
                     };
-                    imgElement.onerror = function() {
+                    imgElement.onerror = function () {
                         clearTimeout(timeoutId);
                         if (retryCount < that.maxRetries) {
                             var nextRetry = retryCount + 1;
@@ -1014,7 +1068,7 @@
                                     placeholder.innerHTML = '<div style="text-align:center;color:#f39c12;font-size:12px;">🔄 重试 ' + nextRetry + '/' + that.maxRetries + '...</div>';
                                 }
                             }
-                            setTimeout(function() {
+                            setTimeout(function () {
                                 that.loadImageWithRetry(imgElement, url, nextRetry)
                                     .then(resolve)
                                     .catch(reject);
@@ -1033,14 +1087,14 @@
                     };
                 });
             },
-        
-            loadImage: function(imgElement, url) {
+
+            loadImage: function (imgElement, url) {
                 return this.loadImageWithRetry(imgElement, url, 0);
             },
-        
-            loadImagesBatch: function(imgList, onProgress) {
+
+            loadImagesBatch: function (imgList, onProgress) {
                 var that = this;
-                
+
                 this.cancelAll();
                 this.isCancelled = false;
                 this.isLoading = true;
@@ -1049,26 +1103,26 @@
                 this.loaded = 0;
                 this.loadTimeoutIds = [];
                 var concurrency = this.concurrency;
-        
+
                 if (this.total === 0) {
                     this.isLoading = false;
                     this.hideProgress();
                     return Promise.resolve({ loaded: 0, total: 0 });
                 }
-        
+
                 this.showProgress();
                 this.updateProgress(0, this.total);
-        
-                return new Promise(function(resolve) {
+
+                return new Promise(function (resolve) {
                     var index = 0;
                     var activeCount = 0;
                     var completed = false;
-        
+
                     function loadNext() {
                         if (that.isCancelled || completed || !that.isLoading) {
                             return;
                         }
-        
+
                         if (that.loaded >= that.total) {
                             completed = true;
                             that.isLoading = false;
@@ -1076,35 +1130,35 @@
                             resolve({ loaded: that.loaded, total: that.total });
                             return;
                         }
-        
+
                         if (index >= that.total || activeCount >= concurrency) {
                             return;
                         }
-        
+
                         var item = that.imgElements[index];
                         var img = item.element;
                         var url = item.url;
                         index++;
                         activeCount++;
-        
-                        that.loadImage(img, url).then(function() {
+
+                        that.loadImage(img, url).then(function () {
                             that.loaded++;
                             activeCount--;
                             that.updateProgress(that.loaded, that.total);
                             if (onProgress) onProgress(that.loaded, that.total);
                             loadNext();
-                        }).catch(function() {
+                        }).catch(function () {
                             activeCount--;
                             that.updateProgress(that.loaded, that.total);
                             if (onProgress) onProgress(that.loaded, that.total);
                             loadNext();
                         });
-        
+
                         if (index < that.total && activeCount < concurrency) {
                             loadNext();
                         }
                     }
-        
+
                     var batchSize = Math.min(concurrency, imgList.length);
                     for (var i = 0; i < batchSize; i++) {
                         loadNext();
@@ -1116,22 +1170,22 @@
         // ============================================================
         // 1. URL 处理工具
         // ============================================================
-        
+
         function isJuemeiUrl(url) {
             if (!url) return false;
             return url.includes('juemeibizhi.com');
         }
-        
+
         function isBingCdnUrl(url) {
             if (!url) return false;
             return url.includes('cn.bing.com') || url.includes('bing.com');
         }
-        
+
         function isCdnBimgUrl(url) {
             if (!url) return false;
             return url.includes('cdn.bimg.cc');
         }
-        
+
         function getImageUrl(item) {
             var bingUrl = item.bing_url || '';
             if (isJuemeiUrl(bingUrl)) {
@@ -1139,7 +1193,7 @@
             }
             return bingUrl;
         }
-        
+
         function get4kUrl(item) {
             var bingUrl = item.bing_url || '';
             if (isJuemeiUrl(bingUrl)) return bingUrl;
@@ -1149,7 +1203,7 @@
             }
             return bingUrl;
         }
-        
+
         function get1080pUrl(item) {
             var bingUrl = item.bing_url || '';
             if (isJuemeiUrl(bingUrl)) return bingUrl;
@@ -1164,7 +1218,7 @@
             }
             return bingUrl;
         }
-        
+
         function get720pUrl(item) {
             var bingUrl = item.bing_url || '';
             if (isJuemeiUrl(bingUrl)) return bingUrl;
@@ -1179,7 +1233,7 @@
             }
             return bingUrl;
         }
-        
+
         function getVerticalUrl(item) {
             var bingUrl = item.bing_url || '';
             if (isJuemeiUrl(bingUrl)) return bingUrl;
@@ -1194,7 +1248,7 @@
             }
             return bingUrl;
         }
-        
+
         function getImageType(item) {
             var url = item.bing_url || '';
             if (isJuemeiUrl(url)) return 'normal';
@@ -1209,7 +1263,7 @@
         // ============================================================
         // 2. 月份控件
         // ============================================================
-        (function() {
+        (function () {
             var today = new Date();
             var currentYear = today.getFullYear();
             var currentMonth = today.getMonth() + 1;
@@ -1223,11 +1277,11 @@
             var popup = document.getElementById('popup');
             var monthInput = document.getElementById('monthInput');
             var monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-            
+
             function closePopup() {
                 mask.classList.remove('show');
             }
-            
+
             function openPopup() {
                 var rect = monthInput.getBoundingClientRect();
                 mask.classList.add('show');
@@ -1239,10 +1293,10 @@
                 popup.style.top = (rect.bottom + 6 + window.scrollY) + 'px';
                 renderPopup();
             }
-            
+
             function renderPopup() {
                 var html = '';
-                
+
                 if (state.view === 'year') {
                     var allYears = [];
                     var startYear = 2010;
@@ -1250,24 +1304,24 @@
                     for (var y = startYear; y <= endYear; y++) {
                         allYears.push(y);
                     }
-                    
+
                     var totalPages = Math.ceil(allYears.length / 12);
                     var currentPage = state.yearPage;
                     if (currentPage >= totalPages) currentPage = totalPages - 1;
                     if (currentPage < 0) currentPage = 0;
                     state.yearPage = currentPage;
-                    
+
                     var pageStart = currentPage * 12;
                     var pageEnd = Math.min(pageStart + 12, allYears.length);
                     var pageYears = allYears.slice(pageStart, pageEnd);
-                    
+
                     html += '<div class="popup-header">';
                     html += '<button class="popup-year-page-btn" id="yearPagePrev">‹</button>';
                     html += '<span class="popup-header-title">选择年份</span>';
                     html += '<button class="popup-year-page-btn" id="yearPageNext">›</button>';
                     html += '</div>';
                     html += '<div class="year-grid-popup">';
-                    
+
                     for (var i = 0; i < pageYears.length; i++) {
                         var y = pageYears[i];
                         var active = (y === state.year) ? 'active' : '';
@@ -1291,17 +1345,17 @@
                     }
                     html += '</div>';
                 }
-                
+
                 popup.innerHTML = html;
                 if (state.view === 'year') {
-                    document.getElementById('yearPagePrev').onclick = function(e) {
+                    document.getElementById('yearPagePrev').onclick = function (e) {
                         e.stopPropagation();
                         if (state.yearPage > 0) {
                             state.yearPage--;
                             renderPopup();
                         }
                     };
-                    document.getElementById('yearPageNext').onclick = function(e) {
+                    document.getElementById('yearPageNext').onclick = function (e) {
                         e.stopPropagation();
                         var totalYears = new Date().getFullYear() + 100 - 2010 + 1;
                         var totalPages = Math.ceil(totalYears / 12);
@@ -1310,10 +1364,10 @@
                             renderPopup();
                         }
                     };
-                    
-                    popup.querySelectorAll('.year-cell').forEach(function(el) {
-                        el.onclick = function() {
-                            if(this.classList.contains('disabled')) return;
+
+                    popup.querySelectorAll('.year-cell').forEach(function (el) {
+                        el.onclick = function () {
+                            if (this.classList.contains('disabled')) return;
                             var year = parseInt(this.dataset.year);
                             state.year = year;
                             state.view = 'month';
@@ -1322,33 +1376,33 @@
                         };
                     });
                 } else {
-                    document.getElementById('popupYearText').onclick = function() {
+                    document.getElementById('popupYearText').onclick = function () {
                         state.view = 'year';
                         var startYear = 2010;
                         var targetIdx = state.year - startYear;
                         state.yearPage = Math.floor(targetIdx / 12);
                         renderPopup();
                     };
-                    
-                    document.getElementById('popupYearPrev').onclick = function(e) {
+
+                    document.getElementById('popupYearPrev').onclick = function (e) {
                         e.stopPropagation();
                         state.year--;
                         document.getElementById('popupYearText').textContent = state.year + '年';
                         updateMonthInput();
                         renderPopup();
                     };
-                    document.getElementById('popupYearNext').onclick = function(e) {
+                    document.getElementById('popupYearNext').onclick = function (e) {
                         e.stopPropagation();
-                        if((state.year + 1) > currentYear) return;
+                        if ((state.year + 1) > currentYear) return;
                         state.year++;
                         document.getElementById('popupYearText').textContent = state.year + '年';
                         updateMonthInput();
                         renderPopup();
                     };
-                    popup.querySelectorAll('.month-cell').forEach(function(el) {
-                        el.onclick = function() {
+                    popup.querySelectorAll('.month-cell').forEach(function (el) {
+                        el.onclick = function () {
                             state.month = parseInt(el.dataset.val);
-                            popup.querySelectorAll('.month-cell').forEach(function(c) {
+                            popup.querySelectorAll('.month-cell').forEach(function (c) {
                                 c.classList.remove('active');
                             });
                             el.classList.add('active');
@@ -1359,42 +1413,42 @@
                     });
                 }
             }
-            
+
             function updateMonthInput() {
                 var monthStr = String(state.month).padStart(2, '0');
                 monthInput.value = state.year + ' - ' + monthStr;
             }
-            
-            monthInput.onclick = function() { openPopup(); };
-            mask.onclick = function(e) { if (e.target === mask) closePopup(); };
-            
-            window.resetAllFilters = function() {
+
+            monthInput.onclick = function () { openPopup(); };
+            mask.onclick = function (e) { if (e.target === mask) closePopup(); };
+
+            window.resetAllFilters = function () {
                 var now = new Date();
                 state.year = now.getFullYear();
                 state.month = now.getMonth() + 1;
                 monthInput.value = '';
                 loadData();
             };
-            
+
             function loadData() {
                 var year = state.year;
                 var month = String(state.month).padStart(2, '0');
                 loadMonthData(year, month);
             }
-            
+
             monthInput.placeholder = '请选择';
-            window.addEventListener('DOMContentLoaded', function() {
-                setTimeout(function() {
+            window.addEventListener('DOMContentLoaded', function () {
+                setTimeout(function () {
                     loadData();
                 }, 100);
             });
-            
+
             window.filterState = {
-                getYear: function() { return state.year; },
-                getMonth: function() { return state.month; }
+                getYear: function () { return state.year; },
+                getMonth: function () { return state.month; }
             };
         })();
-        
+
         // ============================================================
         // 3. 工具函数
         // ============================================================
@@ -1404,7 +1458,7 @@
             }
             return '未知';
         }
-        
+
         function formatTitle(item) {
             var mainTitle = item.subtitle || '';
             var subTitle = item.title || '';
@@ -1419,26 +1473,27 @@
             }
             return '壁纸';
         }
-        
+
         var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-        
+
         // ============================================================
         // 4. 数据加载
         // ============================================================
         var loadedData = {};
         var allAvailableYears = [];
-        
+
+        // 加载索引（保留，用于可选地展示年份列表）
         async function loadIndex() {
             try {
-                var resp = await fetch('index.json');
+                var resp = await fetch(PATH_INDEX);
                 if (!resp.ok) {
                     console.warn('⚠️ 索引文件不存在');
                     return false;
                 }
                 var index = await resp.json();
                 if (index && index.years && index.years.length > 0) {
-                    index.years.sort(function(a, b) { return parseInt(b.year) - parseInt(a.year); });
-                    allAvailableYears = index.years.map(function(item) { return item.year; });
+                    index.years.sort(function (a, b) { return parseInt(b.year) - parseInt(a.year); });
+                    allAvailableYears = index.years.map(function (item) { return item.year; });
                     console.log('📅 从索引加载年份:', allAvailableYears);
                     return true;
                 }
@@ -1448,13 +1503,14 @@
                 return false;
             }
         }
-        
+
+        // 加载年份文件（作为月份文件缺失时的回退）
         async function loadYearData(year) {
             if (loadedData[year]) {
                 return loadedData[year];
             }
             try {
-                var resp = await fetch('zh.' + year + '.json');
+                var resp = await fetch(PATH_YEAR(year));
                 if (!resp.ok) {
                     console.warn('⚠️ ' + year + ' 年文件不存在');
                     return [];
@@ -1470,18 +1526,18 @@
                 return [];
             }
         }
-        
+
         // ============================================================
         // 5. 筛选与渲染
         // ============================================================
         function filterImagesByMonth(images, month) {
             if (!images || images.length === 0) return [];
-            return images.filter(function(img) {
+            return images.filter(function (img) {
                 var m = getMonthFromDate(img.date);
                 return m === month;
             });
         }
-        
+
         function renderGrid(images) {
             var grid = document.getElementById('grid');
             var totalCount = document.getElementById('totalCount');
@@ -1501,12 +1557,12 @@
                 var img = images[i];
                 var dateStr = img.date || '';
                 var displayTitle = formatTitle(img);
-                
+
                 var imageUrl = getImageUrl(img);
                 if (isBingCdnUrl(img.bing_url)) {
                     imageUrl = get720pUrl(img);
                 }
-                
+
                 var imgType = getImageType(img);
                 var isUhd = (imgType === 'uhd');
                 var isFhd = (imgType === 'fhd');
@@ -1528,7 +1584,7 @@
                 html += '<div class="date">📅 ' + dateStr + '</div>';
                 html += '<div class="title">' + displayTitle + '</div>';
                 html += '<div class="btn-group">';
-                
+
                 if (isUhd) {
                     html += '<a href="' + uhdUrl + '" class="download-btn btn-4k" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 4K/UHD</a>';
@@ -1541,7 +1597,7 @@
                     html += '<a href="' + normalUrl + '" class="download-btn btn-download" target="_blank" onclick="event.stopPropagation();">';
                     html += DOWNLOAD_SVG + ' 下载图片</a>';
                 }
-                
+
                 html += '</div></div></div>';
 
                 loadQueue.push({
@@ -1552,7 +1608,7 @@
             grid.innerHTML = html;
 
             var imgElements = [];
-            loadQueue.forEach(function(item) {
+            loadQueue.forEach(function (item) {
                 var el = document.getElementById(item.id);
                 if (el) {
                     imgElements.push({
@@ -1566,8 +1622,8 @@
                 imageLoader.loadImagesBatch(imgElements);
             }
 
-            document.querySelectorAll('.card').forEach(function(el) {
-                el.addEventListener('click', function(e) {
+            document.querySelectorAll('.card').forEach(function (el) {
+                el.addEventListener('click', function (e) {
                     if (e.target.closest('a')) return;
                     var encodedData = this.dataset.item;
                     if (encodedData) {
@@ -1582,7 +1638,7 @@
                 });
             });
         }
-        
+
         // ============================================================
         // 6. 模态框 - 全屏
         // ============================================================
@@ -1597,13 +1653,13 @@
             document.getElementById('modalSubtitle').style.display = 'none';
             var desc = item.description || '';
             desc = desc.replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/<br\s*\/?>/gi, '\n');
-            var paragraphs = desc.split('\n').map(function(p) { return p.trim(); }).filter(function(p) { return p !== ''; });
-            var descHtml = paragraphs.map(function(p) { return '<p>' + p + '</p>'; }).join('');
+            var paragraphs = desc.split('\n').map(function (p) { return p.trim(); }).filter(function (p) { return p !== ''; });
+            var descHtml = paragraphs.map(function (p) { return '<p>' + p + '</p>'; }).join('');
             document.getElementById('modalDesc').innerHTML = descHtml;
             overlay.classList.add('open');
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeModal() {
             var overlay = document.getElementById('modalOverlay');
             if (overlay) {
@@ -1611,43 +1667,65 @@
                 document.body.style.overflow = '';
             }
         }
-        
+
         document.getElementById('modalClose').addEventListener('click', closeModal);
         document.getElementById('modalOverlay').addEventListener('click', function (e) {
             if (e.target === this) {
                 closeModal();
             }
         });
-        
+
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeModal();
                 var mask = document.getElementById('mask');
-                if(mask.classList.contains('show')){
+                if (mask.classList.contains('show')) {
                     mask.classList.remove('show');
                 }
             }
         });
-        
+
         // ============================================================
         // 7. 加载指定年月数据
         // ============================================================
         async function loadMonthData(year, monthStr) {
             const grid = document.getElementById('grid');
             grid.innerHTML = '<div class="loading">加载壁纸数据中...</div>';
-        
+
             imageLoader.cancelAll();
 
-            await loadIndex();
-            const yearData = await loadYearData(year);
-            if (!yearData || yearData.length === 0) {
-                renderGrid([]);
-                return;
+            // 1) 优先读月份文件 json/month/<年>/<年>-<月>.json
+            const monthUrl = PATH_MONTH(year, monthStr);
+            let monthData = null;
+            try {
+                const resp = await fetch(monthUrl);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        monthData = data;
+                        console.log('✅ 月份数据来源:', monthUrl, '(' + data.length + ' 条)');
+                    }
+                } else {
+                    console.warn('⚠️ 月份文件不存在:', monthUrl, resp.status);
+                }
+            } catch (e) {
+                console.warn('⚠️ 读取月份文件失败:', e.message);
             }
-            const filtered = filterImagesByMonth(yearData, monthStr);
-            renderGrid(filtered);
+
+            // 2) 回退：读年份文件再按月份筛选
+            if (!monthData) {
+                console.log('↩️ 回退到年份文件筛选');
+                const yearData = await loadYearData(year);
+                if (!yearData || yearData.length === 0) {
+                    renderGrid([]);
+                    return;
+                }
+                monthData = filterImagesByMonth(yearData, monthStr);
+            }
+
+            renderGrid(monthData);
         }
-        
+
         // ============================================================
         // 8. 页面初始化
         // ============================================================
