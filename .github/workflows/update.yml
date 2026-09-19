@@ -485,7 +485,7 @@ jobs:
           EOF
 
       # ============================================================
-      # 新增：按月份拆分 zh.*.json
+      # 新增：按月份拆分 zh.*.json（仅当年 + 下一年，若存在）
       # ============================================================
       - name: Split zh.*.json into month files
         run: |
@@ -494,22 +494,36 @@ jobs:
           import os
           import re
           import glob
+          from datetime import datetime, timedelta, timezone
 
           YEAR_DIR = 'docs/json/year'
           MONTH_DIR = 'docs/json/month'
 
           os.makedirs(MONTH_DIR, exist_ok=True)
 
-          year_files = glob.glob(os.path.join(YEAR_DIR, 'zh.*.json'))
-          if not year_files:
-              print('没有找到年份文件，跳过拆分')
-              exit(0)
+          # 用北京时间判断"今年"
+          beijing_tz = timezone(timedelta(hours=8))
+          now_beijing = datetime.now(beijing_tz)
+          current_year = now_beijing.year
+          next_year = current_year + 1
 
-          for year_file in year_files:
-              m = re.search(r'zh\.(\d{4})\.json$', os.path.basename(year_file))
-              if not m:
+          target_years = [str(current_year)]
+          next_year_file = os.path.join(YEAR_DIR, f'zh.{next_year}.json')
+          if os.path.exists(next_year_file):
+              target_years.append(str(next_year))
+              print(f"📅 发现下一年文件 zh.{next_year}.json，一并处理")
+          else:
+              print(f"📅 下一年文件 zh.{next_year}.json 不存在，跳过")
+
+          print(f"🎯 本次处理年份: {', '.join(target_years)}")
+
+          for year in target_years:
+              year_file = os.path.join(YEAR_DIR, f'zh.{year}.json')
+
+              if not os.path.exists(year_file):
+                  print(f"⚠️ 文件不存在，跳过: {year_file}")
                   continue
-              year = m.group(1)
+
               print(f"处理 {year_file} (年份 {year})")
 
               try:
