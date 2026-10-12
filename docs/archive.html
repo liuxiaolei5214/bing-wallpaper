@@ -995,7 +995,7 @@
         }
 
         // ============================================================
-        // 0. 图片加载管理器（并发模式 - 每批6张 + 重试）
+        // 0. 图片加载管理器（并发模式 - 每批6张 + 重试 + 回退）
         // ============================================================
         var imageLoader = {
             imgElements: [],
@@ -1091,12 +1091,44 @@
                                     .catch(reject);
                             }, delay);
                         } else {
+                            // ✅ 重试耗尽，尝试回退到原图
+                            var fallbackUrl = imgElement.getAttribute('data-fallback');
+                            if (fallbackUrl && imgElement.src !== fallbackUrl) {
+                                console.log('🔁 代理失败，回退到原图:', fallbackUrl);
+                                imgElement.setAttribute('data-fallback', ''); // 防止无限回退
+                                imgElement.src = fallbackUrl;
+                                imgElement.classList.remove('loaded');
+
+                                imgElement.onload = function () {
+                                    imgElement.classList.add('loaded');
+                                    var wrapper = imgElement.closest('.img-wrapper');
+                                    if (wrapper) {
+                                        var placeholder = wrapper.querySelector('.placeholder');
+                                        if (placeholder) placeholder.style.display = 'none';
+                                    }
+                                    resolve();
+                                };
+                                imgElement.onerror = function () {
+                                    imgElement.style.display = 'none';
+                                    var wrapper = imgElement.closest('.img-wrapper');
+                                    if (wrapper) {
+                                        var placeholder = wrapper.querySelector('.placeholder');
+                                        if (placeholder) {
+                                            placeholder.innerHTML = '<span class="error-text">❌ 加载失败</span>';
+                                        }
+                                    }
+                                    reject(new Error('原图也加载失败'));
+                                };
+                                return;
+                            }
+
+                            // 无 fallback 或已经是 fallback → 显示错误
                             imgElement.style.display = 'none';
-                            var wrapper = imgElement.closest('.img-wrapper');
-                            if (wrapper) {
-                                var placeholder = wrapper.querySelector('.placeholder');
-                                if (placeholder) {
-                                    placeholder.innerHTML = '<span class="error-text">❌ 加载失败</span>';
+                            var wrapper2 = imgElement.closest('.img-wrapper');
+                            if (wrapper2) {
+                                var placeholder2 = wrapper2.querySelector('.placeholder');
+                                if (placeholder2) {
+                                    placeholder2.innerHTML = '<span class="error-text">❌ 加载失败</span>';
                                 }
                             }
                             reject(new Error('加载失败（已重试 ' + that.maxRetries + ' 次）'));
@@ -1252,23 +1284,28 @@
         }
 
         // ============================================================
-        // 缩略图专用：384x216，仅追加 URL 参数，不改原 URL 结构
-        // 仅对 cn.bing.com / bing.com 的图片生效
+        // 缩略图：Bing 自家加参数；其他走 wsrv.nl 代理；失败自动回退
         // ============================================================
         function getThumbnailUrl(item) {
-            var bingUrl = item.bing_url || '';
-            if (!bingUrl) return '';
-        
-            // 非 Bing CDN 原样返回
-            if (!isBingCdnUrl(bingUrl)) return bingUrl;
-        
-            // 如果已经有 pid=hp 参数，说明已经加过了，直接返回
-            if (bingUrl.indexOf('pid=hp') !== -1) return bingUrl;
-        
-            // 直接追加参数
-            return bingUrl + '&pid=hp&w=384&h=216&rs=1&c=4';
+            var url = item.bing_url || '';
+            if (!url) return '';
+
+            // 1) Bing 自家图：直接加参数
+            if (isBingCdnUrl(url)) {
+                if (url.indexOf('pid=hp') !== -1) return url;
+                var sep = url.indexOf('?') !== -1 ? '&' : '?';
+                return url + sep + 'pid=hp&w=384&h=216&rs=1&c=4';
+            }
+
+            // 2) 其他 http 图源：走 wsrv.nl 代理缩略
+            if (url.indexOf('http') === 0) {
+                return 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=384&h=216&fit=cover&output=webp&q=75';
+            }
+
+            // 3) 相对路径等原样返回
+            return url;
         }
-        
+
         function getVerticalUrl(item) {
             var bingUrl = item.bing_url || '';
             if (isJuemeiUrl(bingUrl)) return bingUrl;
@@ -1593,9 +1630,13 @@
                 var dateStr = img.date || '';
                 var displayTitle = formatTitle(img);
 
-                var imageUrl = getImageUrl(img);
-                if (isBingCdnUrl(img.bing_url)) {
-                    imageUrl = getThumbnailUrl(img);
+                // ✅ 缩略图 URL（Bing 加参数，其他走代理）
+                var imageUrl = getThumbnailUrl(img);
+
+                // ✅ 原图 URL（作为代理失败时的回退）
+                var fallbackUrl = img.bing_url || img.local_path || '';
+                if (fallbackUrl && !fallbackUrl.startsWith('http') && fallbackUrl.startsWith('/')) {
+                    fallbackUrl = window.location.origin + fallbackUrl;
                 }
 
                 var imgType = getImageType(img);
@@ -1613,7 +1654,7 @@
                 html += '<div class="card" data-item="' + escapedData + '">';
                 html += '<div class="img-wrapper" id="wrapper-' + imgId + '">';
                 html += '<div class="placeholder"><div class="spinner"></div></div>';
-                html += '<img id="' + imgId + '" data-src="' + imageUrl + '" alt="' + displayTitle + '" loading="lazy" />';
+                html += '<img id="' + imgId + '" data-src="' + imageUrl + '" data-fallback="' + fallbackUrl + '" alt="' + displayTitle + '" loading="lazy" />';
                 html += '</div>';
                 html += '<div class="info">';
                 html += '<div class="date">📅 ' + dateStr + '</div>';
@@ -1763,5 +1804,7 @@
             await loadIndex();
         });
     </script>
+</body>
+</html>
 </body>
 </html>
