@@ -1,770 +1,602 @@
-name: Daily Update
-
-on:
-  schedule:
-    # UTC时间+8小时
-    - cron: '0 16 * * *'
-  workflow_dispatch:
-
-jobs:
-  update:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Python dependencies
-        run: |
-          pip install requests beautifulsoup4 lxml
-
-      - name: Fetch and process today's wallpaper
-        id: fetch
-        run: |
-          python3 << 'EOF'
-          import json
-          import re
-          import requests
-          from datetime import datetime, timedelta, timezone
-          import os
-
-          # ============================================================
-          # 0. 调试信息
-          # ============================================================
-          print("=" * 60)
-          print("🔍 环境调试信息")
-          print("=" * 60)
-          print(f"📂 当前工作目录: {os.getcwd()}")
-
-          files = os.listdir('.')
-          print(f"📄 目录下共有 {len(files)} 个文件/文件夹")
-          for f in files:
-              print(f"  - {f}")
-
-          if os.path.exists('docs'):
-              docs_files = os.listdir('docs')
-              print(f"📄 docs 目录下共有 {len(docs_files)} 个文件/文件夹")
-              for f in docs_files:
-                  print(f"  - docs/{f}")
-
-          # ============================================================
-          # 路径常量（新目录结构）
-          # ============================================================
-          JSON_DIR = 'docs/json'
-          YEAR_DIR = 'docs/json/year'
-          MONTH_DIR = 'docs/json/month'
-
-          os.makedirs(JSON_DIR, exist_ok=True)
-          os.makedirs(YEAR_DIR, exist_ok=True)
-          os.makedirs(MONTH_DIR, exist_ok=True)
-
-          # ============================================================
-          # 1. 检查 today.json
-          # ============================================================
-          print("\n" + "=" * 60)
-          print("📋 步骤1: 检查 today.json 缓存")
-          print("=" * 60)
-
-          today_file = f'{JSON_DIR}/today.json'
-          use_cache = False
-          cached_data = None
-          date_str = None
-          title = ''
-          subtitle = ''
-          description = ''
-          bing_url = ''
-
-          beijing_tz = timezone(timedelta(hours=8))
-          now_beijing = datetime.now(beijing_tz)
-          today_str = f"{now_beijing.year}-{str(now_beijing.month).zfill(2)}-{str(now_beijing.day).zfill(2)}"
-          print(f"📅 今日日期 (北京时间): {today_str}")
-
-          if os.path.exists(today_file):
-              print(f"✅ today.json 文件存在 ({today_file})")
-              try:
-                  with open(today_file, 'r', encoding='utf-8') as f:
-                      cached_data = json.load(f)
-                  print(f"📄 today.json 内容类型: {type(cached_data)}")
-
-                  cache_preview = json.dumps(cached_data, ensure_ascii=False)
-                  if len(cache_preview) > 500:
-                      cache_preview = cache_preview[:500] + "..."
-                  print(f"📄 today.json 内容预览: {cache_preview}")
-
-                  if isinstance(cached_data, list):
-                      if len(cached_data) > 0:
-                          cache_item = cached_data[0]
-                          cache_date = cache_item.get('date')
-                          print(f"📅 缓存中的日期: {cache_date}")
-                      else:
-                          cache_date = None
-                          print(f"⚠️ today.json 为空数组")
-                  elif isinstance(cached_data, dict):
-                      cache_date = cached_data.get('date')
-                      print(f"📅 缓存中的日期: {cache_date}")
-                  else:
-                      cache_date = None
-                      print(f"⚠️ today.json 格式未知: {type(cached_data)}")
-
-                  if cache_date == today_str:
-                      use_cache = True
-                      print(f"✅ 缓存命中！today.json 已是当天数据 ({today_str})，直接使用缓存")
-                  else:
-                      print(f"⚠️ 缓存日期 ({cache_date}) 不等于今日 ({today_str})，需要更新")
-
-              except json.JSONDecodeError as e:
-                  print(f"❌ today.json 格式错误: {e}")
-              except Exception as e:
-                  print(f"❌ 读取 today.json 失败: {e}")
-          else:
-              print(f"❌ today.json 文件不存在 ({today_file})，需要获取数据")
-
-          # ============================================================
-          # 2. 获取数据
-          # ============================================================
-          print("\n" + "=" * 60)
-          print("📋 步骤2: 获取数据")
-          print("=" * 60)
-
-          found_in_year_file = False
-
-          if use_cache and cached_data:
-              cache_valid = False
-              if isinstance(cached_data, list):
-                  if len(cached_data) > 0:
-                      cache_item = cached_data[0]
-                      title = cache_item.get('title', '')
-                      subtitle = cache_item.get('subtitle', '')
-                      description = cache_item.get('description', '')
-                      bing_url = cache_item.get('bing_url', '')
-                      date_str = cache_item.get('date', today_str)
-                      cache_valid = True
-              elif isinstance(cached_data, dict):
-                  title = cached_data.get('title', '')
-                  subtitle = cached_data.get('subtitle', '')
-                  description = cached_data.get('description', '')
-                  bing_url = cached_data.get('bing_url', '')
-                  date_str = cached_data.get('date', today_str)
-                  cache_valid = True
-
-              if cache_valid:
-                  print(f"📦 使用缓存数据 ({today_file})")
-                  print(f"  - title: {title}")
-                  print(f"  - subtitle: {subtitle}")
-                  print(f"  - date: {date_str}")
-                  print(f"  - description 长度: {len(description)} 字符")
-              else:
-                  print(f"⚠️ today.json 数据无效，尝试从其他来源获取")
-                  use_cache = False
-
-          if not use_cache:
-              year = today_str[:4]
-              year_file = f"{YEAR_DIR}/zh.{year}.json"
-
-              print(f"📂 尝试从 {year_file} 读取今日数据...")
-
-              if os.path.exists(year_file):
-                  try:
-                      with open(year_file, 'r', encoding='utf-8') as f:
-                          year_data = json.load(f)
-
-                      if isinstance(year_data, list) and len(year_data) > 0:
-                          print(f"📊 {year_file} 共有 {len(year_data)} 条数据")
-
-                          for item in year_data:
-                              if item.get('date') == today_str:
-                                  title = item.get('title', '')
-                                  subtitle = item.get('subtitle', '')
-                                  description = item.get('description', '')
-                                  bing_url = item.get('bing_url', '')
-                                  date_str = item.get('date', today_str)
-                                  found_in_year_file = True
-                                  print(f"✅ 从 {year_file} 找到今日数据 ({today_str})")
-                                  print(f"  - title: {title}")
-                                  print(f"  - subtitle: {subtitle}")
-                                  print(f"  - description 长度: {len(description)} 字符")
-                                  break
-
-                          if not found_in_year_file:
-                              print(f"⚠️ {year_file} 中未找到日期为 {today_str} 的数据")
-                              print(f"📅 最近数据日期: {[item.get('date') for item in year_data[:3]]}")
-                      else:
-                          print(f"⚠️ {year_file} 为空或格式无效")
-                  except Exception as e:
-                      print(f"❌ 读取 {year_file} 失败: {e}")
-              else:
-                  print(f"❌ {year_file} 不存在")
-
-              if not found_in_year_file:
-                  print("\n📡 从 Bing API + 第三方提取今日数据...")
-                  api_url = "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&setmkt=zh-CN"
-                  resp = requests.get(api_url, timeout=10)
-
-                  print(f"  - 状态码: {resp.status_code}")
-                  if resp.status_code != 200:
-                      print(f"❌ API 请求失败: {resp.status_code}")
-                      exit(1)
-
-                  api_data = resp.json()
-                  if not api_data.get('images'):
-                      print("❌ API 返回数据为空")
-                      exit(1)
-
-                  img = api_data['images'][0]
-                  enddate = img.get('enddate', '')
-                  copyright_text = img.get('copyright', '')
-                  urlbase = img.get('urlbase', '')
-
-                  print(f"  - enddate: {enddate}")
-                  print(f"  - copyright: {copyright_text}")
-                  print(f"  - urlbase: {urlbase}")
-
-                  if len(enddate) == 8:
-                      date_str = f"{enddate[:4]}-{enddate[4:6]}-{enddate[6:8]}"
-                  else:
-                      date_str = enddate
-
-                  print(f"📅 API 返回日期: {date_str}")
-
-                  print("\n🔗 尝试从 bing.ee123.net 提取...")
-                  try:
-                      detail_url = f"https://bing.ee123.net/detail/{enddate}"
-                      print(f"  - URL: {detail_url}")
-                      response = requests.get(detail_url, timeout=15, headers={
-                          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                      })
-                      print(f"  - 状态码: {response.status_code}")
-
-                      if response.status_code == 200:
-                          html = response.text
-                          print(f"  - HTML 长度: {len(html)} 字符")
-
-                          title_match = re.search(r'<p[^>]*class="title"[^>]*>(.*?)</p>', html, re.DOTALL)
-                          if title_match:
-                              raw_title = title_match.group(1)
-                              raw_title = raw_title.replace('&nbsp;', ' ')
-                              raw_title = re.sub(r'\s+', ' ', raw_title).strip()
-                              display_title = re.sub(r'\s*\(©[^)]*\)\s*', '', raw_title)
-
-                              parts = display_title.split(' | ')
-                              if len(parts) >= 2:
-                                  subtitle = parts[0].strip()
-                                  second_part = parts[1].strip()
-                                  second_part = re.sub(r'\s*-\s*', ' - ', second_part)
-                                  title = second_part
-                              else:
-                                  title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_text)
-                                  title = re.sub(r'\s*,\s*$', '', title)
-                                  subtitle = title
-                              print(f"✅ 从 ee123 提取到标题: '{title}'")
-                              print(f"  - subtitle: {subtitle}")
-
-                          sub_match = re.search(r'<span[^>]*class="sub"[^>]*>([\s\S]*?)</span>', html)
-                          if sub_match:
-                              sub_content = sub_match.group(1)
-                              p_tags = re.findall(r'<p>(.*?)</p>', sub_content, re.DOTALL)
-                              desc_parts = [p.strip() for p in p_tags if p.strip()]
-                              if desc_parts:
-                                  clean_parts = []
-                                  for p in desc_parts:
-                                      p = p.replace('&nbsp;', ' ')
-                                      p = p.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
-                                      p = p.replace('&quot;', '"').replace('&#39;', "'")
-                                      if p.strip():
-                                          clean_parts.append(p.strip())
-                                  if clean_parts:
-                                      description = '\n'.join(clean_parts)
-                                      print(f"✅ 从 ee123 提取成功，共 {len(clean_parts)} 段描述")
-                                      print(f"  - 第一段预览: {clean_parts[0][:100]}...")
-
-                  except Exception as e:
-                      print(f"⚠️ bing.ee123.net 提取失败: {e}")
-
-                  if not description or not title:
-                      print("\n🔗 尝试从 dailybing.cn 提取...")
-                      try:
-                          from bs4 import BeautifulSoup
-
-                          detail_url = f"https://www.dailybing.cn/view/zh-cn/{enddate}.html"
-                          print(f"  - URL: {detail_url}")
-                          response = requests.get(detail_url, timeout=15, headers={
-                              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                          })
-                          print(f"  - 状态码: {response.status_code}")
-
-                          if response.status_code == 200:
-                              html = response.text
-                              print(f"  - HTML 长度: {len(html)} 字符")
-
-                              soup = BeautifulSoup(html, "html.parser")
-
-                              main_title = ""
-                              img_ele = soup.select_one('img.view.landscape') or soup.select_one('img.view.portrait')
-                              if img_ele and img_ele.has_attr("alt"):
-                                  main_title = img_ele["alt"].strip()
-                                  print(f"  ✅ 提取主标题: '{main_title}'")
-
-                              sub_title = ""
-                              copyright_ele = soup.select_one(".story-copyright")
-                              if copyright_ele:
-                                  copyright_raw = copyright_ele.get_text(strip=False)
-                                  copyright_raw = copyright_raw.replace('&nbsp;', ' ')
-                                  copyright_raw = copyright_raw.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
-                                  copyright_raw = copyright_raw.replace('&quot;', '"').replace('&#39;', "'")
-                                  copyright_raw = re.sub(r'\s+', ' ', copyright_raw).strip()
-                                  sub_title = re.sub(r'\s*\(©[^)]*\)\s*', '', copyright_raw).strip()
-                                  print(f"  ✅ 提取副标题: '{sub_title[:60]}...'")
-
-                              clean_title = sub_title or main_title
-                              date_slash = date_str.replace("-", "/")
-                              if clean_title:
-                                  title = f"{clean_title.strip()} - {date_slash}"
-                              else:
-                                  title = main_title or date_slash
-                              print(f"  ✅ 构建完整标题: '{title}'")
-
-                              description = ""
-                              story_content_ele = soup.select_one(".story-content")
-                              if story_content_ele:
-                                  p_list = story_content_ele.select(".story-paragraph")
-                                  print(f"  📖 找到 {len(p_list)} 个段落")
-                                  clean_parts = []
-                                  is_first = True
-                                  for p in p_list:
-                                      raw_text = p.get_text()
-                                      text = re.sub(r'\s+', ' ', raw_text).strip()
-                                      text = text.replace('&nbsp;', ' ')
-                                      text = text.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&')
-                                      if len(text) > 10:
-                                          if is_first:
-                                              is_first = False
-                                              continue
-                                          clean_parts.append(text)
-                                  if clean_parts:
-                                      description = '\n'.join(clean_parts)
-                                      print(f"  ✅ 提取描述：共 {len(clean_parts)} 段，{len(description)} 字符")
-                                  else:
-                                      print(f"  ⚠️ 未提取到有效描述段落")
-
-                              if main_title:
-                                  subtitle = main_title
-                              elif sub_title:
-                                  subtitle = sub_title
-                              else:
-                                  subtitle = clean_title
-
-                      except Exception as e:
-                          print(f"  ❌ dailybing.cn 提取失败: {e}")
-
-                  bing_url = f"https://cn.bing.com{urlbase}_UHD.jpg" if urlbase else ''
-                  print(f"  - bing_url: {bing_url}")
-
-                  print(f"\n💾 保存到 {today_file}")
-                  result = {
-                      "title": title,
-                      "subtitle": subtitle,
-                      "description": description,
-                      "date": date_str,
-                      "bing_url": bing_url
-                  }
-
-                  os.makedirs(JSON_DIR, exist_ok=True)
-
-                  with open(today_file, 'w', encoding='utf-8') as f:
-                      json.dump(result, f, ensure_ascii=False, indent=2)
-                  print(f"✅ 已更新 {today_file}")
-
-          # ============================================================
-          # 3. 检查年份文件中是否已存在今日数据
-          # ============================================================
-          print("\n" + "=" * 60)
-          print("📋 步骤3: 检查年份文件中是否存在今日数据")
-          print("=" * 60)
-
-          year = date_str[:4]
-          year_file = f"{YEAR_DIR}/zh.{year}.json"
-          print(f"📄 检查文件: {year_file}")
-
-          need_write = True
-          existing = []
-          date_exists = False
-
-          if os.path.exists(year_file):
-              try:
-                  with open(year_file, 'r', encoding='utf-8') as f:
-                      existing = json.load(f)
-                  print(f"📊 读取到 {len(existing)} 条现有数据")
-
-                  for item in existing:
-                      if item.get('date') == date_str:
-                          date_exists = True
-                          print(f"✅ 年份文件中已存在日期 {date_str} 的数据")
-                          if (item.get('title') == title and
-                              item.get('subtitle') == subtitle and
-                              item.get('description') == description and
-                              item.get('bing_url') == bing_url):
-                              need_write = False
-                              print(f"✅ 数据内容一致，无需更新")
-                          else:
-                              need_write = True
-                              print(f"⚠️ 数据内容不一致，需要更新")
-                              print(f"  - 旧 title: {item.get('title')}")
-                              print(f"  - 新 title: {title}")
-                          break
-
-                  if not date_exists:
-                      print(f"📌 年份文件中不存在日期 {date_str} 的数据，需要追加")
-
-              except Exception as e:
-                  print(f"⚠️ 读取失败: {e}")
-                  existing = []
-          else:
-              print(f"📄 文件不存在，需要创建")
-
-          # ============================================================
-          # 4. 写入年份文件
-          # ============================================================
-          if need_write:
-              print("\n" + "=" * 60)
-              print("📋 步骤4: 写入年份文件")
-              print("=" * 60)
-
-              if date_exists:
-                  existing = [item for item in existing if item.get('date') != date_str]
-                  print(f"🗑️ 删除了日期为 {date_str} 的旧数据")
-
-              new_data = {
-                  "title": title,
-                  "subtitle": subtitle,
-                  "description": description,
-                  "date": date_str,
-                  "bing_url": bing_url
-              }
-              existing.append(new_data)
-              existing.sort(key=lambda x: x.get('date', ''), reverse=True)
-
-              os.makedirs(YEAR_DIR, exist_ok=True)
-
-              with open(year_file, 'w', encoding='utf-8') as f:
-                  json.dump(existing, f, ensure_ascii=False, indent=2)
-              print(f"✅ 已更新 {year_file}，共 {len(existing)} 张壁纸")
-          else:
-              print(f"⏭️ 跳过写入 {year_file}（数据已存在且一致）")
-
-          # ============================================================
-          # 5. 汇总
-          # ============================================================
-          print("\n" + "=" * 60)
-          print("📊 执行完成 - 汇总信息")
-          print("=" * 60)
-          print(f"📝 title: '{title}'")
-          print(f"📝 subtitle: '{subtitle}'")
-          print(f"📝 描述长度: {len(description)} 字符")
-          print(f"📅 日期: {date_str}")
-          print(f"📦 数据来源: {'缓存' if use_cache else ('年份文件' if found_in_year_file else 'API + 第三方提取')}")
-          print(f"📄 年份文件: {'已更新' if need_write else '未变化，跳过'}")
-
-          print("\n🔍 验证文件:")
-          for f in [today_file, year_file]:
-              if os.path.exists(f):
-                  size = os.path.getsize(f)
-                  print(f"  ✅ {f} 存在 ({size} 字节)")
-              else:
-                  print(f"  ❌ {f} 不存在")
-
-          title_clean = title.replace('\n', ' ').replace('\r', ' ').strip()
-          subtitle_clean = subtitle.replace('\n', ' ').replace('\r', ' ').strip()
-
-          with open(os.environ['GITHUB_ENV'], 'a') as f:
-              f.write(f"TITLE={title_clean}\n")
-              f.write(f"SUBTITLE={subtitle_clean}\n")
-              f.write(f"DATE={date_str}\n")
-              f.write(f"BING_URL={bing_url}\n")
-              f.write(f"NEED_WRITE={need_write}\n")
-              f.write(f"DATA_SOURCE={'本地缓存' if use_cache else ('年份文件' if found_in_year_file else '第三方提取')}\n")
-          EOF
-
-      # ============================================================
-      # 新增：按月份拆分 zh.*.json（仅当年 + 下一年，若存在）
-      # ============================================================
-      - name: Split zh.*.json into month files
-        run: |
-          python3 << 'EOF'
-          import json
-          import os
-          import re
-          import glob
-          from datetime import datetime, timedelta, timezone
-
-          YEAR_DIR = 'docs/json/year'
-          MONTH_DIR = 'docs/json/month'
-
-          os.makedirs(MONTH_DIR, exist_ok=True)
-
-          # 用北京时间判断"今年"
-          beijing_tz = timezone(timedelta(hours=8))
-          now_beijing = datetime.now(beijing_tz)
-          current_year = now_beijing.year
-          next_year = current_year + 1
-
-          target_years = [str(current_year)]
-          next_year_file = os.path.join(YEAR_DIR, f'zh.{next_year}.json')
-          if os.path.exists(next_year_file):
-              target_years.append(str(next_year))
-              print(f"📅 发现下一年文件 zh.{next_year}.json，一并处理")
-          else:
-              print(f"📅 下一年文件 zh.{next_year}.json 不存在，跳过")
-
-          print(f"🎯 本次处理年份: {', '.join(target_years)}")
-
-          for year in target_years:
-              year_file = os.path.join(YEAR_DIR, f'zh.{year}.json')
-
-              if not os.path.exists(year_file):
-                  print(f"⚠️ 文件不存在，跳过: {year_file}")
-                  continue
-
-              print(f"处理 {year_file} (年份 {year})")
-
-              try:
-                  with open(year_file, 'r', encoding='utf-8') as f:
-                      data = json.load(f)
-              except Exception as e:
-                  print(f"  跳过 {year_file}: {e}")
-                  continue
-
-              if not isinstance(data, list):
-                  print(f"  跳过 {year_file}: 不是数组")
-                  continue
-
-              by_month = {}
-              for item in data:
-                  if not isinstance(item, dict):
-                      continue
-                  d = item.get('date', '')
-                  if len(d) < 7:
-                      continue
-                  month = d[5:7]
-                  by_month.setdefault(month, []).append(item)
-
-              out_dir = os.path.join(MONTH_DIR, year)
-              os.makedirs(out_dir, exist_ok=True)
-
-              for month, items in by_month.items():
-                  out_file = os.path.join(out_dir, f"{year}-{month}.json")
-                  items.sort(key=lambda x: x.get('date', ''), reverse=True)
-                  with open(out_file, 'w', encoding='utf-8') as f:
-                      json.dump(items, f, ensure_ascii=False, indent=2)
-                  print(f"  写入 {out_file} ({len(items)} 条)")
-
-          print('✅ 月份拆分完成')
-          EOF
-
-      - name: Push today.json and sync
-        env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NEED_WRITE: ${{ env.NEED_WRITE }}
-        run: |
-          if [ "$NEED_WRITE" != "True" ]; then
-            echo "⏭️ 数据无变化，跳过推送和同步"
-            exit 0
-          fi
-
-          echo "📤 推送 today.json 到远程..."
-          git config --local user.email "liuxiaolei5214@gmail.com"
-          git config --local user.name "liuxiaolei5214"
-          git remote set-url origin https://x-access-token:${TOKEN}@github.com/liuxiaolei5214/bing-wallpaper.git
-
-          git add docs/json/today.json
-          if git diff --cached --quiet; then
-            echo "  today.json 无变化"
-          else
-            git commit -m "Update today.json for sync"
-            git push origin main
-            echo "✅ today.json 已推送"
-          fi
-
-          echo ""
-          echo "📡 调用同步API..."
-          sleep 2
-          curl -s -X GET "https://bing.ll1524.cc.cd/api/sync-github?key=ll1524ql2026" || echo "⚠️ API调用失败，继续执行"
-
-      - name: Send WeChat notification
-        env:
-          TITLE: ${{ env.TITLE }}
-          SUBTITLE: ${{ env.SUBTITLE }}
-          DATE: ${{ env.DATE }}
-          BING_URL: ${{ env.BING_URL }}
-          NEED_WRITE: ${{ env.NEED_WRITE }}
-          DATA_SOURCE: ${{ env.DATA_SOURCE }}
-        run: |
-          echo "📱 发送企业微信通知..."
-          python3 << 'EOF'
-          import requests
-          import json
-          import os
-          import random
-          import re
-
-          WECHAT_WEBHOOK = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=fbc3ee80-bc01-439f-965b-6e8806e39351'
-          LINK_URL = 'https://ql.ll1524.cc.cd/task10?key=ll1524ql2026'
-
-          IMAGES = [
-              'https://image.lei5214.cc.cd/img/2026/03/1.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/2.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/3.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/4.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/5.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/6.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/7.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/8.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/9.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/10.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/11.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/12.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/13.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/14.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/15.jpg',
-              'https://image.lei5214.cc.cd/img/2026/03/16.jpg'
-          ]
-
-          def get_random_image():
-              return random.choice(IMAGES) if IMAGES else ''
-
-          def clean_title(title):
-              return re.sub(r' - \d{4}/\d{2}/\d{2}$', '', title)
-
-          title = os.environ.get('TITLE', '今日壁纸')
-          subtitle = os.environ.get('SUBTITLE', '')
-          date_str = os.environ.get('DATE', '')
-          need_write = os.environ.get('NEED_WRITE', 'True') == 'True'
-          data_source = os.environ.get('DATA_SOURCE', '缓存')
-
-          title_clean = clean_title(title)
-
-          if need_write:
-              title_msg = '🎉 Bing壁纸 · 提取推送'
-              description_msg = f'数据来源：{data_source}\n'
-              description_msg += f'提取日期：{date_str}\n'
-              description_msg += f'壁纸主标：{subtitle}\n'
-              description_msg += f'壁纸副标：{title_clean}'
-          else:
-              title_msg = '⏭️ Bing壁纸 · 今日已更新'
-              description_msg = f'数据来源：{data_source}\n'
-              description_msg += f'当前状态：数据已存在\n'
-              description_msg += f'当前日期：{date_str}'
-
-          message = {
-              'msgtype': 'news',
-              'news': {
-                  'articles': [{
-                      'title': title_msg,
-                      'description': description_msg,
-                      'url': LINK_URL,
-                      'picurl': get_random_image()
-                  }]
-              }
-          }
-
-          try:
-              payload = json.dumps(message, ensure_ascii=False).encode('utf-8')
-
-              response = requests.post(
-                  WECHAT_WEBHOOK,
-                  data=payload,
-                  timeout=10,
-                  headers={'Content-Type': 'application/json; charset=utf-8'}
-              )
-              result = response.json()
-              if result.get('errcode') == 0:
-                  print('✅ 企业微信通知发送成功')
-              else:
-                  print(f'❌ 企业微信通知发送失败: {result.get("errmsg")}')
-          except Exception as e:
-              print(f'⚠️ 企业微信通知发送异常: {e}')
-          EOF
-
-      - name: Generate combined history.json
-        run: |
-          mkdir -p docs/json
-          echo '[]' > docs/json/history.json
-
-          for year in $(seq 2010 $(date +'%Y')); do
-            file="docs/json/year/zh.${year}.json"
-
-            if [ ! -f "$file" ] || [ ! -s "$file" ]; then
-              continue
-            fi
-
-            if sed '1s/^\xEF\xBB\xBF//' "$file" | jq empty 2>/dev/null; then
-              echo "📄 合并: $file"
-              sed '1s/^\xEF\xBB\xBF//' "$file" | jq -s '.[0] + .[1]' docs/json/history.json - > docs/json/history_temp.json
-              mv docs/json/history_temp.json docs/json/history.json
-            else
-              echo "⚠️ 跳过无效 JSON: $file"
-            fi
-          done
-
-          if [ -s docs/json/history.json ]; then
-            jq 'unique_by(.date) | sort_by(.date) | reverse' docs/json/history.json > docs/json/history_temp.json
-            mv docs/json/history_temp.json docs/json/history.json
-            COUNT=$(jq 'length' docs/json/history.json)
-            echo "✅ 合并完成，共 ${COUNT} 张壁纸"
-          else
-            echo '[]' > docs/json/history.json
-            echo "⚠️ 没有有效的年份数据"
-          fi
-
-      - name: Generate index file
-        run: |
-          python3 << 'EOF'
-          import json
-          import os
-          from datetime import datetime
-
-          current_year = datetime.now().year
-          index = {"years": []}
-
-          for year in range(2010, current_year + 1):
-              filename = f"docs/json/year/zh.{year}.json"
-              if os.path.exists(filename):
-                  try:
-                      with open(filename, 'r', encoding='utf-8') as f:
-                          data = json.load(f)
-                          count = len(data) if isinstance(data, list) else 0
-                          if count > 0:
-                              index["years"].append({"year": str(year), "count": count})
-                              print(f"✅ 发现 {year} 年数据，共 {count} 条")
-                  except Exception as e:
-                      print(f"⚠️ 读取 {year} 年数据失败: {e}")
-
-          index["years"].sort(key=lambda x: int(x["year"]), reverse=True)
-
-          os.makedirs('docs/json', exist_ok=True)
-          with open('docs/json/index.json', 'w', encoding='utf-8') as f:
-              json.dump(index, f, ensure_ascii=False, indent=2)
-
-          print(f"✅ 生成索引文件，共 {len(index['years'])} 个年份")
-          EOF
-
-      - name: Touch index.html to refresh cache
-        run: |
-          touch docs/index.html
-          export TZ='Asia/Shanghai'
-          echo "✅ 缓存已刷新 (北京时间)  $(date '+%Y-%m-%d %H:%M:%S')" >> docs/cache.log
-
-      - name: Commit and push changes
-        env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config --local user.email "liuxiaolei5214@gmail.com"
-          git config --local user.name "liuxiaolei5214"
-          git remote set-url origin https://x-access-token:${TOKEN}@github.com/liuxiaolei5214/bing-wallpaper.git
-          git pull origin main --rebase --autostash || true
-          git add docs/json/ docs/index.html docs/cache.log
-          if git diff --cached --quiet; then
-            echo "No changes to commit, skipping push."
-          else
-            git commit -m "Daily update: $(date +'%Y-%m-%d %H:%M:%S')"
-            git push origin main
-          fi
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>必应壁纸 · 首页</title>
+    <meta name="description" content="每日更新的必应超清壁纸，4K 高清下载" />
+    <link rel="icon" href="/favicon.avif">
+    <style>
+        /* ===== 基础重置 & 隐藏滚动条 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100vh;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            background: #0e1218;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        .viewport {
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .viewport::-webkit-scrollbar {
+            display: none;
+        }
+
+        .fullscreen-section {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        /* ===== 全新顶部导航栏（图2样式） ===== */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%);
+            pointer-events: none; /* 让下层可点击，子元素恢复 */
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            pointer-events: auto;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .nav-left svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .nav-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 10px;
+            background: rgba(30, 30, 30, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            pointer-events: auto;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-center .nav-item {
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .nav-center .nav-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-center .nav-item.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: 500;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .theme-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(30, 30, 30, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .theme-btn:hover {
+            background: rgba(60, 60, 60, 0.6);
+        }
+        .theme-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        /* ===== 今日壁纸区域 ===== */
+        #today {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            background: #0e1218;
+            position: relative;
+        }
+
+        #todayCard {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1e232b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        #todayCard img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* 取消底部铺满的渐变，改为容器半透明遮罩 */
+
+        /* ===== 内容容器：底部居中，半透明毛玻璃 ===== */
+        #todayCard .today-overlay {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 900px;
+            z-index: 10;
+            padding: 30px 40px;
+            background: rgba(20, 24, 30, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+
+        /* 标题 —— 主标题居中，副标题右对齐 */
+        #todayCard .today-overlay .today-title {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 整体居中 */
+            margin-bottom: 12px;
+        }
+
+        #todayCard .today-overlay .title-main {
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #fff;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            text-align: center;
+            width: 100%;
+        }
+
+        #todayCard .today-overlay .title-sub {
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.85);
+            width: 100%;
+            text-align: right; /* 右对齐，实现与上方右侧对齐 */
+            letter-spacing: 0.2px;
+        }
+
+        /* 描述文字 */
+        #todayCard .today-overlay .today-desc {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.8);
+            max-height: 22vh;
+            overflow-y: auto;
+            scrollbar-width: none;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        #todayCard .today-overlay .today-desc::-webkit-scrollbar {
+            width: 0px;
+        }
+        #todayCard .today-overlay .today-desc p {
+            text-indent: 2em;
+            margin-bottom: 0.3em;
+        }
+        #todayCard .today-overlay .today-desc p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 按钮组 PC端居中 */
+        #todayCard .today-overlay .today-actions-pc {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        /* 移动端悬浮按钮 */
+        #todayCard .today-actions-mobile {
+            display: none;
+            position: absolute;
+            top: 80px;
+            right: 16px;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 8px;
+            z-index: 10;
+            max-width: calc(100vw - 32px);
+        }
+
+        /* 按钮基础样式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 18px;
+            border-radius: 60px;
+            font-size: 0.8rem;
+            font-weight: 400;
+            text-decoration: none;
+            color: #f0ede8;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            transition: all 0.25s;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .btn svg {
+            flex-shrink: 0;
+            width: 14px;
+            height: 14px;
+        }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
+        }
+        .btn-primary {
+            background: rgba(210, 180, 140, 0.25);
+            border-color: rgba(210, 180, 140, 0.4);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: rgba(210, 180, 140, 0.4);
+        }
+
+        /* ===== 加载状态 ===== */
+        .loading {
+            color: #888;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            .nav-center {
+                display: none; /* 移动端隐藏导航条，可放更多空间，或者保留的话改下间距 */
+            }
+            /* 重新定义移动端导航位置和样式 */
+            .top-nav {
+                padding: 10px 16px;
+                justify-content: space-between;
+            }
+            .nav-center {
+                display: flex;
+                position: static;
+                transform: none;
+                background: transparent;
+                border: none;
+                padding: 0;
+                gap: 10px;
+                box-shadow: none;
+            }
+            .nav-center .nav-item {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+            }
+            .nav-center .nav-item.active {
+                background: rgba(255, 255, 255, 0.2);
+            }
+            .nav-left span {
+                display: none; /* 移动端隐藏文字保留图标 */
+            }
+
+            #todayCard .today-overlay {
+                bottom: 20px;
+                width: 95%;
+                padding: 20px;
+                border-radius: 16px;
+            }
+            #todayCard .today-overlay .title-main {
+                font-size: 1.1rem;
+            }
+            #todayCard .today-overlay .title-sub {
+                font-size: 0.8rem;
+            }
+            #todayCard .today-overlay .today-desc {
+                font-size: 0.8rem;
+                max-height: 25vh;
+            }
+            #todayCard .today-overlay .today-actions-pc {
+                display: none;
+            }
+            #todayCard .today-actions-mobile {
+                display: flex;
+            }
+            .btn {
+                font-size: 0.7rem;
+                padding: 5px 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #todayCard .today-overlay .title-main {
+                font-size: 1rem;
+            }
+            #todayCard .today-overlay .title-sub {
+                font-size: 0.75rem;
+            }
+            .nav-center .nav-item {
+                font-size: 0.75rem;
+                padding: 4px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 全新顶部导航栏 ===== -->
+    <nav class="top-nav">
+        <div class="nav-left">
+            <!-- Bing Wallpaper Logo 图标 -->
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 3h18v2H3V3zm0 4h18v2H3V7zm0 4h18v2H3v-2zm0 4h12v2H3v-2zm0 4h12v2H3v-2z" fill="none"/>
+                <path d="M4 2h2v20H4V2zm14 0h2v20h-2V2z" fill="none"/>
+            </svg>
+            <span>必应壁纸</span>
+        </div>
+        <div class="nav-center">
+            <a href="#" class="nav-item active">今日</a>
+            <a href="/archive.html" class="nav-item">历史</a>
+            <a href="/archive.html" class="nav-item">归档</a>
+            <a href="/api.html" class="nav-item">API</a>
+            <a href="/about.html" class="nav-item">关于</a>
+        </div>
+        <div class="nav-right">
+            <button class="theme-btn" title="切换主题">
+                <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ===== 首页壁纸 - 全屏 ===== -->
+    <div class="viewport" id="viewport">
+        <section id="today" class="fullscreen-section">
+            <div id="todayCard">
+                <div class="loading">加载中...</div>
+                <div class="today-actions-mobile"></div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            const ICONS = {
+                download: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+                book: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+                archive: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`,
+            };
+
+            function isMobileDevice() {
+                return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || window.innerWidth <= 640;
+            }
+
+            function get1080pUrl(url) {
+                if (!url) return '';
+                let result = url;
+                if(isMobileDevice()){
+                    result = result.replace(/_UHD\.jpg/g, '_1080x1920.jpg');
+                    result = result.replace(/_1920x1080\.jpg/g, '_1080x1920.jpg');
+                }else{
+                    result = result.replace(/_UHD\.jpg/g, '_1920x1080.jpg');
+                    result = result.replace(/_UHD\.jpg\?/g, '_1920x1080.jpg?');
+                }
+                result = result.replace(/&w=3840&h=2160&rs=1&c=4/g, '');
+                return result;
+            }
+
+            function get4kUrl(url) {
+                if (!url) return '';
+                if (url.includes('_UHD.jpg')) {
+                    return url;
+                }
+                if(isMobileDevice()){
+                    return url.replace(/_1920x1080\.jpg/g, '_1080x1920.jpg');
+                }else{
+                    return url.replace(/_1920x1080\.jpg/g, '_UHD.jpg');
+                }
+            }
+            
+            function formatTitle(item) {
+                const mainTitle = item.subtitle || '';
+                const subTitle = item.title || '';
+                if (mainTitle && subTitle && mainTitle !== subTitle) {
+                    return { main: mainTitle, sub: subTitle };
+                }
+                return { main: mainTitle || subTitle || '壁纸', sub: '' };
+            }
+
+            function getDetailUrl(title, dateStr) {
+                if (!dateStr) return '#';
+                let cleanTitle = title.replace(/\s*[-–]\s*\d{4}\/\d{2}\/\d{2}$/, '').trim();
+                const parts = dateStr.split('-');
+                const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                d.setDate(d.getDate() - 1);
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const dateParam = `${y}${m}${day}_1600`;
+                return `https://cn.bing.com/search?q=${encodeURIComponent(cleanTitle)}&form=hpcapt&filters=HpDate:%22${dateParam}%22+mgzv3configlist:%22BingQA_Encyclopedia_Layout%22`;
+            }
+
+            function getTodayStr() {
+                const now = new Date();
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+
+            let wallpaperDataPromise = null;
+        
+            function fetchWallpaperData() {
+                if (!wallpaperDataPromise) {
+                    wallpaperDataPromise = fetch('json/bing_wallpaper.json')
+                        .then(resp => {
+                            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                            return resp.json();
+                        })
+                        .catch(err => {
+                            wallpaperDataPromise = null;
+                            throw err;
+                        });
+                }
+                return wallpaperDataPromise;
+            }
+            
+            async function loadToday() {
+                const container = document.getElementById('todayCard');
+                try {
+                    const data = await fetchWallpaperData();
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        throw new Error('数据为空或格式无效');
+                    }
+
+                    const todayStr = getTodayStr();
+                    let item = data.find(d => d.date === todayStr);
+
+                    if (!item) {
+                        console.warn(`⚠️ 没有 ${todayStr} 的数据，改用最新一条`);
+                        const sorted = [...data].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+                        item = sorted[0];
+                    }
+
+                    if (!item) throw new Error('无可用数据');
+                    if (!item.date) item.date = todayStr;
+
+                    const imgUrl = get1080pUrl(item.bing_url || item.url || '');
+                    const titles = formatTitle(item);
+                    const desc = item.description || item.desc || '暂无详细介绍';
+
+                    // 拆分段落
+                    let descHtml = '';
+                    if (desc) {
+                        const paragraphs = desc.split('\n')
+                            .map(p => p.trim())
+                            .filter(p => p !== '');
+                        descHtml = paragraphs.map(p => `<p>${p}</p>`).join('');
+                    }
+
+                    // 格式化日期（把 2026-10-18 改成 2026/10/18）
+                    const displayDate = item.date ? item.date.replace(/-/g, '/') : '';
+
+                    const detailUrl = getDetailUrl(item.title || item.subtitle || '', item.date);
+                    
+                    // 重新组织标题结构
+                    const titleHtml = `
+                        <div class="title-main">${titles.main}</div>
+                        ${titles.sub ? `<div class="title-sub">- ${titles.sub} （${displayDate}）</div>` : (displayDate ? `<div class="title-sub">- （${displayDate}）</div>` : '')}
+                    `;
+                    
+                    const htmlPcActions = `
+                        <div class="today-actions-pc">
+                            <a href="${get4kUrl(item.bing_url || item.url || '')}" class="btn btn-primary" target="_blank">${ICONS.download} UHD/4K</a>
+                            <a href="${get1080pUrl(item.bing_url || item.url || '')}" class="btn btn-secondary" target="_blank">${ICONS.download} 1080P</a>
+                            <a href="${detailUrl}" class="btn btn-secondary" target="_blank">${ICONS.book} 光影回顾</a>
+                            <a href="/archive.html" class="btn btn-secondary">${ICONS.archive} 壁纸归档</a>
+                        </div>
+                    `;
+                    
+                    const mobileBtnHtml = `
+                        <a href="${get4kUrl(item.bing_url || item.url || '')}" class="btn btn-primary" target="_blank">${ICONS.download} UHD/4K</a>
+                        <a href="${get1080pUrl(item.bing_url || item.url || '')}" class="btn btn-secondary" target="_blank">${ICONS.download} 1080P</a>
+                        <a href="${detailUrl}" class="btn btn-secondary" target="_blank">${ICONS.book} 光影回顾</a>
+                        <a href="/archive.html" class="btn btn-secondary">${ICONS.archive} 壁纸归档</a>
+                    `;
+
+                    container.innerHTML = `
+                        <img src="${imgUrl}" alt="${titles.main}" loading="lazy" onerror="this.style.display='none'" />
+                        <div class="today-overlay">
+                            <div class="today-title">
+                                ${titleHtml}
+                            </div>
+                            <div class="today-desc">${descHtml || '暂无详细介绍'}</div>
+                            ${htmlPcActions}
+                        </div>
+                        <div class="today-actions-mobile">${mobileBtnHtml}</div>
+                    `;
+                    console.log('✅ 首页壁纸加载成功:', item.date);
+                } catch (e) {
+                    console.warn('首页壁纸加载失败:', e);
+                    container.innerHTML = `<div class="loading">⚠️ 加载失败: ${e.message}</div>`;
+                }
+            }
+
+            // 启动
+            loadToday();
+        })();
+    </script>
+</body>
+</html>
